@@ -13,6 +13,10 @@ Browser
 ├── local emotion lexicon
 │   ├── DUTIR seven emotions
 │   └── intimacy and boundary rules
+├── local knowledge retrieval
+│   ├── anonymized CPED-derived patterns
+│   ├── synthetic dating scenarios
+│   └── hashed TF-IDF similarity
 ├── conversation parser
 │   ├── timestamps and sessions
 │   ├── short-reply baseline and recovery
@@ -55,6 +59,8 @@ Cloud analysis uses two bounded calls:
 
 Every quote is checked against profile and chat source text before rendering.
 
+Before synthesis, the browser retrieves at most three relevant cases from the bundled knowledge library. Retrieved cases are sent as non-evidence context and are excluded from the evidence ledger. Control-risk cases are down-ranked unless local signal detection also finds a control cue.
+
 ## Analysis contract
 
 The model receives `public/skills/letsdate-relationship-analysis/SKILL.md` and its selected references as system instructions plus a structured user payload. The skill requires:
@@ -82,6 +88,12 @@ The browser loads PaddleOCR.js lazily. PP-OCRv6 detects text boxes and recognize
 ## Emotion layer
 
 Before model synthesis, letsdate runs a local DUTIR emotion lexicon and relationship-specific signal detector. It produces valence, emotion categories, intimacy/withdrawal/control/repair cues, a short actionable reading and missing-information questions. See `docs/EMOTION.md`.
+
+## Knowledge layer
+
+`data-pipeline/build_knowledge.py` builds a static, browser-readable case library from licensed public dialogue data and synthetic dating scenarios. Raw CPED dialogue is removed from the published output; only anonymized scenario, emotion, pattern and takeaway summaries are retained.
+
+`src/lib/knowledge.ts` performs deterministic lexical retrieval with emotion, intimacy-signal and dating-scene bonuses. Results are explicitly labeled as context references rather than evidence. See `docs/KNOWLEDGE.md`.
 
 ## Deployment
 

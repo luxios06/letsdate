@@ -1,0 +1,242 @@
+[
+  {
+    "id": "syn-short-low-energy",
+    "title": "短回复后说明低能量",
+    "pattern": "状态性短回复",
+    "situation": "对方回复很短，但前后文说明疲惫，随后恢复交流。",
+    "takeaway": "把短回复理解为当前状态，不要直接判断冷淡或依恋类型。",
+    "emotions": ["neutral", "worried"],
+    "signals": ["withdrawal", "repair"],
+    "dialogue": [
+      {"speaker": "A", "text": "你今天还好吗？"},
+      {"speaker": "B", "text": "有点低电量，脑子转不动"},
+      {"speaker": "A", "text": "那你先休息"},
+      {"speaker": "B", "text": "嗯，晚点我再回你"}
+    ]
+  },
+  {
+    "id": "syn-short-cold-loop",
+    "title": "连续短回复且没有恢复",
+    "pattern": "互动收缩",
+    "situation": "多次追问后，对方连续用极短回复，之后没有补充或主动重开话题。",
+    "takeaway": "减少继续追问，把主动权交还对方；一次样本仍不足以诊断回避型。",
+    "emotions": ["neutral"],
+    "signals": ["withdrawal"],
+    "dialogue": [
+      {"speaker": "A", "text": "周末有空吗？"},
+      {"speaker": "B", "text": "嗯"},
+      {"speaker": "A", "text": "要不要一起吃饭？"},
+      {"speaker": "B", "text": "哦"}
+    ]
+  },
+  {
+    "id": "syn-mutual-closeness",
+    "title": "双方表达想念并提出见面",
+    "pattern": "双向亲密靠近",
+    "situation": "双方都表达想念，并继续讨论具体见面。",
+    "takeaway": "可以温和回应并推进一次低压力、具体的安排。",
+    "emotions": ["happy", "positive-other"],
+    "signals": ["closeness", "flirtation", "future"],
+    "dialogue": [
+      {"speaker": "A", "text": "我有点想你"},
+      {"speaker": "B", "text": "我也想你，周日想见你"},
+      {"speaker": "A", "text": "那一起吃饭？"},
+      {"speaker": "B", "text": "好，我晚点确认时间"}
+    ]
+  },
+  {
+    "id": "syn-plan-confirmed",
+    "title": "计划从提议走到确认",
+    "pattern": "计划确认",
+    "situation": "时间、地点和活动都被明确确认。",
+    "takeaway": "不需要继续反复试探，下一步观察是否按约兑现。",
+    "emotions": ["happy", "relaxed"],
+    "signals": ["future", "closeness"],
+    "dialogue": [
+      {"speaker": "A", "text": "周日下午可以吗？"},
+      {"speaker": "B", "text": "可以，两点展馆门口见"},
+      {"speaker": "A", "text": "好，之后去吃饭"},
+      {"speaker": "B", "text": "成交"}
+    ]
+  },
+  {
+    "id": "syn-plan-cancelled-reconfirmed",
+    "title": "取消后解释并重新约定",
+    "pattern": "计划变更与修复",
+    "situation": "原计划被取消，但对方解释原因并提出替代时间。",
+    "takeaway": "把一次改期视为行为信息，继续观察后续是否兑现新安排。",
+    "emotions": ["sadness", "worried", "positive-other"],
+    "signals": ["repair", "future"],
+    "dialogue": [
+      {"speaker": "B", "text": "临时加拍，周六不行"},
+      {"speaker": "A", "text": "有点失望"},
+      {"speaker": "B", "text": "抱歉，是我没安排好"},
+      {"speaker": "B", "text": "周日下午可以吗？"}
+    ]
+  },
+  {
+    "id": "syn-conflict-repair",
+    "title": "小冲突后的澄清修复",
+    "pattern": "冲突修复",
+    "situation": "双方表达失望和误解，但没有攻击，随后说明以后如何调整。",
+    "takeaway": "关注修复后的具体改变，不只凭一次道歉判断安全。",
+    "emotions": ["sadness", "worried", "positive-other"],
+    "signals": ["repair", "boundary", "closeness"],
+    "dialogue": [
+      {"speaker": "A", "text": "你突然取消让我有点失落"},
+      {"speaker": "B", "text": "抱歉，我应该提前说清楚"},
+      {"speaker": "A", "text": "我也不想憋着"},
+      {"speaker": "B", "text": "以后有变化我提前告诉你"}
+    ]
+  },
+  {
+    "id": "syn-boundary-respected",
+    "title": "明确边界后对方尊重",
+    "pattern": "边界协商",
+    "situation": "一方说明需要空间或较慢节奏，另一方没有施压。",
+    "takeaway": "边界被尊重是积极信号，但需要观察后续是否稳定执行。",
+    "emotions": ["neutral", "relaxed"],
+    "signals": ["boundary", "repair"],
+    "dialogue": [
+      {"speaker": "A", "text": "我最近需要一点自己的空间"},
+      {"speaker": "B", "text": "理解，你不用马上回我"},
+      {"speaker": "A", "text": "谢谢，我缓过来会找你"},
+      {"speaker": "B", "text": "好"}
+    ]
+  },
+  {
+    "id": "syn-control-risk",
+    "title": "把控制包装成关心",
+    "pattern": "控制风险",
+    "situation": "对方要求定位、查手机、强制报备或限制社交。",
+    "takeaway": "控制不是爱的证明。优先确认边界；如果拒绝被惩罚，应考虑拉开距离。",
+    "emotions": ["anger", "fear", "disgust"],
+    "signals": ["control"],
+    "dialogue": [
+      {"speaker": "B", "text": "把定位一直开着"},
+      {"speaker": "A", "text": "我不太舒服"},
+      {"speaker": "B", "text": "你爱我就应该让我查手机"},
+      {"speaker": "A", "text": "这不行"}
+    ]
+  },
+  {
+    "id": "syn-reassurance-seeking",
+    "title": "反复确认对方是否还喜欢自己",
+    "pattern": "寻求确认",
+    "situation": "一方在缺少明确回应时连续追问关系状态。",
+    "takeaway": "直接说明当前投入程度比含糊安抚更有效，也不要用反复试探替代沟通。",
+    "emotions": ["worried", "fear", "depress"],
+    "signals": ["reassurance"],
+    "dialogue": [
+      {"speaker": "A", "text": "你是不是不喜欢我了？"},
+      {"speaker": "B", "text": "我最近只是忙"},
+      {"speaker": "A", "text": "那你怎么不回我？"},
+      {"speaker": "B", "text": "我需要一点时间，但不是想消失"}
+    ]
+  },
+  {
+    "id": "syn-breadcrumbing",
+    "title": "只给热度不给行动",
+    "pattern": "低投入循环",
+    "situation": "对方偶尔说想你或以后见面，但持续回避具体安排。",
+    "takeaway": "把是否愿意落实一次具体安排作为验证标准，不用口头热度替代行动。",
+    "emotions": ["positive-other", "neutral"],
+    "signals": ["closeness", "future"],
+    "dialogue": [
+      {"speaker": "B", "text": "最近好想你"},
+      {"speaker": "A", "text": "那周末见？"},
+      {"speaker": "B", "text": "看情况，之后再说"},
+      {"speaker": "A", "text": "好"}
+    ]
+  },
+  {
+    "id": "syn-polite-no-interest",
+    "title": "礼貌回应但没有双向投入",
+    "pattern": "低兴趣信号",
+    "situation": "回复礼貌但不追问，不提出替代安排，也不主动开启话题。",
+    "takeaway": "礼貌不等于兴趣。停止加码，观察对方是否会主动补位。",
+    "emotions": ["neutral"],
+    "signals": ["withdrawal"],
+    "dialogue": [
+      {"speaker": "A", "text": "有空一起喝咖啡吗？"},
+      {"speaker": "B", "text": "最近比较忙，谢谢邀请"},
+      {"speaker": "A", "text": "那下次？"},
+      {"speaker": "B", "text": "好的"}
+    ]
+  },
+  {
+    "id": "syn-slow-with-explanation",
+    "title": "回复慢但说明原因",
+    "pattern": "节奏差异",
+    "situation": "对方回复较慢，但明确说明工作忙碌，并在之后恢复对话。",
+    "takeaway": "单独看延迟容易误判，解释和后续恢复更能说明投入。",
+    "emotions": ["neutral", "worried"],
+    "signals": ["boundary", "repair"],
+    "dialogue": [
+      {"speaker": "B", "text": "今天加班，可能回得慢"},
+      {"speaker": "A", "text": "好，你忙完再说"},
+      {"speaker": "B", "text": "忙完了，今天怎么样？"},
+      {"speaker": "A", "text": "还行，刚吃完饭"}
+    ]
+  },
+  {
+    "id": "syn-jealousy-pressure",
+    "title": "用吃醋施压",
+    "pattern": "嫉妒与控制",
+    "situation": "对方把羞辱、盘问或限制社交解释成吃醋。",
+    "takeaway": "嫉妒不自动等于爱。观察是否尊重你的社交自由和拒绝。",
+    "emotions": ["anger", "disgust", "fear"],
+    "signals": ["control"],
+    "dialogue": [
+      {"speaker": "B", "text": "你为什么和那个人出去？"},
+      {"speaker": "A", "text": "那是我朋友"},
+      {"speaker": "B", "text": "以后不许联系"},
+      {"speaker": "A", "text": "你没有权利这样要求"}
+    ]
+  },
+  {
+    "id": "syn-apology-no-change",
+    "title": "道歉但没有改变",
+    "pattern": "无效修复",
+    "situation": "对方反复道歉，但相同越界行为持续发生。",
+    "takeaway": "修复看具体行动和重复率，不只看道歉语气。",
+    "emotions": ["sadness", "anger"],
+    "signals": ["repair", "boundary"],
+    "dialogue": [
+      {"speaker": "B", "text": "对不起，我下次不会了"},
+      {"speaker": "A", "text": "这已经是第三次"},
+      {"speaker": "B", "text": "我真的知道错了"},
+      {"speaker": "A", "text": "我需要看到实际改变"}
+    ]
+  },
+  {
+    "id": "syn-consistent-small-actions",
+    "title": "稳定的小行动",
+    "pattern": "一致性投入",
+    "situation": "对方不夸张表达，但持续记住细节、按时回复和落实小安排。",
+    "takeaway": "稳定的小行动通常比偶发的高强度表达更值得参考。",
+    "emotions": ["happy", "relaxed", "grateful"],
+    "signals": ["closeness", "repair", "future"],
+    "dialogue": [
+      {"speaker": "B", "text": "你明天面试，记得早点睡"},
+      {"speaker": "A", "text": "你还记得"},
+      {"speaker": "B", "text": "当然，结束后告诉我结果"},
+      {"speaker": "A", "text": "好"}
+    ]
+  },
+  {
+    "id": "syn-values-mismatch",
+    "title": "互动不错但核心节奏不一致",
+    "pattern": "价值与节奏冲突",
+    "situation": "双方聊天顺畅，但对联系频率、空间或未来规划有不同期待。",
+    "takeaway": "好感不能自动解决长期节奏差异，需要明确讨论可接受的边界。",
+    "emotions": ["neutral", "worried"],
+    "signals": ["boundary", "future"],
+    "dialogue": [
+      {"speaker": "A", "text": "我希望每天都能聊几句"},
+      {"speaker": "B", "text": "我做不到，我需要更多自己的时间"},
+      {"speaker": "A", "text": "我会觉得被忽略"},
+      {"speaker": "B", "text": "那我们需要谈谈双方能接受的方式"}
+    ]
+  }
+]

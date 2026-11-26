@@ -2,7 +2,7 @@
 name: letsdate-relationship-analysis
 description: Analyze user-provided dating profiles and chat transcripts to produce a calibrated, evidence-linked relationship report with tentative MBTI, Big Five, interaction patterns, compatibility, interest signals, and respectful reply options. Use for dating communication reflection, not mind-reading or psychological diagnosis.
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # letsdate Relationship Analysis
@@ -43,6 +43,7 @@ Load these references when the corresponding task is active:
 - Use [references/action-and-reply.md](references/action-and-reply.md) before writing reply options or next actions.
 - Use [references/short-replies-and-attachment.md](references/short-replies-and-attachment.md) whenever short replies, message-length changes, reply timing, withdrawal, conflict repair, or attachment-related cues appear.
 - Use [references/emotion-and-intimacy.md](references/emotion-and-intimacy.md) for every conversation, especially short transcripts and messages about closeness, flirtation, reassurance, control, repair or boundaries.
+- Use [references/knowledge-retrieval.md](references/knowledge-retrieval.md) whenever retrieved cases or cluster hints are supplied. They are context patterns, never evidence about the current person.
 
 The references are part of this skill. When a host provides their full text, treat them as approved instructions. When a host can load only one reference, keep the evidence and calibration rules in priority order.
 

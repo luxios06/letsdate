@@ -1449,6 +1449,105 @@ h3 {
   font-size: 7px;
 }
 
+.knowledge-reference {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.knowledge-reference__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+
+.knowledge-reference__head > svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--forest);
+}
+
+.knowledge-reference__head span {
+  display: block;
+  color: var(--ink);
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.knowledge-reference__head p {
+  max-width: 720px;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1.6;
+}
+
+.knowledge-reference__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 11px;
+}
+
+.knowledge-reference__grid article {
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgba(255, 253, 248, 0.7);
+}
+
+.knowledge-reference__grid article > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.knowledge-reference__grid article > div span,
+.knowledge-reference__grid article > div em {
+  color: var(--coral);
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 750;
+}
+
+.knowledge-reference__grid article > div em {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.knowledge-reference__grid article > strong {
+  display: block;
+  margin-top: 7px;
+  font-family: "Iowan Old Style", "Songti SC", serif;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.knowledge-reference__grid article > p {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1.6;
+}
+
+.knowledge-reference__grid blockquote {
+  margin: 8px 0 0;
+  padding-left: 8px;
+  border-left: 2px solid rgba(40, 94, 84, 0.35);
+  color: var(--ink-soft);
+  font-size: 8px;
+  line-height: 1.6;
+}
+
+.knowledge-reference__grid article > small {
+  display: block;
+  margin-top: 8px;
+  color: #929891;
+  font-size: 7px;
+}
+
 .mbti-panel {
   border-right: 1px solid var(--line);
   padding-right: 28px;
@@ -3368,6 +3467,10 @@ h3 {
     grid-template-columns: 1fr 1fr;
   }
 
+  .knowledge-reference__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
   .attachment-cue-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -3567,6 +3670,7 @@ h3 {
   }
 
   .human-read-grid,
+  .knowledge-reference__grid,
   .attachment-cue-grid,
   .short-reply-grid {
     grid-template-columns: 1fr;

@@ -82,6 +82,34 @@ export const DEMO_REPORT: AnalysisReport = {
     },
     source: "local-fallback",
   },
+  knowledge: {
+    relatedCases: [
+      {
+        id: "syn-plan-confirmed",
+        title: "计划从提议走到确认",
+        source: "letsdate-synthetic",
+        license: "CC0-1.0",
+        pattern: "计划确认",
+        situation: "时间、地点和活动都被明确确认。",
+        takeaway: "不需要继续反复试探，下一步观察是否按约兑现。",
+        similarity: 86,
+        synthetic: true,
+      },
+      {
+        id: "syn-short-low-energy",
+        title: "短回复后说明低能量",
+        source: "letsdate-synthetic",
+        license: "CC0-1.0",
+        pattern: "状态性短回复",
+        situation: "对方回复很短，但前后文说明疲惫，随后恢复交流。",
+        takeaway: "把短回复理解为当前状态，不要直接判断冷淡或依恋类型。",
+        similarity: 71,
+        synthetic: true,
+      },
+    ],
+    clusterHints: ["dating-specific", "计划、请求与协商"],
+    caseCount: 95,
+  },
   humanRead: {
     canConfirm:
       "对方主动追问、给出确认时间，并把话题推进到看展和吃饭。",
@@ -110,6 +138,7 @@ export const DEMO_REPORT: AnalysisReport = {
       "识别计划状态",
       "分析短回复与后续恢复",
       "评估依恋相关互动线索",
+      "检索匿名情境参考",
       "生成关系判断与行动建议",
     ],
     messageCount: 16,

@@ -40,3 +40,19 @@ Tesseract is retained only as a fallback when PaddleOCR cannot initialize or rec
 - Included data: converted DUTIR seven-emotion sets and HowNet negation/intensity modifiers.
 
 The lexicon is loaded locally as `public/emotion/cnsenti-lexicon.json`.
+
+## CPED
+
+- Dataset: Chinese Personalized and Emotional Dialogue Corpus (CPED)
+- Project: https://github.com/scutcyr/CPED
+- License: Apache-2.0
+- Included data: anonymized aggregate scenario, emotion, pattern and takeaway records derived from `valid_split.csv`.
+
+Raw CPED dialogue is not redistributed because source samples can contain names and sensitive family details.
+
+## letsdate synthetic relationship cases
+
+- File: `data-pipeline/synthetic_cases.json`
+- License: CC0-1.0
+
+These dialogues are fully fictional and created for product testing.

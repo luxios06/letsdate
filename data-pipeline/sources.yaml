@@ -1,0 +1,38 @@
+sources:
+  - id: cped
+    name: CPED Chinese Personalized and Emotional Dialogue Dataset
+    url: https://github.com/scutcyr/CPED
+    file: data/CPED/valid_split.csv
+    license: Apache-2.0
+    commercial_use: allowed
+    fields_used:
+      - Dialogue_ID
+      - Utterance_ID
+      - Speaker
+      - Scene
+      - Sentiment
+      - Emotion
+      - Utterance
+    fields_removed:
+      - speaker names
+      - gender
+      - age
+      - Big Five scores
+      - face positions
+    processing:
+      - remove speaker identity
+      - redact contact and account information
+      - group utterances into anonymous dialogues
+      - derive clusters and representative cases
+
+  - id: cnsenti
+    name: cnsenti DUTIR emotion lexicon
+    url: https://github.com/hiDaDeng/cnsenti
+    license: MIT
+    commercial_use: allowed
+
+  - id: letsdate-synthetic
+    name: letsdate synthetic dating and relationship scenarios
+    license: CC0-1.0
+    commercial_use: allowed
+    note: All people and conversations are fictional.

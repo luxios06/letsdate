@@ -66,7 +66,8 @@ describe("two-stage provider pipeline", () => {
     };
     const local = buildLocalAnalysis(input, "custom");
     let providerCalls = 0;
-    const mockFetch = vi.fn(async (url: RequestInfo | URL) => {
+    const synthesisPayloads: string[] = [];
+    const mockFetch = vi.fn(async (url: RequestInfo | URL, init?: RequestInit) => {
       const textUrl = String(url);
       if (textUrl.endsWith(".md")) {
         return new Response("# approved skill", { status: 200 });
@@ -97,7 +98,37 @@ describe("two-stage provider pipeline", () => {
           },
         });
       }
+      if (textUrl.endsWith("knowledge/cases.json")) {
+        return Response.json({
+          version: "test",
+          caseCount: 1,
+          clusters: [{ label: "计划、请求与协商", count: 1 }],
+          manifest: {},
+          cases: [
+            {
+              id: "test-plan",
+              source: "letsdate-synthetic",
+              license: "CC0-1.0",
+              title: "周末计划协商",
+              scene: "dating",
+              pattern: "计划确认",
+              situation: "双方讨论周末安排，并给出明确的确认时间。",
+              takeaway: "把是否给出具体时间作为验证投入的行为线索。",
+              emotions: ["joy"],
+              sentiment: "positive",
+              signals: ["future"],
+              clusterId: 0,
+              clusterLabel: "计划、请求与协商",
+              searchTerms: ["周末", "计划", "确认"],
+              dialogue: [{ speaker: "B", text: "周日可以，周六晚确认。" }],
+            },
+          ],
+        });
+      }
       providerCalls += 1;
+      if (providerCalls === 2) {
+        synthesisPayloads.push(String(init?.body ?? ""));
+      }
       if (providerCalls === 1) {
         return Response.json({
           choices: [
@@ -143,5 +174,8 @@ describe("two-stage provider pipeline", () => {
     expect(providerCalls).toBe(2);
     expect(report.pipeline.exactQuoteVerification).toBe(true);
     expect(report.evidence.length).toBeGreaterThan(0);
+    expect(report.knowledge.relatedCases[0]?.id).toBe("test-plan");
+    expect(synthesisPayloads[0]).toContain("retrieved_cases");
+    expect(synthesisPayloads[0]).toContain("周末计划协商");
   });
 });

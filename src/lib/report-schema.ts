@@ -150,6 +150,25 @@ export const ReportSchema = z.object({
     }),
     source: z.enum(["cnsenti-dutir", "local-fallback"]),
   }),
+  knowledge: z.object({
+    relatedCases: z
+      .array(
+        z.object({
+          id: text(80),
+          title: text(160),
+          source: text(80),
+          license: text(40),
+          pattern: text(120),
+          situation: text(300),
+          takeaway: text(300),
+          similarity: score,
+          synthetic: z.boolean(),
+        }),
+      )
+      .max(3),
+    clusterHints: z.array(text(80)).max(12),
+    caseCount: z.number().int().min(0).max(100000),
+  }),
   humanRead: z.object({
     canConfirm: text(500),
     likely: text(500),

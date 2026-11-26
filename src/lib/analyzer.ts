@@ -13,11 +13,13 @@ import {
   type ParsedConversation,
 } from "./conversation";
 import { analyzeEmotionFallback } from "./emotion-analysis";
+import { emptyKnowledge } from "./knowledge";
 import type {
   AnalysisInput,
   AnalysisReport,
   EmotionAnalysis,
   EvidenceItem,
+  KnowledgeMatch,
   MbtiDimension,
   PersonProfile,
   ProviderId,
@@ -539,6 +541,7 @@ function buildHumanRead(
   person: PersonProfile,
   interestScore: number,
   emotion: EmotionAnalysis,
+  knowledge: KnowledgeMatch,
 ): AnalysisReport["humanRead"] {
   const withdrawal = emotion.intimacySignals.some(
     (signal) => signal.key === "withdrawal",
@@ -553,20 +556,28 @@ function buildHumanRead(
         ? "能确认最近的计划被取消或改期，不能把之前的热情当成当前确认。"
         : "能确认双方有过真实互动，但目前没有足够材料证明稳定人格或依恋模式。";
   const likely = `${emotion.quickRead.headline} ${emotion.quickRead.observation}`;
-  const alternatives =
+  const baseAlternatives =
     withdrawal && recovery
       ? "短回复更像当时的低能量或忙碌状态；随后恢复交流，不能直接解释成冷淡或回避。"
       : person.attachmentAssessment.summary;
-  const observeNext = emotion.quickRead.suggestion;
+  const reference = knowledge.relatedCases[0];
+  const alternatives = reference
+    ? `${baseAlternatives} 相似情境里常见的模式是“${reference.pattern}”，但这只能用于扩展解释，不能当作对方的证据。`
+    : baseAlternatives;
+  const observeNext = reference
+    ? `${emotion.quickRead.suggestion} 同时验证：${reference.takeaway}`
+    : emotion.quickRead.suggestion;
   return {
     canConfirm,
     likely,
     alternatives,
     observeNext,
     supportNote:
-      interestScore < 50
-        ? "即使材料不足，也不要只靠猜。先使用低压力回应，并补充最能改变判断的上下文。"
-        : "这份分析不替你判断关系值不值得，只帮助你把猜测变成可观察、可验证的信号。",
+      reference
+        ? "相似案例只用于提示可能的情境模式，不会替代这段关系里的原话和后续行动。"
+        : interestScore < 50
+          ? "即使材料不足，也不要只靠猜。先使用低压力回应，并补充最能改变判断的上下文。"
+          : "这份分析不替你判断关系值不值得，只帮助你把猜测变成可观察、可验证的信号。",
   };
 }
 
@@ -574,8 +585,10 @@ export function buildLocalAnalysis(
   input: AnalysisInput,
   provider: ProviderId = "demo",
   emotionOverride?: EmotionAnalysis,
+  knowledgeOverride?: KnowledgeMatch,
 ): AnalysisReport {
   const emotion = emotionOverride ?? analyzeEmotionFallback(input);
+  const knowledge = knowledgeOverride ?? emptyKnowledge();
   const isDemo = input.chat.trim() === DEMO_SAMPLE.chat.trim() && input.otherProfile.trim() === DEMO_SAMPLE.otherProfile.trim();
   if (isDemo) {
     return {
@@ -585,6 +598,7 @@ export function buildLocalAnalysis(
       provider,
       stage: input.relationshipStage,
       emotion,
+      knowledge: knowledgeOverride ?? DEMO_REPORT.knowledge,
     };
   }
 
@@ -630,7 +644,13 @@ export function buildLocalAnalysis(
   const coldRisk = cold > warm;
   const messageOptions = buildMessageOptions(input, interestScore);
   const nextMessage = messageOptions[0].text;
-  const humanRead = buildHumanRead(parsed, person, interestScore, emotion);
+  const humanRead = buildHumanRead(
+    parsed,
+    person,
+    interestScore,
+    emotion,
+    knowledge,
+  );
   const contextGaps = buildContextGaps(parsed, person, emotion);
 
   return {
@@ -656,6 +676,7 @@ export function buildLocalAnalysis(
     compatibilityScore: overallScore,
     calibration,
     emotion,
+    knowledge,
     humanRead,
     contextGaps,
     shortReplies: parsed.shortReplies,
@@ -667,6 +688,7 @@ export function buildLocalAnalysis(
         "识别计划状态",
         "分析短回复与后续恢复",
         "评估依恋相关互动线索",
+        ...(knowledge.caseCount > 0 ? ["检索匿名情境参考"] : []),
         "生成关系判断与行动建议",
       ],
       messageCount: parsed.messages.length,

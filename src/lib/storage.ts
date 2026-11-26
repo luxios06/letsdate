@@ -3,6 +3,7 @@ import type {
   HistoryRecord,
   ProviderSettings,
 } from "../types";
+import { emptyKnowledge } from "./knowledge";
 
 const SETTINGS_KEY = "letsdate.settings.v1";
 const HISTORY_KEY = "letsdate.history.v1";
@@ -47,7 +48,22 @@ export function saveSettings(settings: ProviderSettings) {
 
 export function loadHistory(): HistoryRecord[] {
   try {
-    return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]") as HistoryRecord[];
+    const stored = JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]") as unknown;
+    if (!Array.isArray(stored)) return [];
+    return stored.flatMap((item) => {
+      if (!item || typeof item !== "object") return [];
+      const record = item as HistoryRecord;
+      if (!record.report || typeof record.report !== "object") return [];
+      return [
+        {
+          ...record,
+          report: {
+            ...record.report,
+            knowledge: record.report.knowledge ?? emptyKnowledge(),
+          },
+        },
+      ];
+    });
   } catch {
     return [];
   }

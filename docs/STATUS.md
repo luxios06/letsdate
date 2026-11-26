@@ -2,7 +2,7 @@
 
 Saved and deployed: 2026-11-26
 
-Current source version: `0.6.0`
+Current source version: `0.7.0`
 
 ## Completed
 
@@ -23,6 +23,9 @@ Current source version: `0.6.0`
 - Two-stage model pipeline with fact extraction before synthesis.
 - Exact quote verification and plan cancellation detection.
 - Human-first report, context gaps and explicit rule-demo disclaimers.
+- Local knowledge retrieval over 95 anonymized or fictional relationship cases.
+- CPED-derived aggregate cases, synthetic dating cases, hashed TF-IDF retrieval and control-risk down-ranking.
+- Similar-case references displayed separately from evidence with source and license labels.
 - Reply-lag baseline and timestamp inheritance across bracket-only times.
 - `zod` schema validation for every model-generated report.
 - WechatVibe 1.3.6 source review and reuse decisions in `docs/WECHATVIBE_REVIEW.md`.
@@ -34,7 +37,7 @@ Current source version: `0.6.0`
 
 ## Verified
 
-- `pnpm test`: 32 tests passed.
+- `pnpm test`: 36 tests passed.
 - `pnpm check`: passed.
 - `pnpm build`: passed.
 - Playwright desktop and 390px mobile flows: passed.

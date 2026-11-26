@@ -2,6 +2,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   ArrowRight,
+  BookOpen,
   Check,
   ChevronRight,
   CircleHelp,
@@ -142,6 +143,17 @@ function downloadReport(report: AnalysisReport) {
       (signal) => `- ${signal.label}：${signal.score}，${signal.hits.join("、")}`,
     ),
     "",
+    ...(report.knowledge.relatedCases.length > 0
+      ? [
+          "## 相似情境参考",
+          `案例库共 ${report.knowledge.caseCount} 条匿名派生或虚构案例；以下匹配只用于提示可能的情境模式，不是当前对象的证据。`,
+          ...report.knowledge.relatedCases.map(
+            (item) =>
+              `- ${item.title}（${item.pattern}，相似度 ${item.similarity}%）\n  情境：${item.situation}\n  可参考：${item.takeaway}\n  来源：${item.source} / ${item.license}`,
+          ),
+          "",
+        ]
+      : []),
     `## 对方人格透镜`,
     `MBTI 候选：${report.person.mbti.candidate}（${report.person.mbti.confidence}置信度）`,
     ...report.person.bigFive.map((trait) => `- ${trait.label}: ${trait.score}/100，${trait.summary}`),
@@ -399,6 +411,37 @@ export function ReportView({ report, onBack }: ReportViewProps) {
                 情感词典来源：cnsenti / DUTIR · 仅描述当前材料中的情绪与互动信号
               </small>
             </div>
+            {report.knowledge.relatedCases.length > 0 && (
+              <div className="knowledge-reference">
+                <div className="knowledge-reference__head">
+                  <BookOpen size={17} />
+                  <div>
+                    <span>相似情境参考</span>
+                    <p>
+                      从 {report.knowledge.caseCount} 条匿名派生或虚构案例中检索，
+                      只用于扩展解释，不是关于对方的证据。
+                    </p>
+                  </div>
+                </div>
+                <div className="knowledge-reference__grid">
+                  {report.knowledge.relatedCases.map((item) => (
+                    <article key={item.id}>
+                      <div>
+                        <span>{item.pattern}</span>
+                        <em>{item.similarity}% 相似</em>
+                      </div>
+                      <strong>{item.title}</strong>
+                      <p>{item.situation}</p>
+                      <blockquote>{item.takeaway}</blockquote>
+                      <small>
+                        {item.synthetic ? "虚构测试案例" : "公开匿名派生"} ·{" "}
+                        {item.license}
+                      </small>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="human-read-support">
               <ShieldAlert size={15} />
               {report.humanRead.supportNote}

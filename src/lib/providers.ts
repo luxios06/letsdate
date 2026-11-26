@@ -12,8 +12,9 @@ import {
 import {
   analyzeEmotion,
 } from "./emotion-analysis";
+import { retrieveKnowledge } from "./knowledge";
 import { validateReport } from "./report-schema";
-import type { EmotionAnalysis } from "../types";
+import type { EmotionAnalysis, KnowledgeMatch } from "../types";
 
 const PROVIDER_DEFAULTS: Record<
   ProviderSettings["provider"],
@@ -154,8 +155,9 @@ function mergeWithFallback(
   input: AnalysisInput,
   provider: ProviderSettings["provider"],
   emotion: EmotionAnalysis,
+  knowledge: KnowledgeMatch,
 ): AnalysisReport {
-  const fallback = buildLocalAnalysis(input, provider, emotion);
+  const fallback = buildLocalAnalysis(input, provider, emotion, knowledge);
   if (!raw || typeof raw !== "object") return fallback;
   const candidate = raw as Partial<AnalysisReport>;
   const merged: AnalysisReport = {
@@ -201,6 +203,7 @@ function mergeWithFallback(
       ...fallback.action,
       ...(candidate.action ?? {}),
     },
+    knowledge,
     evidence: candidate.evidence?.length ? candidate.evidence : fallback.evidence,
     uncertainties: candidate.uncertainties?.length
       ? candidate.uncertainties
@@ -223,6 +226,7 @@ export async function loadSkillPrompt(): Promise<string> {
     "skills/letsdate-relationship-analysis/references/action-and-reply.md",
     "skills/letsdate-relationship-analysis/references/short-replies-and-attachment.md",
     "skills/letsdate-relationship-analysis/references/emotion-and-intimacy.md",
+    "skills/letsdate-relationship-analysis/references/knowledge-retrieval.md",
   ];
   const responses = await Promise.all(
     paths.map((path) =>
@@ -402,6 +406,7 @@ function verifyReportEvidence(
         "解析消息与会话",
         "模型提取事实",
         "逐字核验引文",
+        ...(report.knowledge.caseCount > 0 ? ["检索匿名情境参考"] : []),
         "模型综合画像与关系",
         "结构化校验与分数校准",
       ],
@@ -412,6 +417,8 @@ function verifyReportEvidence(
 function buildSynthesisPayload(
   input: AnalysisInput,
   facts: ExtractedFactLedger,
+  emotion: EmotionAnalysis,
+  knowledge: KnowledgeMatch,
 ) {
   return JSON.stringify(
     {
@@ -423,10 +430,25 @@ function buildSynthesisPayload(
         user_goal: input.goal,
       },
       verified_fact_ledger: facts,
+      local_emotion_signals: {
+        valence: emotion.valence,
+        intensity: emotion.intensity,
+        categories: emotion.categories.filter((item) => item.count > 0),
+        intimacy_signals: emotion.intimacySignals,
+        quick_read: emotion.quickRead,
+      },
+      retrieved_cases: {
+        case_count: knowledge.caseCount,
+        cluster_hints: knowledge.clusterHints,
+        references: knowledge.relatedCases,
+        caveat:
+          "这些只是匿名派生或虚构的相似情境参考，不是关于当前对象的证据，不能写进 evidence，也不能用相似度证明对方想法。",
+      },
       requirements: [
         "只使用 verified_fact_ledger 中已有原文依据的事实。",
         "不能把单条短回复直接判断为冷淡、回避或焦虑。",
         "依恋输出必须是互动线索，不得诊断为依恋类型。",
+        "retrieved_cases 只能用于扩展解释候选，不得当作当前对象的证据或人格结论。",
         "必须填写 humanRead、contextGaps、shortReplies、pipeline 和 attachmentAssessment。",
         "只输出 JSON，不要 Markdown。",
       ],
@@ -580,9 +602,10 @@ export async function analyzeWithProvider(
 ): Promise<AnalysisReport> {
   const settings = validateProviderSettings(rawSettings);
   const emotion = await analyzeEmotion(input);
+  const knowledge = await retrieveKnowledge(input, emotion);
   if (settings.provider === "demo") {
     await new Promise((resolve) => window.setTimeout(resolve, 900));
-    return buildLocalAnalysis(input, "demo", emotion);
+    return buildLocalAnalysis(input, "demo", emotion, knowledge);
   }
   try {
     const systemPrompt = await loadSkillPrompt();
@@ -595,13 +618,14 @@ export async function analyzeWithProvider(
     const output = await requestProvider(
       settings,
       systemPrompt,
-      buildSynthesisPayload(input, facts),
+      buildSynthesisPayload(input, facts, emotion, knowledge),
     );
     return mergeWithFallback(
       extractJson(output),
       input,
       settings.provider,
       emotion,
+      knowledge,
     );
   } catch (error) {
     throw new Error(friendlyError(error));

@@ -257,6 +257,24 @@ export interface EmotionAnalysis {
   source: "cnsenti-dutir" | "local-fallback";
 }
 
+export interface KnowledgeReference {
+  id: string;
+  title: string;
+  source: string;
+  license: string;
+  pattern: string;
+  situation: string;
+  takeaway: string;
+  similarity: number;
+  synthetic: boolean;
+}
+
+export interface KnowledgeMatch {
+  relatedCases: KnowledgeReference[];
+  clusterHints: string[];
+  caseCount: number;
+}
+
 export interface PipelineMeta {
   version: string;
   stages: string[];
@@ -301,6 +319,7 @@ export interface AnalysisReport {
   compatibilityScore: number;
   calibration: ScoreCalibration;
   emotion: EmotionAnalysis;
+  knowledge: KnowledgeMatch;
   humanRead: HumanRead;
   contextGaps: ContextGap[];
   shortReplies: ShortReplyInsight[];
