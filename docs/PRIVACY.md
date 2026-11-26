@@ -6,9 +6,10 @@ letsdate does not operate a backend for the MVP.
 
 When the user analyzes with a cloud provider:
 
-1. The browser sends the submitted text and skill prompt directly to the provider endpoint selected by the user.
-2. The provider may process and retain the request according to its own policy.
-3. The full report is stored in the user's browser history unless cleared.
+1. The browser sends the submitted text and skill prompt directly to the provider endpoint selected by the user for fact extraction.
+2. A second request sends the verified fact ledger and synthesis instructions to the same provider.
+3. The provider may process and retain both requests according to its own policy.
+4. The full report is stored in the user's browser history unless cleared.
 
 When the user selects local demo:
 

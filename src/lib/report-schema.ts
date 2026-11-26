@@ -37,6 +37,18 @@ const mbtiSchema = z.object({
   dimensions: z.array(mbtiDimensionSchema).length(4),
 });
 
+const attachmentCueSchema = z.object({
+  key: z.enum(["safe", "anxious", "avoidant", "mixed", "insufficient"]),
+  label: text(30),
+  status: evidenceStatus,
+  score,
+  confidence,
+  summary: text(300),
+  evidenceIds: z.array(text(80)).max(20),
+  counterEvidenceIds: z.array(text(80)).max(20),
+  missingInformation: z.array(text(180)).max(8),
+});
+
 const personSchema = z.object({
   summary: text(400),
   mbti: mbtiSchema,
@@ -53,6 +65,11 @@ const personSchema = z.object({
   boundaries: list(60, 0),
   greenFlags: list(80, 0),
   watchouts: list(80, 0),
+  attachmentAssessment: z.object({
+    summary: text(400),
+    scope: text(300),
+    cues: z.array(attachmentCueSchema).min(3).max(5),
+  }),
 });
 
 export const ReportSchema = z.object({
@@ -82,6 +99,56 @@ export const ReportSchema = z.object({
     scoreCap: score,
     method: text(200),
     notes: list(240, 1),
+  }),
+  humanRead: z.object({
+    canConfirm: text(500),
+    likely: text(500),
+    alternatives: text(500),
+    observeNext: text(500),
+    supportNote: text(500),
+  }),
+  contextGaps: z
+    .array(
+      z.object({
+        question: text(300),
+        why: text(300),
+        priority: z.number().int().min(1).max(10),
+      }),
+    )
+    .max(8),
+  shortReplies: z
+    .array(
+      z.object({
+        messageId: text(80),
+        quote: text(120),
+        sessionId: text(80),
+        classification: z.enum([
+          "acknowledgment",
+          "low_energy",
+          "topic_closed",
+          "possible_withdrawal",
+          "uncertain",
+        ]),
+        explanation: text(400),
+        baselineCharacters: z.number().int().min(0).max(10000),
+        sessionShift: z.number().int().min(-10000).max(10000),
+        replyLagMs: z.number().int().min(0).nullable(),
+        baselineReplyLagMs: z.number().int().min(0).nullable(),
+        replyLagShiftMs: z.number().int().nullable(),
+        afterEffect: z.enum(["recovered", "no_recovery", "unknown"]),
+        evidenceIds: z.array(text(80)).max(12),
+        confidence,
+      }),
+    )
+    .max(12),
+  pipeline: z.object({
+    version: text(60),
+    stages: list(120, 1),
+    messageCount: z.number().int().min(0).max(100000),
+    sessionCount: z.number().int().min(0).max(10000),
+    timestampCoverage: z.number().min(0).max(1),
+    localRuleMode: z.boolean(),
+    exactQuoteVerification: z.boolean(),
   }),
   person: personSchema,
   self: personSchema,

@@ -2,6 +2,8 @@
 
 Saved and deployed: 2026-11-26
 
+Current source version: `0.3.0`
+
 ## Completed
 
 - React + TypeScript + Vite Web App.
@@ -12,6 +14,12 @@ Saved and deployed: 2026-11-26
 - History, report export, model/privacy settings and PWA base.
 - Cross-model Agent Skill under `public/skills/letsdate-relationship-analysis/`.
 - Calibrated score caps, MBTI evidence status and three reply tones.
+- Timestamp/session parsing, reply-lag baselines and short-reply classification.
+- Structured attachment-related interaction cues for both people.
+- Two-stage model pipeline with fact extraction before synthesis.
+- Exact quote verification and plan cancellation detection.
+- Human-first report, context gaps and explicit rule-demo disclaimers.
+- Reply-lag baseline and timestamp inheritance across bracket-only times.
 - `zod` schema validation for every model-generated report.
 - WechatVibe 1.3.6 source review and reuse decisions in `docs/WECHATVIBE_REVIEW.md`.
 - GitHub Pages deployment workflow.
@@ -22,7 +30,7 @@ Saved and deployed: 2026-11-26
 
 ## Verified
 
-- `pnpm test`: 12 tests passed.
+- `pnpm test`: 22 tests passed.
 - `pnpm check`: passed.
 - `pnpm build`: passed.
 - Playwright desktop and 390px mobile flows: passed.
@@ -31,6 +39,7 @@ Saved and deployed: 2026-11-26
 - Browser OCR: Chinese screenshot recognized and normalized successfully.
 - Skill validator: passed.
 - Five-day, multi-context long-dialogue simulation: passed.
+- Timestamped short-reply and attachment-cue simulation: passed.
 - Live GitHub Pages report flow: passed.
 - Live Agent Skill request: HTTP 200.
 - Live production page: no console errors and no horizontal overflow.

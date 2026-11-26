@@ -35,10 +35,10 @@ interface AnalyzeWorkspaceProps {
 }
 
 const PROGRESS_STEPS = [
-  "提取可验证的表达信号",
-  "对齐人格与互动维度",
-  "寻找反证和替代解释",
-  "生成关系判断与行动建议",
+  "解析消息与会话",
+  "提取并核对事实证据",
+  "分析短回复与依恋线索",
+  "生成人话报告与行动建议",
 ];
 
 function ScreenshotButton({

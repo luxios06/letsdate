@@ -6,6 +6,7 @@ import type {
   MessageOption,
   ScoreCalibration,
 } from "../types";
+import { parseConversation } from "./conversation";
 
 const clamp = (value: number, min = 0, max = 100) =>
   Math.min(max, Math.max(min, Math.round(value)));
@@ -30,9 +31,16 @@ export interface ConversationStats {
 
 export function conversationStats(input: AnalysisInput): ConversationStats {
   const text = `${input.selfProfile}\n${input.otherProfile}\n${input.chat}`;
-  const selfTurns = countMatches(input.chat, /^我[:：]/gm);
-  const otherTurns = countMatches(input.chat, /^对方[:：]/gm);
-  const questionCount = countMatches(input.chat, /[?？]/g);
+  const parsed = parseConversation(input.chat);
+  const selfTurns = parsed.messages.filter(
+    (message) => message.sender === "self",
+  ).length;
+  const otherTurns = parsed.messages.filter(
+    (message) => message.sender === "other",
+  ).length;
+  const questionCount = parsed.messages.filter(
+    (message) => message.kind === "question",
+  ).length;
   const warmSignals = countMatches(
     input.chat,
     /哈哈|😂|😊|一起|周末|有空|见面|约|期待|晚安|早安|怎么样|你呢|你也|成交|验收|想见你|谢谢|重要/g,
@@ -163,32 +171,12 @@ export function extractContextTerms(input: AnalysisInput) {
     "咖啡",
   ];
   const topics = candidates.filter((term) => text.toLowerCase().includes(term.toLowerCase()));
-  const dayMatches = [
-    ...input.chat.matchAll(/周[一二三四五六日天](?:晚|下午|上午)?/g),
-  ];
-  const day = dayMatches.at(-1)?.[0] ?? "";
-  const timeMatches = [
-    ...input.chat.matchAll(/(?:[0-9]{1,2}|[一二三四五六七八九十两])点/g),
-  ];
-  const time = timeMatches.at(-1)?.[0] ?? "";
-  const recentTurns = input.chat
-    .split(/\n+/)
-    .filter((line) => /^(?:我|对方)[:：]/.test(line.trim()))
-    .slice(-8)
-    .join("\n");
-  const venue =
-    recentTurns.match(
-      /(展馆门口|展馆|咖啡店|餐厅|电影院|小馆|小店)/,
-    )?.[1] ??
-    input.chat.match(
-      /(?:在|到)?(展馆门口|展馆|咖啡店|餐厅|电影院|小馆|小店)(?:见|碰面)?/,
-    )?.[1] ??
-    "";
-  const confirmedPlan =
-    /(?:周[一二三四五六日天].{0,16}(?:见|门口|可以|成交))|(?:好[，,]?\s*周[一二三四五六日天].{0,8}见)/.test(
-      recentTurns,
-    );
-  const explicitMeet = /见面|有空|一起|安排|时间|周末/.test(input.chat);
+  const parsed = parseConversation(input.chat);
+  const day = parsed.planState.day;
+  const time = parsed.planState.time;
+  const venue = parsed.planState.venue;
+  const confirmedPlan = parsed.planState.status === "confirmed";
+  const explicitMeet = parsed.planState.status !== "none";
   return { topics, day, time, venue, confirmedPlan, explicitMeet };
 }
 
@@ -346,9 +334,30 @@ export function calibrateModelReport(
           evidenceIds,
         };
       }),
+      attachmentAssessment: {
+        ...person.attachmentAssessment,
+        cues: person.attachmentAssessment.cues.map((cue) => {
+          const evidenceIds = checkedIds(cue.evidenceIds);
+          let status = cue.status;
+          if (status === "supported" && evidenceIds.length < 2) {
+            status = "tentative";
+          }
+          if (status !== "insufficient" && evidenceIds.length === 0) {
+            status = "insufficient";
+          }
+          return {
+            ...cue,
+            status,
+            score: status === "insufficient" ? 50 : bounded(cue.score),
+            evidenceIds,
+            counterEvidenceIds: checkedIds(cue.counterEvidenceIds),
+          };
+        }),
+      },
     };
   };
 
+  const parsed = parseConversation(input.chat);
   const person = normalizePerson(report.person);
   const self = normalizePerson(report.self);
   const compatibilityScore = bounded(
@@ -391,5 +400,14 @@ export function calibrateModelReport(
       ...item,
       evidenceIds: checkedIds(item.evidenceIds),
     })),
+    shortReplies: parsed.shortReplies,
+    pipeline: {
+      ...report.pipeline,
+      messageCount: parsed.messages.length,
+      sessionCount: parsed.sessions.length,
+      timestampCoverage: Number(parsed.timestampCoverage.toFixed(2)),
+      localRuleMode: false,
+      exactQuoteVerification: true,
+    },
   };
 }

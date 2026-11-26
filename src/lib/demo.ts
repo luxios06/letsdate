@@ -45,6 +45,42 @@ export const DEMO_REPORT: AnalysisReport = {
       "样本仍不足以判断稳定人格，关系分数不代表成功概率。",
     ],
   },
+  humanRead: {
+    canConfirm:
+      "对方主动追问、给出确认时间，并把话题推进到看展和吃饭。",
+    likely:
+      "更可能是双方都有继续了解的兴趣，当前互动具备真实的推进信号。",
+    alternatives:
+      "热情也可能来自友好沟通习惯，仍需用一次具体安排验证。",
+    observeNext:
+      "重点观察周六是否按约定回复，以及临时变化时是否提前说明。",
+    supportNote:
+      "这份分析不替你判断关系值不值得，只帮助你把猜测变成可观察的信号。",
+  },
+  contextGaps: [
+    {
+      question: "对方平时的回复间隔和表达长度大概是什么样？",
+      why: "时间变化比单句语气更能帮助判断兴趣和边界。",
+      priority: 1,
+    },
+  ],
+  shortReplies: [],
+  pipeline: {
+    version: "letsdate-pipeline-v2",
+    stages: [
+      "解析消息与会话",
+      "建立事实证据账本",
+      "识别计划状态",
+      "分析短回复与后续恢复",
+      "评估依恋相关互动线索",
+      "生成关系判断与行动建议",
+    ],
+    messageCount: 16,
+    sessionCount: 1,
+    timestampCoverage: 0,
+    localRuleMode: true,
+    exactQuoteVerification: true,
+  },
   person: {
     summary:
       "偏体验驱动，愿意分享生活细节，也重视有质量的交流。社交上并非持续高能量，更像是在熟悉后逐步打开。",
@@ -149,6 +185,47 @@ export const DEMO_REPORT: AnalysisReport = {
     boundaries: ["个人日程需要自己确认", "不喜欢纯应酬式热闹"],
     greenFlags: ["主动追问", "提出具体见面方向", "会接梗也会收束话题"],
     watchouts: ["目前样本仍短", "尚未看到冲突或低能量状态"],
+    attachmentAssessment: {
+      summary:
+        "出现了日程边界和可修复线索，但没有冲突或拉开距离后的再联系，无法判断依恋模式。",
+      scope:
+        "依恋线索只描述这段材料中的互动行为，不是临床诊断。",
+      cues: [
+        {
+          key: "safe",
+          label: "安全互动线索",
+          status: "tentative",
+          score: 61,
+          confidence: "低",
+          summary: "能说明日程并给确认时间，边界表达较清晰。",
+          evidenceIds: ["demo-3"],
+          counterEvidenceIds: [],
+          missingInformation: ["冲突后的修复和再联系"],
+        },
+        {
+          key: "anxious",
+          label: "焦虑互动线索",
+          status: "insufficient",
+          score: 50,
+          confidence: "低",
+          summary: "没有持续寻求确认或害怕被抛下的明确证据。",
+          evidenceIds: [],
+          counterEvidenceIds: ["demo-3"],
+          missingInformation: ["回复间隔", "被冷落后的反应"],
+        },
+        {
+          key: "avoidant",
+          label: "回避互动线索",
+          status: "insufficient",
+          score: 50,
+          confidence: "低",
+          summary: "没有连续短回复或距离后的持续撤退。",
+          evidenceIds: [],
+          counterEvidenceIds: ["demo-1"],
+          missingInformation: ["压力下是否持续拉开距离"],
+        },
+      ],
+    },
   },
   self: {
     summary:
@@ -254,6 +331,47 @@ export const DEMO_REPORT: AnalysisReport = {
     boundaries: ["不希望长期单向推进", "需要一定的个人空间"],
     greenFlags: ["会给出具体替代方案", "尊重对方的确认时间"],
     watchouts: ["可能因为在意而过度解读短期波动"],
+    attachmentAssessment: {
+      summary:
+        "你重视稳定回应，也会给对方确认时间；短期材料不足以判断依恋模式。",
+      scope:
+        "依恋线索只描述这段材料中的互动行为，不是临床诊断。",
+      cues: [
+        {
+          key: "safe",
+          label: "安全互动线索",
+          status: "tentative",
+          score: 60,
+          confidence: "低",
+          summary: "能尊重对方的确认时间，没有继续施压。",
+          evidenceIds: ["demo-3"],
+          counterEvidenceIds: [],
+          missingInformation: ["更长周期的稳定回应"],
+        },
+        {
+          key: "anxious",
+          label: "焦虑互动线索",
+          status: "insufficient",
+          score: 50,
+          confidence: "低",
+          summary: "暂时没有持续追问或反复确认安全的证据。",
+          evidenceIds: [],
+          counterEvidenceIds: ["demo-3"],
+          missingInformation: ["延迟回复时的反应"],
+        },
+        {
+          key: "avoidant",
+          label: "回避互动线索",
+          status: "insufficient",
+          score: 50,
+          confidence: "低",
+          summary: "没有出现拉开距离或拒绝沟通的明确线索。",
+          evidenceIds: [],
+          counterEvidenceIds: ["demo-1"],
+          missingInformation: ["冲突中的表达方式"],
+        },
+      ],
+    },
   },
   compatibility: {
     score: 74,

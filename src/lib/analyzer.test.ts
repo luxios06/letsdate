@@ -9,6 +9,7 @@ describe("buildLocalAnalysis", () => {
     expect(report.person.mbti.candidate).toBe("ENFP");
     expect(report.decision).toBe("适度推进");
     expect(report.evidence.length).toBeGreaterThan(2);
+    expect(() => validateReport(report)).not.toThrow();
   });
 
   it("keeps scores inside the 0 to 100 range", () => {

@@ -100,7 +100,9 @@ export function SettingsModal({
               <Sparkles size={17} />
               <div>
                 <h3>推理模型</h3>
-                <p>Web 端通过对应供应商的公开 API 直接发送请求。</p>
+                <p>
+                  分析会分两次调用模型：先提取事实，再综合报告；费用按两次请求计算。
+                </p>
               </div>
             </div>
             <div className="provider-grid">

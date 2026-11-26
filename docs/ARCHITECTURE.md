@@ -9,6 +9,10 @@ Browser
 ├── React workspace
 ├── Tesseract.js OCR
 ├── zod report validation
+├── conversation parser
+│   ├── timestamps and sessions
+│   ├── short-reply baseline and recovery
+│   └── plan state with negation/cancellation
 ├── localStorage / sessionStorage
 └── provider adapters
     ├── OpenAI-compatible
@@ -39,6 +43,13 @@ public/skills/letsdate-relationship-analysis/SKILL.md
 - Local demo fallback.
 
 Model output is normalized and merged with a local fallback report so a partially malformed model response cannot break the entire interface.
+
+Cloud analysis uses two bounded calls:
+
+1. Extract an exact fact ledger.
+2. Synthesize the final report from verified facts.
+
+Every quote is checked against profile and chat source text before rendering.
 
 ## Analysis contract
 

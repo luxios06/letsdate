@@ -53,6 +53,29 @@ const evidenceStatusText: Record<EvidenceStatus, string> = {
   supported: "多条支持",
 };
 
+const shortReplyText = {
+  acknowledgment: "收到或确认",
+  low_energy: "低能量或忙碌",
+  topic_closed: "结束当前话题",
+  possible_withdrawal: "可能有收缩线索",
+  uncertain: "信息不足",
+} as const;
+
+const afterEffectText = {
+  recovered: "随后恢复有效交流",
+  no_recovery: "暂未看到恢复",
+  unknown: "后续信息不足",
+} as const;
+
+function formatLag(value: number | null) {
+  if (value === null) return "回复间隔未知";
+  const minutes = Math.round(value / 60000);
+  if (minutes < 60) return `回复间隔 ${minutes} 分钟`;
+  const hours = Math.round((minutes / 60) * 10) / 10;
+  if (hours < 24) return `回复间隔 ${hours} 小时`;
+  return `回复间隔 ${Math.round((hours / 24) * 10) / 10} 天`;
+}
+
 function BigFiveRow({ trait }: { trait: TraitScore }) {
   return (
     <div className={`trait-row ${trait.status === "insufficient" ? "is-uncertain" : ""}`}>
@@ -104,9 +127,22 @@ function downloadReport(report: AnalysisReport) {
     `## ${report.overallTitle}`,
     report.overallSummary,
     "",
+    `## 先说人话`,
+    `能确认：${report.humanRead.canConfirm}`,
+    `更可能：${report.humanRead.likely}`,
+    `另一种解释：${report.humanRead.alternatives}`,
+    `接下来观察：${report.humanRead.observeNext}`,
+    report.humanRead.supportNote,
+    "",
     `## 对方人格透镜`,
     `MBTI 候选：${report.person.mbti.candidate}（${report.person.mbti.confidence}置信度）`,
     ...report.person.bigFive.map((trait) => `- ${trait.label}: ${trait.score}/100，${trait.summary}`),
+    "",
+    `## 依恋相关互动线索`,
+    report.person.attachmentAssessment.summary,
+    ...report.person.attachmentAssessment.cues.map(
+      (cue) => `- ${cue.label}（${evidenceStatusText[cue.status]}）：${cue.summary}`,
+    ),
     "",
     `## 互动匹配`,
     report.compatibility.summary,
@@ -127,6 +163,9 @@ function downloadReport(report: AnalysisReport) {
     "",
     `## 不确定性`,
     ...report.uncertainties.map((item) => `- ${item}`),
+    "",
+    `## 还需要补充`,
+    ...report.contextGaps.map((gap) => `- ${gap.question} ${gap.why}`),
     "",
     `> ${report.safetyNotes.join(" ")}`,
   ];
@@ -176,6 +215,16 @@ export function ReportView({ report, onBack }: ReportViewProps) {
           <span>{fmtDate(report.createdAt)}</span>
           <span className="report__dot" />
           <span>{PROVIDER_LABELS[report.provider]}</span>
+          <span className="report__dot" />
+          <span>
+            {report.pipeline.messageCount} 条消息 · {report.pipeline.sessionCount} 个会话
+          </span>
+          <span className="report__dot" />
+          <span>
+            {report.pipeline.timestampCoverage > 0
+              ? `时间戳 ${Math.round(report.pipeline.timestampCoverage * 100)}%`
+              : "无时间戳"}
+          </span>
           <button
             type="button"
             className="icon-button"
@@ -214,7 +263,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
           </div>
         </div>
         <div className="verdict__score">
-          <ScoreRing score={report.compatibilityScore} label="关系适配" />
+          <ScoreRing score={report.compatibilityScore} label="互动信号" />
           <div>
             <span>兴趣信号</span>
             <strong>{report.interest.score}</strong>
@@ -225,6 +274,11 @@ export function ReportView({ report, onBack }: ReportViewProps) {
             <strong>{report.person.mbti.candidate}</strong>
             <small>{report.person.mbti.confidence}置信度</small>
           </div>
+          {report.pipeline.localRuleMode && (
+            <p className="local-mode-note">
+              当前为规则演示，不用于正式心理或依恋判断。
+            </p>
+          )}
         </div>
       </section>
 
@@ -257,6 +311,45 @@ export function ReportView({ report, onBack }: ReportViewProps) {
 
       {tab === "overview" && (
         <div className="report-section-stack">
+          <section className="report-section human-read-section">
+            <div className="section-heading">
+              <div>
+                <span className="section-index">H</span>
+                <div>
+                  <h3>先说人话</h3>
+                  <p>把“能确认的事实”和“仍然不确定的解释”分开。</p>
+                </div>
+              </div>
+              <span className="confidence-chip">
+                {report.pipeline.exactQuoteVerification
+                  ? "引文已校验"
+                  : "引文待校验"}
+              </span>
+            </div>
+            <div className="human-read-grid">
+              <div>
+                <span>能确认</span>
+                <p>{report.humanRead.canConfirm}</p>
+              </div>
+              <div>
+                <span>更可能</span>
+                <p>{report.humanRead.likely}</p>
+              </div>
+              <div>
+                <span>另一种解释</span>
+                <p>{report.humanRead.alternatives}</p>
+              </div>
+              <div>
+                <span>接下来观察</span>
+                <p>{report.humanRead.observeNext}</p>
+              </div>
+            </div>
+            <div className="human-read-support">
+              <ShieldAlert size={15} />
+              {report.humanRead.supportNote}
+            </div>
+          </section>
+
           <section className="report-section personality-section">
             <div className="section-heading">
               <div>
@@ -344,7 +437,75 @@ export function ReportView({ report, onBack }: ReportViewProps) {
                 </div>
               ))}
             </div>
+
+            <div className="attachment-cue-section">
+              <div className="attachment-cue-section__head">
+                <div>
+                  <span>依恋相关互动线索</span>
+                  <p>{report.person.attachmentAssessment.summary}</p>
+                </div>
+                <ShieldAlert size={19} />
+              </div>
+              <div className="attachment-cue-grid">
+                {report.person.attachmentAssessment.cues.map((cue) => (
+                  <article
+                    className={`attachment-cue attachment-cue--${cue.status}`}
+                    key={cue.key}
+                  >
+                    <div>
+                      <strong>{cue.label}</strong>
+                      <em>{evidenceStatusText[cue.status]}</em>
+                    </div>
+                    <p>{cue.summary}</p>
+                    {cue.status !== "insufficient" && (
+                      <span>线索强度 {cue.score}</span>
+                    )}
+                  </article>
+                ))}
+              </div>
+              <p className="attachment-scope">
+                {report.person.attachmentAssessment.scope}
+              </p>
+            </div>
           </section>
+
+          {report.shortReplies.length > 0 && (
+            <section className="report-section short-reply-section">
+              <div className="section-heading">
+                <div>
+                  <span className="section-index">S</span>
+                  <div>
+                    <h3>短回复不等于冷淡</h3>
+                    <p>先看个人基线、前后语境和后续是否恢复，而不是只看“嗯”或“哦”。</p>
+                  </div>
+                </div>
+                <span className="confidence-chip">
+                  {report.shortReplies.length} 条短回复
+                </span>
+              </div>
+              <div className="short-reply-grid">
+                {report.shortReplies.map((item) => (
+                  <article key={item.messageId}>
+                    <blockquote>“{item.quote}”</blockquote>
+                    <div>
+                      <strong>{shortReplyText[item.classification]}</strong>
+                      <em>{item.confidence}置信度</em>
+                    </div>
+                    <p>{item.explanation}</p>
+                    <span>
+                      较个人基线 {item.sessionShift >= 0 ? "+" : ""}
+                      {item.sessionShift} 字 · {formatLag(item.replyLagMs)}
+                      {item.baselineReplyLagMs !== null
+                        ? `（基线 ${formatLag(item.baselineReplyLagMs).replace("回复间隔 ", "")}）`
+                        : ""}
+                      {" · "}
+                      {afterEffectText[item.afterEffect]}
+                    </span>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section className="report-section compatibility-section">
             <div className="section-heading">
@@ -446,6 +607,29 @@ export function ReportView({ report, onBack }: ReportViewProps) {
                 ))}
               </div>
             </div>
+            <div className="attachment-cue-section">
+              <div className="attachment-cue-section__head">
+                <div>
+                  <span>你的依恋相关互动线索</span>
+                  <p>{report.self.attachmentAssessment.summary}</p>
+                </div>
+                <ShieldAlert size={19} />
+              </div>
+              <div className="attachment-cue-grid">
+                {report.self.attachmentAssessment.cues.map((cue) => (
+                  <article
+                    className={`attachment-cue attachment-cue--${cue.status}`}
+                    key={cue.key}
+                  >
+                    <div>
+                      <strong>{cue.label}</strong>
+                      <em>{evidenceStatusText[cue.status]}</em>
+                    </div>
+                    <p>{cue.summary}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
           </section>
         </div>
       )}
@@ -521,6 +705,31 @@ export function ReportView({ report, onBack }: ReportViewProps) {
               ))}
             </div>
           </section>
+
+          {report.contextGaps.length > 0 && (
+            <section className="report-section context-gap-section">
+              <div className="section-heading">
+                <div>
+                  <span className="section-index">E2</span>
+                  <div>
+                    <h3>还需要你补充什么</h3>
+                    <p>这些信息会直接改变对短回复、依恋线索和兴趣的判断。</p>
+                  </div>
+                </div>
+              </div>
+              <div className="context-gap-list">
+                {report.contextGaps.map((gap, index) => (
+                  <div key={gap.question}>
+                    <span>{String(index + 1).padStart(2, "0")}</span>
+                    <div>
+                      <strong>{gap.question}</strong>
+                      <p>{gap.why}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section className="report-section safety-section">
             <div className="section-heading">

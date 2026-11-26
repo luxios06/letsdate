@@ -4,6 +4,27 @@ export type Confidence = "低" | "中" | "较高";
 export type Decision = "继续推进" | "适度推进" | "先观察" | "暂缓推进";
 export type EvidenceStatus = "insufficient" | "tentative" | "supported";
 export type EvidenceStrength = "insufficient" | "tentative" | "confirmed";
+export type MessageKind =
+  | "short"
+  | "question"
+  | "plan"
+  | "conflict"
+  | "repair"
+  | "support"
+  | "self_disclosure"
+  | "statement";
+export type ShortReplyClass =
+  | "acknowledgment"
+  | "low_energy"
+  | "topic_closed"
+  | "possible_withdrawal"
+  | "uncertain";
+export type AttachmentCueKind =
+  | "safe"
+  | "anxious"
+  | "avoidant"
+  | "mixed"
+  | "insufficient";
 
 export type ProviderId =
   | "demo"
@@ -66,6 +87,24 @@ export interface InteractionPattern {
   humor: string;
 }
 
+export interface AttachmentCue {
+  key: AttachmentCueKind;
+  label: string;
+  status: EvidenceStatus;
+  score: number;
+  confidence: Confidence;
+  summary: string;
+  evidenceIds: string[];
+  counterEvidenceIds: string[];
+  missingInformation: string[];
+}
+
+export interface AttachmentAssessment {
+  summary: string;
+  cues: AttachmentCue[];
+  scope: string;
+}
+
 export interface PersonProfile {
   summary: string;
   mbti: MbtiLens;
@@ -76,6 +115,7 @@ export interface PersonProfile {
   boundaries: string[];
   greenFlags: string[];
   watchouts: string[];
+  attachmentAssessment: AttachmentAssessment;
 }
 
 export interface CompatibilityDimension {
@@ -108,6 +148,74 @@ export interface EvidenceItem {
 export interface MessageOption {
   tone: string;
   text: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  sender: "self" | "other";
+  text: string;
+  sessionId: string;
+  timestamp: string | null;
+  timestampMs: number | null;
+  replyLagMs: number | null;
+  kind: MessageKind;
+  short: boolean;
+  replyToId: string | null;
+}
+
+export interface ConversationSession {
+  id: string;
+  label: string;
+  messageIds: string[];
+}
+
+export interface PlanState {
+  status: "none" | "proposed" | "confirmed" | "cancelled" | "ambiguous";
+  day: string;
+  time: string;
+  venue: string;
+  evidenceIds: string[];
+  summary: string;
+}
+
+export interface ShortReplyInsight {
+  messageId: string;
+  quote: string;
+  sessionId: string;
+  classification: ShortReplyClass;
+  explanation: string;
+  baselineCharacters: number;
+  sessionShift: number;
+  replyLagMs: number | null;
+  baselineReplyLagMs: number | null;
+  replyLagShiftMs: number | null;
+  afterEffect: "recovered" | "no_recovery" | "unknown";
+  evidenceIds: string[];
+  confidence: Confidence;
+}
+
+export interface ContextGap {
+  question: string;
+  why: string;
+  priority: number;
+}
+
+export interface HumanRead {
+  canConfirm: string;
+  likely: string;
+  alternatives: string;
+  observeNext: string;
+  supportNote: string;
+}
+
+export interface PipelineMeta {
+  version: string;
+  stages: string[];
+  messageCount: number;
+  sessionCount: number;
+  timestampCoverage: number;
+  localRuleMode: boolean;
+  exactQuoteVerification: boolean;
 }
 
 export interface ActionPlan {
@@ -143,6 +251,10 @@ export interface AnalysisReport {
   confidence: Confidence;
   compatibilityScore: number;
   calibration: ScoreCalibration;
+  humanRead: HumanRead;
+  contextGaps: ContextGap[];
+  shortReplies: ShortReplyInsight[];
+  pipeline: PipelineMeta;
   person: PersonProfile;
   self: PersonProfile;
   compatibility: {

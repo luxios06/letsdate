@@ -7,6 +7,11 @@ import {
   decisionFromScore,
   scoreCalibration,
 } from "./calibration";
+import {
+  assessAttachment,
+  parseConversation,
+  type ParsedConversation,
+} from "./conversation";
 import type {
   AnalysisInput,
   AnalysisReport,
@@ -47,6 +52,14 @@ const countColdSignals = (text: string) =>
 
 const evidenceLineCount = (lines: string[], words: string[]) =>
   lines.filter((line) => includesAny(line, words)).length;
+
+const shortClassLabel: Record<string, string> = {
+  acknowledgment: "收到或确认",
+  low_energy: "低能量或忙碌",
+  topic_closed: "结束当前话题",
+  possible_withdrawal: "可能有收缩线索",
+  uncertain: "信息不足",
+};
 
 const buildMbti = (
   profile: string,
@@ -283,9 +296,15 @@ const buildPerson = (
   chat: string,
   seed: number,
   kind: "self" | "other",
+  parsed: ParsedConversation,
 ): PersonProfile => {
   const text = `${profile}\n${chat}`;
   const introvertHint = includesAny(profile, ["慢热", "安静", "独处", "小范围"]);
+  const attachmentAssessment = assessAttachment(
+    parsed.messages,
+    parsed.shortReplies,
+    kind,
+  );
   return {
     summary:
       kind === "other"
@@ -294,8 +313,7 @@ const buildPerson = (
     mbti: buildMbti(profile, chat, seed),
     bigFive: buildBigFive(text, seed),
     interaction: {
-      attachment:
-        "短期文本不足以判断依恋类型。仅可观察到回应稳定性和边界表达，不能当作心理学诊断。",
+      attachment: attachmentAssessment.summary,
       conflict: includesAny(text, ["解释", "沟通", "冷静", "理解"])
         ? "更可能在冲突时先解释与修复，但仍需真实压力场景验证。"
         : "冲突处理方式没有足够证据，建议观察对方遇到分歧时是否仍尊重边界。",
@@ -322,30 +340,46 @@ const buildPerson = (
       "表达具体",
     ].slice(0, 4),
     watchouts: ["目前样本有限", "友善和浪漫兴趣需要分开验证"],
+    attachmentAssessment,
   };
 };
 
-const buildEvidence = (chat: string, otherProfile: string): EvidenceItem[] => {
-  const lines = chat
-    .split(/\n+/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-  const otherLines = lines.filter((line) => /^对方[:：]/.test(line));
-  const fractions = [0, 0.18, 0.36, 0.54, 0.72, 0.88, 1];
-  const selectedIndexes = [
-    ...new Set(
-      fractions.map((fraction) =>
-        Math.min(
-          otherLines.length - 1,
-          Math.max(0, Math.round((otherLines.length - 1) * fraction)),
-        ),
-      ),
-    ),
-  ]
-    .filter((index) => index >= 0)
-    .sort((a, b) => a - b);
-  const selected = selectedIndexes.map((index) => otherLines[index]!);
-  const evidence: EvidenceItem[] = selected.map((line, index) => {
+const buildEvidence = (
+  parsed: ParsedConversation,
+  otherProfile: string,
+): EvidenceItem[] => {
+  const otherMessages = parsed.messages.filter(
+    (message) => message.sender === "other",
+  );
+  const priority = (message: (typeof otherMessages)[number]) => {
+    if (message.kind === "conflict" || message.kind === "repair") return 6;
+    if (message.kind === "plan") return 5;
+    if (message.kind === "question") return 4;
+    if (message.kind === "support") return 3;
+    if (message.short) return 1;
+    return 2;
+  };
+  const selectedIds = new Set<string>();
+  for (const session of parsed.sessions) {
+    const candidates = otherMessages.filter(
+      (message) => message.sessionId === session.id,
+    );
+    const best = [...candidates].sort((a, b) => priority(b) - priority(a))[0];
+    if (best) selectedIds.add(best.id);
+  }
+  const fractions = [0, 0.2, 0.4, 0.6, 0.8, 1];
+  for (const fraction of fractions) {
+    if (selectedIds.size >= 7) break;
+    const index = Math.round((otherMessages.length - 1) * fraction);
+    const message = otherMessages[index];
+    if (message) selectedIds.add(message.id);
+  }
+  const selected = otherMessages.filter((message) => selectedIds.has(message.id)).slice(0, 7);
+  const evidence: EvidenceItem[] = selected.map((message) => {
+    const line = message.text;
+    const shortInsight = parsed.shortReplies.find(
+      (item) => item.messageId === message.id,
+    );
     const conflict = /失望|抱歉|没说清|憋着|怕猜|不舒服|不开心/.test(line);
     const boundary =
       /提前|回慢|低电量|不想细说|安静|不催|空间|需要/.test(line);
@@ -353,10 +387,12 @@ const buildEvidence = (chat: string, otherProfile: string): EvidenceItem[] => {
       /想见你|成交|见面|有空|周末|周日|验收/.test(line);
     const question = /[?？]/.test(line) || /你呢|你也|喜欢吗/.test(line);
     return {
-      id: `evidence-${index + 1}`,
+      id: message.id,
       source: "聊天",
-      quote: line.replace(/^对方[:：]\s*/, ""),
-      observation: conflict
+      quote: line,
+      observation: shortInsight
+        ? `这条短回复在前后语境中更接近“${shortClassLabel[shortInsight.classification] ?? shortInsight.classification}”，并${shortInsight.afterEffect === "recovered" ? "随后恢复了有效交流" : shortInsight.afterEffect === "no_recovery" ? "暂未看到恢复" : "缺少后续信息"}。`
+        : conflict
         ? "对方直接回应了失望或误解，并解释了自己的表达问题。"
         : boundary
           ? "对方说明了回应节奏或空间需求，并给出可执行约定。"
@@ -365,21 +401,29 @@ const buildEvidence = (chat: string, otherProfile: string): EvidenceItem[] => {
             : question
               ? "对方主动把话题递回给你，并继续了解你的兴趣。"
               : "对方提供了具体信息或行动线索，而非只作礼貌回应。",
-      inference: conflict
+      inference: shortInsight
+        ? shortInsight.explanation
+        : conflict
         ? "双方具备澄清和修复互动的意愿，而非回避冲突。"
         : boundary
           ? "存在协商边界的意愿，关系可持续性线索较强。"
           : interest
             ? "存在继续投入并落到行动的意愿。"
             : "当前有继续交流的兴趣，但投入程度仍需观察。",
-      confidence: conflict || boundary ? "较高" : "中",
-      caution: conflict
+      confidence: shortInsight
+        ? shortInsight.confidence
+        : conflict || boundary
+          ? "较高"
+          : "中",
+      caution: shortInsight
+        ? "短回复必须结合个人基线、时间间隔和后续恢复，不能单独证明冷淡或依恋模式。"
+        : conflict
         ? "单次修复不能保证以后一致，仍需观察同类场景。"
         : boundary
           ? "边界是否稳定执行，要看后续是否言行一致。"
           : "单条消息可能受上下文、情绪和沟通习惯影响，不能单独作为结论。",
       status: "confirmed",
-      evidenceIds: [`evidence-${index + 1}`],
+      evidenceIds: [message.id],
     };
   });
 
@@ -387,7 +431,7 @@ const buildEvidence = (chat: string, otherProfile: string): EvidenceItem[] => {
     evidence.push({
       id: "profile-evidence",
       source: "主页",
-      quote: otherProfile.trim().slice(0, 72),
+      quote: otherProfile.trim(),
       observation: "主页呈现了 Ta 主动选择的自我描述与兴趣方向。",
       inference: "可以作为破冰和互相了解的线索，但不等同于稳定人格。",
       confidence: "低",
@@ -398,6 +442,118 @@ const buildEvidence = (chat: string, otherProfile: string): EvidenceItem[] => {
   }
   return evidence.slice(0, 8);
 };
+
+function buildContextGaps(
+  parsed: ParsedConversation,
+  person: PersonProfile,
+): AnalysisReport["contextGaps"] {
+  const gaps: AnalysisReport["contextGaps"] = [];
+  if (parsed.timestampCoverage < 0.2) {
+    gaps.push({
+      question: "对方平时的回复间隔大概是多少？出现短回复时，间隔是否明显变化？",
+      why: "时间变化比单条短回复更能说明收缩、忙碌还是普通习惯。",
+      priority: 1,
+    });
+  }
+  if (parsed.shortReplies.length > 0) {
+    gaps.push({
+      question: "对方平时也常用“嗯、哦、好”吗？这些短回复之后通常会重新开启话题吗？",
+      why: "需要个人基线，才能区分表达习惯与关系变化。",
+      priority: 2,
+    });
+  }
+  if (
+    !parsed.messages.some((message) => message.kind === "conflict") ||
+    !parsed.messages.some((message) => message.kind === "repair")
+  ) {
+    gaps.push({
+      question: "你们出现分歧或拒绝后，对方通常会解释、修复，还是直接拉开距离？",
+      why: "依恋相关互动线索必须依赖冲突和修复场景，不能只靠轻松聊天。",
+      priority: 3,
+    });
+  }
+  if (parsed.sessions.length < 2) {
+    gaps.push({
+      question: "这段互动在不同日期或不同状态下是否保持一致？",
+      why: "单一会话无法区分稳定模式和短期状态。",
+      priority: 4,
+    });
+  }
+  for (const cue of person.attachmentAssessment.cues) {
+    if (cue.status === "insufficient" && gaps.length < 5) {
+      const missing = cue.missingInformation[0] ?? "更多不同情境的互动";
+      gaps.push({
+        question: missing.includes("基线")
+          ? "对方平时回复的长度和间隔大概是什么样？"
+          : missing.includes("时间间隔")
+            ? "出现短回复或慢回复前后，间隔了多长时间？"
+            : missing.includes("冲突")
+              ? "你们出现分歧后，对方通常会解释、修复还是拉开距离？"
+              : `还需要补充哪些“${missing}”的具体例子？`,
+        why: cue.summary,
+        priority: 5,
+      });
+    }
+  }
+  const seen = new Set<string>();
+  const gapCategory = (question: string) =>
+    question.includes("回复")
+      ? "reply-baseline"
+      : question.includes("冲突") || question.includes("分歧")
+        ? "conflict-repair"
+        : question.includes("日期") || question.includes("时间")
+          ? "time-context"
+          : question;
+  return gaps
+    .sort((a, b) => a.priority - b.priority)
+    .filter((gap) => {
+      const category = gapCategory(gap.question);
+      if (seen.has(category)) return false;
+      seen.add(category);
+      return true;
+    })
+    .slice(0, 5);
+}
+
+function buildHumanRead(
+  parsed: ParsedConversation,
+  person: PersonProfile,
+  interestScore: number,
+): AnalysisReport["humanRead"] {
+  const withdrawal = parsed.shortReplies.some(
+    (item) => item.classification === "possible_withdrawal",
+  );
+  const recovery = parsed.shortReplies.some(
+    (item) => item.afterEffect === "recovered",
+  );
+  const canConfirm =
+    parsed.planState.status === "confirmed"
+      ? parsed.planState.summary
+      : parsed.planState.status === "cancelled"
+        ? "能确认最近的计划被取消或改期，不能把之前的热情当成当前确认。"
+        : "能确认双方有过真实互动，但目前没有足够材料证明稳定人格或依恋模式。";
+  const likely =
+    withdrawal && !recovery
+      ? "更可能需要先观察对方是否恢复主动性，而不是继续增加追问。"
+      : interestScore >= 62
+        ? "更可能是双方都有继续了解的兴趣，并且当前互动具备修复空间。"
+        : "更可能只是礼貌交流，或兴趣仍处在早期验证阶段。";
+  const alternatives = withdrawal
+    ? "短回复也可能来自忙碌、低能量、个人表达习惯或当时的话题不感兴趣。"
+    : person.attachmentAssessment.summary;
+  const observeNext =
+    parsed.planState.status === "confirmed"
+      ? "下一步重点观察对方是否按约定兑现，以及临时变化时是否提前说明。"
+      : "下一步重点观察对方是否主动恢复话题、给出具体安排或清楚表达边界。";
+  return {
+    canConfirm,
+    likely,
+    alternatives,
+    observeNext,
+    supportNote:
+      "这份分析不替你判断关系值不值得，只帮助你把猜测变成可观察、可验证的信号。",
+  };
+}
 
 export function buildLocalAnalysis(
   input: AnalysisInput,
@@ -414,6 +570,7 @@ export function buildLocalAnalysis(
     };
   }
 
+  const parsed = parseConversation(input.chat);
   const text = `${input.selfProfile}\n${input.otherProfile}\n${input.chat}`;
   const seed = hash(text);
   const questions = countQuestions(input.chat);
@@ -421,7 +578,7 @@ export function buildLocalAnalysis(
   const cold = countColdSignals(input.chat);
   const initiative = (input.chat.match(/^我[:：]/gm) ?? []).length;
   const otherTurns = (input.chat.match(/^对方[:：]/gm) ?? []).length;
-  const evidence = buildEvidence(input.chat, input.otherProfile);
+  const evidence = buildEvidence(parsed, input.otherProfile);
   const stats = conversationStats(input);
   const confidence = confidenceForStats(stats);
   const calibration = scoreCalibration(input, confidence);
@@ -438,11 +595,25 @@ export function buildLocalAnalysis(
     calibration,
   );
   const decision = decisionFromScore(overallScore);
-  const person = buildPerson(input.otherProfile, input.chat, seed, "other");
-  const self = buildPerson(input.selfProfile, input.chat, seed + 13, "self");
+  const person = buildPerson(
+    input.otherProfile,
+    input.chat,
+    seed,
+    "other",
+    parsed,
+  );
+  const self = buildPerson(
+    input.selfProfile,
+    input.chat,
+    seed + 13,
+    "self",
+    parsed,
+  );
   const coldRisk = cold > warm;
   const messageOptions = buildMessageOptions(input, interestScore);
   const nextMessage = messageOptions[0].text;
+  const humanRead = buildHumanRead(parsed, person, interestScore);
+  const contextGaps = buildContextGaps(parsed, person);
 
   return {
     id: createId(),
@@ -466,6 +637,25 @@ export function buildLocalAnalysis(
     confidence,
     compatibilityScore: overallScore,
     calibration,
+    humanRead,
+    contextGaps,
+    shortReplies: parsed.shortReplies,
+    pipeline: {
+      version: "letsdate-pipeline-v2",
+      stages: [
+        "解析消息与会话",
+        "建立事实证据账本",
+        "识别计划状态",
+        "分析短回复与后续恢复",
+        "评估依恋相关互动线索",
+        "生成关系判断与行动建议",
+      ],
+      messageCount: parsed.messages.length,
+      sessionCount: parsed.sessions.length,
+      timestampCoverage: Number(parsed.timestampCoverage.toFixed(2)),
+      localRuleMode: provider === "demo",
+      exactQuoteVerification: true,
+    },
     person,
     self,
     compatibility: {
@@ -595,7 +785,11 @@ export function buildLocalAnalysis(
     uncertainties: [
       "当前人格判断来自有限文本，置信度应随材料增加而更新。",
       "MBTI 不是临床诊断，也不能替代真实相处。",
-      input.chat.length < 160 ? "聊天样本较短，兴趣和互动判断可能明显偏差。" : "缺少语音、表情、回复时延与线下互动信息。",
+      input.chat.length < 160
+        ? "聊天样本较短，兴趣和互动判断可能明显偏差。"
+        : parsed.timestampCoverage > 0
+          ? "已使用现有时间戳估计回复间隔，但仍缺少语音、语气和线下互动信息。"
+          : "缺少回复时间间隔、语音和线下互动信息。",
     ],
     safetyNotes: [
       "不要把推断当作事实，更不要用画像结果操控或试探对方。",

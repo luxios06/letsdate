@@ -47,6 +47,7 @@ export function MethodView() {
           <p>
             每个结论都从具体表达出发，然后标记可能解释、置信度和反证。MBTI
             只是入口，大五人格、互动节奏、冲突方式、边界感与价值线索共同构成画像。
+            模型模式会把“事实提取”和“人格综合”拆成两次判断，短回复和依恋线索单独分析。
           </p>
         </div>
       </section>
@@ -63,7 +64,7 @@ export function MethodView() {
             icon: Fingerprint,
             index: "02",
             title: "形成假设",
-            text: "使用 MBTI、大五人格和互动行为维度交叉验证，并保留替代类型和反例。",
+            text: "先提取可核实事实，再使用 MBTI、大五人格和互动行为维度交叉验证，并保留替代解释。",
           },
           {
             icon: UsersRound,
@@ -111,7 +112,7 @@ export function MethodView() {
           <div>
             <span>03</span>
             <strong>互动模式</strong>
-            <p>观察主动、回应、幽默、节奏、冲突与边界，不把依恋类型当诊断。</p>
+            <p>观察主动、回应、短回复基线、后续恢复、冲突与边界，不把依恋类型当诊断。</p>
           </div>
           <div>
             <span>04</span>

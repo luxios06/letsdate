@@ -41,6 +41,7 @@ Load these references when the corresponding task is active:
 - Use [references/evidence-rubric.md](references/evidence-rubric.md) before extracting evidence or forming any personality claim.
 - Use [references/calibration-and-uncertainty.md](references/calibration-and-uncertainty.md) before assigning scores, MBTI status, confidence, or a relationship decision.
 - Use [references/action-and-reply.md](references/action-and-reply.md) before writing reply options or next actions.
+- Use [references/short-replies-and-attachment.md](references/short-replies-and-attachment.md) whenever short replies, message-length changes, reply timing, withdrawal, conflict repair, or attachment-related cues appear.
 
 The references are part of this skill. When a host provides their full text, treat them as approved instructions. When a host can load only one reference, keep the evidence and calibration rules in priority order.
 
@@ -58,6 +59,13 @@ Confidence also depends on context diversity, consistency, recency, and whether 
 Treat the number of the other person's messages, not total lines, as the main sample size. One repeated quote does not create multiple independent observations.
 
 ## Analysis procedure
+
+Use two distinct stages:
+
+1. **Fact extraction.** Parse messages, timestamps, sessions, message kinds, short replies, follow-up outcomes, negations, cancellations and exact quotes. Do not synthesize personality or relationship conclusions yet.
+2. **Synthesis.** Use only the verified fact ledger to form personality, compatibility, attachment-related interaction cues and actions.
+
+If a host runs this as one model call, still preserve the two-stage internal order and do not let an early impression contaminate the evidence ledger.
 
 ### 1. Build an evidence ledger
 
@@ -96,6 +104,26 @@ Rules:
 - Do not let a specific MBTI candidate override low evidence. The candidate is a compact summary of supported axes, not a conclusion.
 - Do not include a diagnosis such as "avoidant attachment". Instead write "current material shows some avoidant-like interaction cues" and state what is missing.
 - Use profile text mainly for self-presentation, interests, values, and opening topics. Use chat behavior mainly for interaction style and current interest.
+
+### 2.1 Short replies and attachment-related cues
+
+For every short reply such as "嗯", "哦", "好", "行" or emoji-only:
+
+- Compare it with the same person's baseline.
+- Check the preceding context.
+- Check whether the person recovers with a question, plan, explanation, support or longer response.
+- Classify it as acknowledgment, low energy, topic closed, possible withdrawal or uncertain.
+- Never infer attachment or interest from a single short reply.
+
+Attachment is represented as interaction cues, not a diagnosis:
+
+- `safe`
+- `anxious`
+- `avoidant`
+- `mixed`
+- `insufficient`
+
+A supported attachment-related cue requires repeated behavior across contexts plus a conflict, boundary, delay, rejection or reconnection event, visible counter-evidence, and missing-information notes.
 
 ### 3. Analyze the dyad
 
@@ -234,6 +262,46 @@ Use this complete shape:
     "method": "向 50 分收缩并按材料充分性设置上限",
     "notes": ["string"]
   },
+  "humanRead": {
+    "canConfirm": "string",
+    "likely": "string",
+    "alternatives": "string",
+    "observeNext": "string",
+    "supportNote": "string"
+  },
+  "contextGaps": [
+    {
+      "question": "string",
+      "why": "string",
+      "priority": 1
+    }
+  ],
+  "shortReplies": [
+    {
+      "messageId": "msg-1",
+      "quote": "嗯",
+      "sessionId": "session-1",
+      "classification": "acknowledgment | low_energy | topic_closed | possible_withdrawal | uncertain",
+      "explanation": "string",
+      "baselineCharacters": 0,
+      "sessionShift": 0,
+      "replyLagMs": null,
+      "baselineReplyLagMs": null,
+      "replyLagShiftMs": null,
+      "afterEffect": "recovered | no_recovery | unknown",
+      "evidenceIds": ["evidence-1"],
+      "confidence": "低 | 中 | 较高"
+    }
+  ],
+  "pipeline": {
+    "version": "letsdate-pipeline-v2",
+    "stages": ["string"],
+    "messageCount": 0,
+    "sessionCount": 0,
+    "timestampCoverage": 0,
+    "localRuleMode": false,
+    "exactQuoteVerification": true
+  },
   "person": {
     "summary": "string",
     "mbti": {
@@ -274,7 +342,24 @@ Use this complete shape:
     "needs": ["string"],
     "boundaries": ["string"],
     "greenFlags": ["string"],
-    "watchouts": ["string"]
+    "watchouts": ["string"],
+    "attachmentAssessment": {
+      "summary": "string",
+      "scope": "依恋线索只描述这段材料中的互动行为，不是临床诊断。",
+      "cues": [
+        {
+          "key": "safe | anxious | avoidant | mixed | insufficient",
+          "label": "string",
+          "status": "insufficient | tentative | supported",
+          "score": 0,
+          "confidence": "低 | 中 | 较高",
+          "summary": "string",
+          "evidenceIds": ["evidence-1"],
+          "counterEvidenceIds": [],
+          "missingInformation": ["string"]
+        }
+      ]
+    }
   },
   "self": {
     "summary": "string",
@@ -316,7 +401,24 @@ Use this complete shape:
     "needs": ["string"],
     "boundaries": ["string"],
     "greenFlags": ["string"],
-    "watchouts": ["string"]
+    "watchouts": ["string"],
+    "attachmentAssessment": {
+      "summary": "string",
+      "scope": "依恋线索只描述这段材料中的互动行为，不是临床诊断。",
+      "cues": [
+        {
+          "key": "safe | anxious | avoidant | mixed | insufficient",
+          "label": "string",
+          "status": "insufficient | tentative | supported",
+          "score": 0,
+          "confidence": "低 | 中 | 较高",
+          "summary": "string",
+          "evidenceIds": ["evidence-1"],
+          "counterEvidenceIds": [],
+          "missingInformation": ["string"]
+        }
+      ]
+    }
   },
   "compatibility": {
     "score": 0,
@@ -387,10 +489,15 @@ Before returning JSON, verify:
 - Compatibility and interest never exceed the calibrated cap and are never 100 from text-only evidence.
 - `compatibilityScore`, `compatibility.score`, and `action.decision` are consistent.
 - `calibration` contains the actual sample statistics and a concise method description.
+- `humanRead` contains confirmable facts, likely interpretation, alternatives and one observable next step.
+- `contextGaps` lists what information would materially change the judgment.
+- `shortReplies` classifies short messages only after comparing baseline and follow-up outcome.
+- `pipeline.exactQuoteVerification` is true only after quotes have been checked against the source.
 - MBTI has four dimensions with keys `EI`, `SN`, `TF`, `JP`.
 - Every MBTI dimension and Big Five trait has a valid `status` and `evidenceIds`.
 - If more than one MBTI axis is `insufficient`, candidate is `待观察`.
 - Big Five includes all five traits for both people.
+- Both people include `attachmentAssessment`, with safe/anxious/avoidant cues marked `insufficient` when evidence is lacking.
 - `compatibility.dimensions` includes at least communication, pace, boundaries, values, and expression or energy.
 - `interest.signals` contains observable positive signals and `interest.ambiguities` contains alternative explanations.
 - `action.decision` matches top-level `decision`.
