@@ -133,4 +133,17 @@ describe("buildLocalAnalysis", () => {
     expect(replies).toContain("周日两点");
     expect(replies).toContain("展馆门口");
   });
+
+  it("does not invent a curry when it never appears in the source", () => {
+    const report = buildLocalAnalysis({
+      ...DEMO_SAMPLE,
+      selfProfile: "喜欢散步和看电影。",
+      otherProfile: "喜欢摄影和看展。",
+      chat: `我：周日要不要去看展？
+对方：可以，周日两点展馆门口见。`,
+    });
+    const replies = report.action.messageOptions.map((item) => item.text).join("\n");
+    expect(replies).toContain("展馆");
+    expect(replies).not.toContain("咖喱");
+  });
 });

@@ -219,6 +219,11 @@ export function buildMessageOptions(
       topics.includes("咖喱")
         ? "之后接受小店盲盒和咖喱验收"
         : "之后按你查好的安排走";
+    const lightTail = topics.includes("咖喱")
+      ? "，压力别给咖喱太大哈哈"
+      : topics.includes("小店")
+        ? "，顺便看看小店盲盒"
+        : "";
     return [
       {
         tone: "留空间",
@@ -230,7 +235,7 @@ export function buildMessageOptions(
       },
       {
         tone: "轻松一点",
-        text: `那就${when}见。看完展再去${topics.includes("小店") ? "小店" : "吃点东西"}，压力别给咖喱太大哈哈。`,
+        text: `那就${when}见。看完展再去${topics.includes("小店") ? "小店" : "吃点东西"}${lightTail}。`,
       },
     ];
   }

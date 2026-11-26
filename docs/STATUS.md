@@ -30,7 +30,7 @@ Current source version: `0.3.0`
 
 ## Verified
 
-- `pnpm test`: 22 tests passed.
+- `pnpm test`: 23 tests passed.
 - `pnpm check`: passed.
 - `pnpm build`: passed.
 - Playwright desktop and 390px mobile flows: passed.
