@@ -165,7 +165,7 @@ export function AnalyzeWorkspace({
               </span>
               <ScreenshotButton
                 label="识别聊天截图"
-                onFile={(file) => onImportScreenshot("other", file)}
+                onFile={(file) => onImportScreenshot("chat", file)}
               />
             </div>
           </div>
@@ -183,7 +183,7 @@ export function AnalyzeWorkspace({
             </span>
             <span>
               <ShieldCheck size={14} />
-              支持文字与截图 OCR
+              PaddleOCR 中文截图识别
             </span>
           </div>
         </section>

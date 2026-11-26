@@ -1,7 +1,7 @@
 {
   "name": "letsdate",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "packageManager": "pnpm@11.25.0",
   "type": "module",
   "scripts": {
@@ -13,6 +13,7 @@
     "check": "tsc -b"
   },
   "dependencies": {
+    "@paddleocr/paddleocr-js": "^0.4.2",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

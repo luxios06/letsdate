@@ -26,7 +26,7 @@ letsdate
 ## 技术亮点
 
 - 跨模型 Agent Skill，兼容 OpenAI、DeepSeek、Anthropic、Gemini、Ollama。
-- 静态 React Web App，浏览器端 OCR，自带本地演示引擎。
+- 静态 React Web App，浏览器端 PaddleOCR PP-OCRv6 与本地演示引擎。
 - 结构化 JSON 报告协议，供应商无关。
 - GitHub Pages 自动部署与 PWA 基础。
 - 默认不上传数据到 letsdate 服务器，API Key 默认只保存在当前会话。

@@ -149,11 +149,19 @@ function App() {
     setOcrBusy(true);
     setToast({ kind: "success", message: "正在识别截图，首次加载语言包可能需要一点时间。" });
     try {
-      const text = await recognizeScreenshot(file, ({ progress: value }) => {
+      const result = await recognizeScreenshot(
+        file,
+        ({ status, progress: value }) => {
         if (value > 0) {
           setToast({ kind: "success", message: `截图识别中 ${value}%` });
         }
-      });
+          if (status.includes("回退")) {
+            setToast({ kind: "success", message: status });
+          }
+        },
+        source === "chat" ? "chat" : "text",
+      );
+      const text = result.text;
       if (!text) throw new Error("没有识别到可用文字。");
       setInput((current) => {
         if (source === "self") {
@@ -162,15 +170,17 @@ function App() {
             selfProfile: [current.selfProfile, text].filter(Boolean).join("\n\n"),
           };
         }
-        const looksLikeChat = /我[:：]|对方[:：]|你[:：]|Ta[:：]/i.test(text);
-        return looksLikeChat
+        return source === "chat"
           ? { ...current, chat: [current.chat, text].filter(Boolean).join("\n\n") }
           : {
               ...current,
               otherProfile: [current.otherProfile, text].filter(Boolean).join("\n\n"),
             };
       });
-      setToast({ kind: "success", message: "截图文字已提取，请检查并补充标点或说话人。" });
+      setToast({
+        kind: "success",
+        message: `${result.engine === "paddleocr-v6" ? "PaddleOCR" : "Tesseract 兜底"}识别完成，置信度 ${Math.round(result.confidence * 100)}%。请检查文字和说话人。`,
+      });
     } catch (ocrError) {
       setToast({
         kind: "error",

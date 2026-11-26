@@ -1,5 +1,5 @@
 export type View = "analyze" | "history" | "method";
-export type SourceKey = "self" | "other";
+export type SourceKey = "self" | "other" | "chat";
 export type Confidence = "低" | "中" | "较高";
 export type Decision = "继续推进" | "适度推进" | "先观察" | "暂缓推进";
 export type EvidenceStatus = "insufficient" | "tentative" | "supported";

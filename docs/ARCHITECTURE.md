@@ -7,7 +7,8 @@ letsdate uses a static React application plus a model-agnostic analysis protocol
 ```text
 Browser
 ├── React workspace
-├── Tesseract.js OCR
+├── PaddleOCR PP-OCRv6 (primary)
+├── Tesseract.js fallback
 ├── zod report validation
 ├── conversation parser
 │   ├── timestamps and sessions
@@ -70,6 +71,10 @@ The model receives `public/skills/letsdate-relationship-analysis/SKILL.md` and i
 - API key persistence requires an explicit user opt-in.
 
 No analytics or letsdate-owned database is included.
+
+## OCR
+
+The browser loads PaddleOCR.js lazily. PP-OCRv6 detects text boxes and recognizes Chinese text using ONNX Runtime Web. Chat screenshots are grouped by bubble position before assigning SELF/OTHER. Tesseract runs only when PaddleOCR fails. See `docs/OCR.md`.
 
 ## Deployment
 
