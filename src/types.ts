@@ -208,6 +208,55 @@ export interface HumanRead {
   supportNote: string;
 }
 
+export type EmotionCategoryKey =
+  | "good"
+  | "joy"
+  | "sadness"
+  | "anger"
+  | "fear"
+  | "disgust"
+  | "surprise";
+
+export interface EmotionCategoryScore {
+  key: EmotionCategoryKey;
+  label: string;
+  count: number;
+  score: number;
+}
+
+export interface IntimacySignal {
+  key:
+    | "closeness"
+    | "flirtation"
+    | "reassurance"
+    | "withdrawal"
+    | "control"
+    | "repair"
+    | "boundary"
+    | "future";
+  label: string;
+  score: number;
+  hits: string[];
+  sender: "self" | "other" | "both";
+}
+
+export interface QuickEmotionRead {
+  headline: string;
+  observation: string;
+  suggestion: string;
+  confidence: Confidence;
+  missingInformation: string[];
+}
+
+export interface EmotionAnalysis {
+  valence: number;
+  intensity: number;
+  categories: EmotionCategoryScore[];
+  intimacySignals: IntimacySignal[];
+  quickRead: QuickEmotionRead;
+  source: "cnsenti-dutir" | "local-fallback";
+}
+
 export interface PipelineMeta {
   version: string;
   stages: string[];
@@ -251,6 +300,7 @@ export interface AnalysisReport {
   confidence: Confidence;
   compatibilityScore: number;
   calibration: ScoreCalibration;
+  emotion: EmotionAnalysis;
   humanRead: HumanRead;
   contextGaps: ContextGap[];
   shortReplies: ShortReplyInsight[];

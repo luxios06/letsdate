@@ -9,7 +9,11 @@ import {
   FactLedgerSchema,
   type ExtractedFactLedger,
 } from "./fact-schema";
+import {
+  analyzeEmotion,
+} from "./emotion-analysis";
 import { validateReport } from "./report-schema";
+import type { EmotionAnalysis } from "../types";
 
 const PROVIDER_DEFAULTS: Record<
   ProviderSettings["provider"],
@@ -145,8 +149,13 @@ function extractJson(text: string): unknown {
   return JSON.parse(candidate.slice(start, end + 1));
 }
 
-function mergeWithFallback(raw: unknown, input: AnalysisInput, provider: ProviderSettings["provider"]): AnalysisReport {
-  const fallback = buildLocalAnalysis(input, provider);
+function mergeWithFallback(
+  raw: unknown,
+  input: AnalysisInput,
+  provider: ProviderSettings["provider"],
+  emotion: EmotionAnalysis,
+): AnalysisReport {
+  const fallback = buildLocalAnalysis(input, provider, emotion);
   if (!raw || typeof raw !== "object") return fallback;
   const candidate = raw as Partial<AnalysisReport>;
   const merged: AnalysisReport = {
@@ -200,9 +209,10 @@ function mergeWithFallback(raw: unknown, input: AnalysisInput, provider: Provide
       ? candidate.safetyNotes
       : fallback.safetyNotes,
   };
-  return validateReport(
-    calibrateModelReport(verifyReportEvidence(merged, input), input),
-  );
+  return validateReport({
+    ...calibrateModelReport(verifyReportEvidence(merged, input), input),
+    emotion,
+  });
 }
 
 export async function loadSkillPrompt(): Promise<string> {
@@ -212,6 +222,7 @@ export async function loadSkillPrompt(): Promise<string> {
     "skills/letsdate-relationship-analysis/references/calibration-and-uncertainty.md",
     "skills/letsdate-relationship-analysis/references/action-and-reply.md",
     "skills/letsdate-relationship-analysis/references/short-replies-and-attachment.md",
+    "skills/letsdate-relationship-analysis/references/emotion-and-intimacy.md",
   ];
   const responses = await Promise.all(
     paths.map((path) =>
@@ -568,9 +579,10 @@ export async function analyzeWithProvider(
   rawSettings: ProviderSettings,
 ): Promise<AnalysisReport> {
   const settings = validateProviderSettings(rawSettings);
+  const emotion = await analyzeEmotion(input);
   if (settings.provider === "demo") {
     await new Promise((resolve) => window.setTimeout(resolve, 900));
-    return buildLocalAnalysis(input, "demo");
+    return buildLocalAnalysis(input, "demo", emotion);
   }
   try {
     const systemPrompt = await loadSkillPrompt();
@@ -585,7 +597,12 @@ export async function analyzeWithProvider(
       systemPrompt,
       buildSynthesisPayload(input, facts),
     );
-    return mergeWithFallback(extractJson(output), input, settings.provider);
+    return mergeWithFallback(
+      extractJson(output),
+      input,
+      settings.provider,
+      emotion,
+    );
   } catch (error) {
     throw new Error(friendlyError(error));
   }

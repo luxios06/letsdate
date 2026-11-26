@@ -71,6 +71,32 @@ describe("two-stage provider pipeline", () => {
       if (textUrl.endsWith(".md")) {
         return new Response("# approved skill", { status: 200 });
       }
+      if (textUrl.endsWith("cnsenti-lexicon.json")) {
+        return Response.json({
+          source: {
+            project: "test",
+            license: "MIT",
+            dictionary: "test",
+            url: "https://example.com",
+          },
+          categories: {
+            good: [],
+            joy: [],
+            sadness: [],
+            anger: [],
+            fear: [],
+            disgust: [],
+            surprise: [],
+          },
+          modifiers: {
+            deny: [],
+            extreme: [],
+            very: [],
+            more: [],
+            ish: [],
+          },
+        });
+      }
       providerCalls += 1;
       if (providerCalls === 1) {
         return Response.json({

@@ -134,6 +134,14 @@ function downloadReport(report: AnalysisReport) {
     `接下来观察：${report.humanRead.observeNext}`,
     report.humanRead.supportNote,
     "",
+    "## 情感与亲密信号",
+    report.emotion.quickRead.headline,
+    report.emotion.quickRead.observation,
+    `建议：${report.emotion.quickRead.suggestion}`,
+    ...report.emotion.intimacySignals.map(
+      (signal) => `- ${signal.label}：${signal.score}，${signal.hits.join("、")}`,
+    ),
+    "",
     `## 对方人格透镜`,
     `MBTI 候选：${report.person.mbti.candidate}（${report.person.mbti.confidence}置信度）`,
     ...report.person.bigFive.map((trait) => `- ${trait.label}: ${trait.score}/100，${trait.summary}`),
@@ -343,6 +351,53 @@ export function ReportView({ report, onBack }: ReportViewProps) {
                 <span>接下来观察</span>
                 <p>{report.humanRead.observeNext}</p>
               </div>
+            </div>
+            <div className="emotion-read-panel">
+              <div className="emotion-read-panel__main">
+                <div>
+                  <span className="eyebrow">情感与亲密信号</span>
+                  <h4>{report.emotion.quickRead.headline}</h4>
+                  <p>{report.emotion.quickRead.observation}</p>
+                </div>
+                <span className="confidence-chip">
+                  {report.emotion.quickRead.confidence}置信度
+                </span>
+              </div>
+              <div className="emotion-read-panel__advice">
+                <MessageCircleMore size={16} />
+                <p>{report.emotion.quickRead.suggestion}</p>
+              </div>
+              <div className="emotion-chip-row">
+                {report.emotion.categories
+                  .filter(
+                    (category) => category.count > 0 && category.score >= 20,
+                  )
+                  .sort((a, b) => b.score - a.score)
+                  .slice(0, 4)
+                  .map((category) => (
+                    <span key={category.key}>
+                      {category.label} {category.score}%
+                    </span>
+                  ))}
+                {report.emotion.intimacySignals.slice(0, 4).map((signal) => (
+                  <span key={signal.key} className="emotion-chip-row__signal">
+                    {signal.label}
+                    {signal.sender === "both"
+                      ? " · 双方"
+                      : signal.sender === "self"
+                        ? " · 你"
+                        : " · 对方"}
+                  </span>
+                ))}
+              </div>
+              {report.emotion.quickRead.missingInformation.length > 0 && (
+                <p className="emotion-read-panel__missing">
+                  还需要：{report.emotion.quickRead.missingInformation.join("；")}
+                </p>
+              )}
+              <small>
+                情感词典来源：cnsenti / DUTIR · 仅描述当前材料中的情绪与互动信号
+              </small>
             </div>
             <div className="human-read-support">
               <ShieldAlert size={15} />

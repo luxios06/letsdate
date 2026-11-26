@@ -10,6 +10,9 @@ Browser
 ├── PaddleOCR PP-OCRv6 (primary)
 ├── Tesseract.js fallback
 ├── zod report validation
+├── local emotion lexicon
+│   ├── DUTIR seven emotions
+│   └── intimacy and boundary rules
 ├── conversation parser
 │   ├── timestamps and sessions
 │   ├── short-reply baseline and recovery
@@ -75,6 +78,10 @@ No analytics or letsdate-owned database is included.
 ## OCR
 
 The browser loads PaddleOCR.js lazily. PP-OCRv6 detects text boxes and recognizes Chinese text using ONNX Runtime Web. Chat screenshots are grouped by bubble position before assigning SELF/OTHER. Tesseract runs only when PaddleOCR fails. See `docs/OCR.md`.
+
+## Emotion layer
+
+Before model synthesis, letsdate runs a local DUTIR emotion lexicon and relationship-specific signal detector. It produces valence, emotion categories, intimacy/withdrawal/control/repair cues, a short actionable reading and missing-information questions. See `docs/EMOTION.md`.
 
 ## Deployment
 

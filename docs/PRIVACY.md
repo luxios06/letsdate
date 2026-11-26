@@ -23,6 +23,8 @@ When the user imports a screenshot:
 - PaddleOCR may download model files from the official PaddlePaddle model host.
 - OCR text is inserted into the local input field for review before analysis.
 
+Emotion and intimacy signal detection uses a local JSON lexicon. Text is not sent to an emotion-analysis service.
+
 ## API keys
 
 - API keys are not sent to letsdate.

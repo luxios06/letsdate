@@ -45,6 +45,43 @@ export const DEMO_REPORT: AnalysisReport = {
       "样本仍不足以判断稳定人格，关系分数不代表成功概率。",
     ],
   },
+  emotion: {
+    valence: 0.58,
+    intensity: 0.52,
+    categories: [
+      { key: "good", label: "好", count: 3, score: 45 },
+      { key: "joy", label: "乐", count: 2, score: 25 },
+      { key: "sadness", label: "哀", count: 0, score: 0 },
+      { key: "anger", label: "怒", count: 0, score: 0 },
+      { key: "fear", label: "惧", count: 0, score: 0 },
+      { key: "disgust", label: "恶", count: 0, score: 0 },
+      { key: "surprise", label: "惊", count: 0, score: 0 },
+    ],
+    intimacySignals: [
+      {
+        key: "closeness",
+        label: "亲密靠近",
+        score: 44,
+        hits: ["想见你"],
+        sender: "other",
+      },
+      {
+        key: "future",
+        label: "未来承诺",
+        score: 28,
+        hits: ["以后"],
+        sender: "both",
+      },
+    ],
+    quickRead: {
+      headline: "对话里有明确的靠近和共同活动信号",
+      observation: "对方主动追问并接受邀约，但仍需要真实安排来验证投入。",
+      suggestion: "先用一次低压力邀约验证，不需要过早定义关系。",
+      confidence: "中",
+      missingInformation: ["对方平时的回复节奏"],
+    },
+    source: "local-fallback",
+  },
   humanRead: {
     canConfirm:
       "对方主动追问、给出确认时间，并把话题推进到看展和吃饭。",

@@ -12,9 +12,11 @@ import {
   parseConversation,
   type ParsedConversation,
 } from "./conversation";
+import { analyzeEmotionFallback } from "./emotion-analysis";
 import type {
   AnalysisInput,
   AnalysisReport,
+  EmotionAnalysis,
   EvidenceItem,
   MbtiDimension,
   PersonProfile,
@@ -446,6 +448,7 @@ const buildEvidence = (
 function buildContextGaps(
   parsed: ParsedConversation,
   person: PersonProfile,
+  emotion: EmotionAnalysis,
 ): AnalysisReport["contextGaps"] {
   const gaps: AnalysisReport["contextGaps"] = [];
   if (parsed.timestampCoverage < 0.2) {
@@ -495,6 +498,22 @@ function buildContextGaps(
       });
     }
   }
+  for (const missing of emotion.quickRead.missingInformation) {
+    const question = missing.includes("时间")
+      ? "这段对话中间隔了多久？短回复或慢回复前后，时间间隔有没有明显变化？"
+      : missing.includes("关系阶段") || missing.includes("前后")
+        ? "你们目前是什么关系阶段？这段对话之前发生过什么？"
+        : missing.includes("分歧") || missing.includes("拒绝")
+          ? "你们出现分歧或拒绝时，对方通常会解释、修复还是直接拉开距离？"
+          : missing.includes("玩笑") || missing.includes("暧昧")
+            ? "这些亲密表达是玩笑、暧昧，还是你们已经明确过的关系语言？"
+            : `能否补充“${missing}”的相关例子？`;
+    gaps.push({
+      question,
+      why: "这类信息会直接改变情感与亲密关系信号的解释。",
+      priority: 2,
+    });
+  }
   const seen = new Set<string>();
   const gapCategory = (question: string) =>
     question.includes("回复")
@@ -519,9 +538,10 @@ function buildHumanRead(
   parsed: ParsedConversation,
   person: PersonProfile,
   interestScore: number,
+  emotion: EmotionAnalysis,
 ): AnalysisReport["humanRead"] {
-  const withdrawal = parsed.shortReplies.some(
-    (item) => item.classification === "possible_withdrawal",
+  const withdrawal = emotion.intimacySignals.some(
+    (signal) => signal.key === "withdrawal",
   );
   const recovery = parsed.shortReplies.some(
     (item) => item.afterEffect === "recovered",
@@ -532,33 +552,30 @@ function buildHumanRead(
       : parsed.planState.status === "cancelled"
         ? "能确认最近的计划被取消或改期，不能把之前的热情当成当前确认。"
         : "能确认双方有过真实互动，但目前没有足够材料证明稳定人格或依恋模式。";
-  const likely =
-    withdrawal && !recovery
-      ? "更可能需要先观察对方是否恢复主动性，而不是继续增加追问。"
-      : interestScore >= 62
-        ? "更可能是双方都有继续了解的兴趣，并且当前互动具备修复空间。"
-        : "更可能只是礼貌交流，或兴趣仍处在早期验证阶段。";
-  const alternatives = withdrawal
-    ? "短回复也可能来自忙碌、低能量、个人表达习惯或当时的话题不感兴趣。"
-    : person.attachmentAssessment.summary;
-  const observeNext =
-    parsed.planState.status === "confirmed"
-      ? "下一步重点观察对方是否按约定兑现，以及临时变化时是否提前说明。"
-      : "下一步重点观察对方是否主动恢复话题、给出具体安排或清楚表达边界。";
+  const likely = `${emotion.quickRead.headline} ${emotion.quickRead.observation}`;
+  const alternatives =
+    withdrawal && recovery
+      ? "短回复更像当时的低能量或忙碌状态；随后恢复交流，不能直接解释成冷淡或回避。"
+      : person.attachmentAssessment.summary;
+  const observeNext = emotion.quickRead.suggestion;
   return {
     canConfirm,
     likely,
     alternatives,
     observeNext,
     supportNote:
-      "这份分析不替你判断关系值不值得，只帮助你把猜测变成可观察、可验证的信号。",
+      interestScore < 50
+        ? "即使材料不足，也不要只靠猜。先使用低压力回应，并补充最能改变判断的上下文。"
+        : "这份分析不替你判断关系值不值得，只帮助你把猜测变成可观察、可验证的信号。",
   };
 }
 
 export function buildLocalAnalysis(
   input: AnalysisInput,
   provider: ProviderId = "demo",
+  emotionOverride?: EmotionAnalysis,
 ): AnalysisReport {
+  const emotion = emotionOverride ?? analyzeEmotionFallback(input);
   const isDemo = input.chat.trim() === DEMO_SAMPLE.chat.trim() && input.otherProfile.trim() === DEMO_SAMPLE.otherProfile.trim();
   if (isDemo) {
     return {
@@ -567,6 +584,7 @@ export function buildLocalAnalysis(
       createdAt: new Date().toISOString(),
       provider,
       stage: input.relationshipStage,
+      emotion,
     };
   }
 
@@ -612,8 +630,8 @@ export function buildLocalAnalysis(
   const coldRisk = cold > warm;
   const messageOptions = buildMessageOptions(input, interestScore);
   const nextMessage = messageOptions[0].text;
-  const humanRead = buildHumanRead(parsed, person, interestScore);
-  const contextGaps = buildContextGaps(parsed, person);
+  const humanRead = buildHumanRead(parsed, person, interestScore, emotion);
+  const contextGaps = buildContextGaps(parsed, person, emotion);
 
   return {
     id: createId(),
@@ -637,6 +655,7 @@ export function buildLocalAnalysis(
     confidence,
     compatibilityScore: overallScore,
     calibration,
+    emotion,
     humanRead,
     contextGaps,
     shortReplies: parsed.shortReplies,

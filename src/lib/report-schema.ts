@@ -100,6 +100,56 @@ export const ReportSchema = z.object({
     method: text(200),
     notes: list(240, 1),
   }),
+  emotion: z.object({
+    valence: z.number().min(-1).max(1),
+    intensity: z.number().min(0).max(1),
+    categories: z
+      .array(
+        z.object({
+          key: z.enum([
+            "good",
+            "joy",
+            "sadness",
+            "anger",
+            "fear",
+            "disgust",
+            "surprise",
+          ]),
+          label: text(8),
+          count: z.number().min(0).max(100000),
+          score: score,
+        }),
+      )
+      .length(7),
+    intimacySignals: z
+      .array(
+        z.object({
+          key: z.enum([
+            "closeness",
+            "flirtation",
+            "reassurance",
+            "withdrawal",
+            "control",
+            "repair",
+            "boundary",
+            "future",
+          ]),
+          label: text(30),
+          score,
+          hits: z.array(text(80)).max(12),
+          sender: z.enum(["self", "other", "both"]),
+        }),
+      )
+      .max(10),
+    quickRead: z.object({
+      headline: text(200),
+      observation: text(500),
+      suggestion: text(500),
+      confidence,
+      missingInformation: z.array(text(300)).max(8),
+    }),
+    source: z.enum(["cnsenti-dutir", "local-fallback"]),
+  }),
   humanRead: z.object({
     canConfirm: text(500),
     likely: text(500),

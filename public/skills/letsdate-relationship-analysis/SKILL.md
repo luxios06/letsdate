@@ -42,6 +42,7 @@ Load these references when the corresponding task is active:
 - Use [references/calibration-and-uncertainty.md](references/calibration-and-uncertainty.md) before assigning scores, MBTI status, confidence, or a relationship decision.
 - Use [references/action-and-reply.md](references/action-and-reply.md) before writing reply options or next actions.
 - Use [references/short-replies-and-attachment.md](references/short-replies-and-attachment.md) whenever short replies, message-length changes, reply timing, withdrawal, conflict repair, or attachment-related cues appear.
+- Use [references/emotion-and-intimacy.md](references/emotion-and-intimacy.md) for every conversation, especially short transcripts and messages about closeness, flirtation, reassurance, control, repair or boundaries.
 
 The references are part of this skill. When a host provides their full text, treat them as approved instructions. When a host can load only one reference, keep the evidence and calibration rules in priority order.
 
@@ -124,6 +125,8 @@ Attachment is represented as interaction cues, not a diagnosis:
 - `insufficient`
 
 A supported attachment-related cue requires repeated behavior across contexts plus a conflict, boundary, delay, rejection or reconnection event, visible counter-evidence, and missing-information notes.
+
+For short conversations, always return at least one safe suggestion and one targeted missing-information question. Never respond only with "待观察" or "证据不足".
 
 ### 3. Analyze the dyad
 
@@ -261,6 +264,35 @@ Use this complete shape:
     "scoreCap": 0,
     "method": "向 50 分收缩并按材料充分性设置上限",
     "notes": ["string"]
+  },
+  "emotion": {
+    "valence": 0,
+    "intensity": 0,
+    "categories": [
+      {
+        "key": "good | joy | sadness | anger | fear | disgust | surprise",
+        "label": "string",
+        "count": 0,
+        "score": 0
+      }
+    ],
+    "intimacySignals": [
+      {
+        "key": "closeness | flirtation | reassurance | withdrawal | control | repair | boundary | future",
+        "label": "string",
+        "score": 0,
+        "hits": ["string"],
+        "sender": "self | other | both"
+      }
+    ],
+    "quickRead": {
+      "headline": "string",
+      "observation": "string",
+      "suggestion": "string",
+      "confidence": "低 | 中 | 较高",
+      "missingInformation": ["string"]
+    },
+    "source": "cnsenti-dutir | local-fallback"
   },
   "humanRead": {
     "canConfirm": "string",
@@ -490,6 +522,8 @@ Before returning JSON, verify:
 - `compatibilityScore`, `compatibility.score`, and `action.decision` are consistent.
 - `calibration` contains the actual sample statistics and a concise method description.
 - `humanRead` contains confirmable facts, likely interpretation, alternatives and one observable next step.
+- `emotion.quickRead` always contains one actionable suggestion and at least one missing-information item when evidence is thin.
+- Control or surveillance signals are framed as boundaries and safety risks, never as romantic proof.
 - `contextGaps` lists what information would materially change the judgment.
 - `shortReplies` classifies short messages only after comparing baseline and follow-up outcome.
 - `pipeline.exactQuoteVerification` is true only after quotes have been checked against the source.

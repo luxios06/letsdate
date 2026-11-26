@@ -32,3 +32,11 @@ Tesseract is retained only as a fallback when PaddleOCR cannot initialize or rec
 
 - `clipper-lib` 6.4.2: Boost Software License
 - `js-yaml` 4.3.2: MIT
+
+## cnsenti / DUTIR emotion lexicon
+
+- Project: https://github.com/hiDaDeng/cnsenti
+- License: MIT
+- Included data: converted DUTIR seven-emotion sets and HowNet negation/intensity modifiers.
+
+The lexicon is loaded locally as `public/emotion/cnsenti-lexicon.json`.

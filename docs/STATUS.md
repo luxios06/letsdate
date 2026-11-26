@@ -2,7 +2,7 @@
 
 Saved and deployed: 2026-11-26
 
-Current source version: `0.4.0`
+Current source version: `0.6.0`
 
 ## Completed
 
@@ -10,6 +10,8 @@ Current source version: `0.4.0`
 - Input workspace for both profiles, chat transcript, screenshot OCR, relationship stage and goals.
 - PaddleOCR PP-OCRv6 primary OCR with Tesseract fallback.
 - Chat bubble grouping, speaker recovery and timestamp-noise filtering.
+- Local DUTIR emotion analysis and intimacy/boundary signal detection.
+- Short conversations always receive an actionable suggestion and targeted follow-up questions.
 - Local demo analysis engine.
 - Provider adapters for OpenAI, DeepSeek, Anthropic, Gemini, Ollama and custom OpenAI-compatible APIs.
 - MBTI lens, Big Five, interaction patterns, compatibility, interest signals, evidence chain and action plan.
@@ -32,7 +34,7 @@ Current source version: `0.4.0`
 
 ## Verified
 
-- `pnpm test`: 27 tests passed.
+- `pnpm test`: 32 tests passed.
 - `pnpm check`: passed.
 - `pnpm build`: passed.
 - Playwright desktop and 390px mobile flows: passed.
