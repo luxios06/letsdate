@@ -97,4 +97,39 @@ describe("buildLocalAnalysis", () => {
     });
     expect(() => validateReport(report)).not.toThrow();
   });
+
+  it("samples long chats across conflict, repair and final agreement", () => {
+    const report = buildLocalAnalysis({
+      ...DEMO_SAMPLE,
+      selfProfile:
+        "慢热，但重视稳定回应和直接表达。喜欢电影、散步和做饭。",
+      otherProfile:
+        "喜欢胶片摄影、夜跑和小范围深聊，需要提前说清安排。",
+      chat: `我：你主页那张夜跑照片是在滨江拍的吗？
+对方：对，蓝色时刻最好看。你也跑步吗？
+我：偶尔跑。你周末有空吗？
+对方：我先看拍摄安排，周四回你。
+对方：周六要拍摄，周日可以。
+我：我以为你周六有空，有点失望。
+对方：抱歉，是我没说清楚，不想让你等模糊答案。
+我：我也有问题，嘴上说没关系其实憋着。
+对方：以后直接说？我更怕猜。
+对方：今天有点低电量，想安静一会儿。
+我：好，你需要我时再找我。
+对方：谢谢，这对我很重要。
+对方：周日两点在展馆门口？
+我：可以，看两小时？
+对方：够了。之后找家小店，我主要想见你。
+我：好，周日见。`,
+    });
+    const quotes = report.evidence.map((item) => item.quote).join("\n");
+    expect(quotes).toContain("抱歉");
+    expect(quotes).toContain("想见你");
+    expect(report.compatibility.dimensions.find((item) => item.key === "pace")?.summary).toContain(
+      "修复",
+    );
+    const replies = report.action.messageOptions.map((item) => item.text).join("\n");
+    expect(replies).toContain("周日两点");
+    expect(replies).toContain("展馆门口");
+  });
 });

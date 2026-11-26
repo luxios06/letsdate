@@ -22,7 +22,7 @@ Saved and deployed: 2026-11-26
 
 ## Verified
 
-- `pnpm test`: 11 tests passed.
+- `pnpm test`: 12 tests passed.
 - `pnpm check`: passed.
 - `pnpm build`: passed.
 - Playwright desktop and 390px mobile flows: passed.
@@ -30,6 +30,7 @@ Saved and deployed: 2026-11-26
 - Browser console: no errors.
 - Browser OCR: Chinese screenshot recognized and normalized successfully.
 - Skill validator: passed.
+- Five-day, multi-context long-dialogue simulation: passed.
 - Live GitHub Pages report flow: passed.
 - Live Agent Skill request: HTTP 200.
 - Live production page: no console errors and no horizontal overflow.

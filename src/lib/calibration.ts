@@ -22,6 +22,8 @@ export interface ConversationStats {
   questionCount: number;
   warmSignals: number;
   coldSignals: number;
+  repairSignals: number;
+  boundarySignals: number;
   sourceCount: number;
   evidenceMessages: number;
 }
@@ -33,11 +35,19 @@ export function conversationStats(input: AnalysisInput): ConversationStats {
   const questionCount = countMatches(input.chat, /[?？]/g);
   const warmSignals = countMatches(
     input.chat,
-    /哈哈|😂|😊|一起|周末|有空|见面|约|期待|晚安|早安|怎么样|你呢|你也|成交|验收/g,
+    /哈哈|😂|😊|一起|周末|有空|见面|约|期待|晚安|早安|怎么样|你呢|你也|成交|验收|想见你|谢谢|重要/g,
   );
   const coldSignals = countMatches(
     input.chat,
-    /嗯嗯|好的|行吧|再说|看情况|忙|下次吧|不太方便|算了|随便|不着急/g,
+    /下次吧|不太方便|算了|随便|不想聊|没空|拒绝|别催|不想说/g,
+  );
+  const repairSignals = countMatches(
+    input.chat,
+    /抱歉|理解|直接说|提前告诉|提前讲|沟通|谢谢|重要|听你|可以接受/g,
+  );
+  const boundarySignals = countMatches(
+    input.chat,
+    /需要|空间|提前|安静|不催|不喜欢|可以接受|不方便/g,
   );
   const sourceCount =
     1 +
@@ -52,6 +62,8 @@ export function conversationStats(input: AnalysisInput): ConversationStats {
     questionCount,
     warmSignals,
     coldSignals,
+    repairSignals,
+    boundarySignals,
     sourceCount,
     evidenceMessages: Math.min(otherTurns, 24),
   };
@@ -113,6 +125,9 @@ export function scoreCalibration(
   if (stats.coldSignals > stats.warmSignals) {
     notes.push("收缩性表达多于积极表达，推进分数受到限制。");
   }
+  if (stats.repairSignals >= 2) {
+    notes.push("材料中存在澄清、道歉或修复线索，互动韧性较好。");
+  }
   return {
     evidenceMessages: stats.evidenceMessages,
     reciprocalTurns: stats.reciprocalTurns,
@@ -152,15 +167,37 @@ export function extractContextTerms(input: AnalysisInput) {
     ...input.chat.matchAll(/周[一二三四五六日天](?:晚|下午|上午)?/g),
   ];
   const day = dayMatches.at(-1)?.[0] ?? "";
+  const timeMatches = [
+    ...input.chat.matchAll(/(?:[0-9]{1,2}|[一二三四五六七八九十两])点/g),
+  ];
+  const time = timeMatches.at(-1)?.[0] ?? "";
+  const recentTurns = input.chat
+    .split(/\n+/)
+    .filter((line) => /^(?:我|对方)[:：]/.test(line.trim()))
+    .slice(-8)
+    .join("\n");
+  const venue =
+    recentTurns.match(
+      /(展馆门口|展馆|咖啡店|餐厅|电影院|小馆|小店)/,
+    )?.[1] ??
+    input.chat.match(
+      /(?:在|到)?(展馆门口|展馆|咖啡店|餐厅|电影院|小馆|小店)(?:见|碰面)?/,
+    )?.[1] ??
+    "";
+  const confirmedPlan =
+    /(?:周[一二三四五六日天].{0,16}(?:见|门口|可以|成交))|(?:好[，,]?\s*周[一二三四五六日天].{0,8}见)/.test(
+      recentTurns,
+    );
   const explicitMeet = /见面|有空|一起|安排|时间|周末/.test(input.chat);
-  return { topics, day, explicitMeet };
+  return { topics, day, time, venue, confirmedPlan, explicitMeet };
 }
 
 export function buildMessageOptions(
   input: AnalysisInput,
   interestScore: number,
 ): MessageOption[] {
-  const { topics, day, explicitMeet } = extractContextTerms(input);
+  const { topics, day, time, venue, confirmedPlan, explicitMeet } =
+    extractContextTerms(input);
   const activity = topics.includes("咖喱")
     ? "找家小店吃饭，顺便验收一下你的咖喱"
     : topics.length >= 2
@@ -183,6 +220,29 @@ export function buildMessageOptions(
       {
         tone: "轻松一点",
         text: "没关系，你先忙自己的事。等你哪天想起我了再出现。",
+      },
+    ];
+  }
+
+  if (confirmedPlan) {
+    const when = `${day}${time}`.trim() || "到时候";
+    const place = venue ? `在${venue}` : "";
+    const curry =
+      topics.includes("咖喱")
+        ? "之后接受小店盲盒和咖喱验收"
+        : "之后按你查好的安排走";
+    return [
+      {
+        tone: "留空间",
+        text: `好，那${when}${place}见。路线我提前看一下，到了联系。`,
+      },
+      {
+        tone: "直接确认",
+        text: `确认一下，${when}${place}见，${curry}。`,
+      },
+      {
+        tone: "轻松一点",
+        text: `那就${when}见。看完展再去${topics.includes("小店") ? "小店" : "吃点东西"}，压力别给咖喱太大哈哈。`,
       },
     ];
   }

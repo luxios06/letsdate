@@ -118,12 +118,13 @@ Skill 包含：
 
 ## 已验证
 
-- `pnpm test`：11 个分析、校准与模型边界测试通过。
+- `pnpm test`：12 个分析、校准与模型边界测试通过。
 - `pnpm check`：TypeScript 类型检查通过。
 - `pnpm build`：生产构建通过。
 - Playwright：桌面与 390px 手机视口完成输入、示例分析、报告页、证据页和行动页交互验证。
 - 关键视口无横向溢出，浏览器控制台无错误。
 - Skill 结构通过 `quick_validate.py` 校验。
+- 五日长对话、跨场景证据抽样和最终计划确认测试通过。
 
 ## Roadmap
 

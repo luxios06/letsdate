@@ -40,7 +40,9 @@ const countWarmSignals = (text: string) =>
 
 const countColdSignals = (text: string) =>
   (
-    text.match(/嗯嗯|好的|行吧|再说|看情况|忙|下次吧|不太方便|算了|随便/g) ?? []
+    text.match(
+      /下次吧|不太方便|算了|随便|不想聊|没空|拒绝|别催|不想说/g,
+    ) ?? []
   ).length;
 
 const evidenceLineCount = (lines: string[], words: string[]) =>
@@ -329,24 +331,57 @@ const buildEvidence = (chat: string, otherProfile: string): EvidenceItem[] => {
     .map((line) => line.trim())
     .filter(Boolean);
   const otherLines = lines.filter((line) => /^对方[:：]/.test(line));
-  const selected = otherLines.slice(0, 4);
-  const evidence: EvidenceItem[] = selected.map((line, index) => ({
-    id: `evidence-${index + 1}`,
-    source: "聊天",
-    quote: line.replace(/^对方[:：]\s*/, ""),
-    observation:
-      /[?？]/.test(line) || /你呢|你也|喜欢吗/.test(line)
-        ? "对方主动把话题递回给你，并继续了解你的兴趣。"
-        : "对方提供了具体信息或行动线索，而非只作礼貌回应。",
-    inference:
-      /一起|周末|见面|有空|时间/.test(line)
-        ? "存在把互动推进到现实场景的意愿。"
-        : "当前有继续交流的兴趣，但投入程度仍需观察。",
-    confidence: "中",
-    caution: "单条消息可能受上下文、情绪和沟通习惯影响，不能单独作为结论。",
-    status: "confirmed",
-    evidenceIds: [`evidence-${index + 1}`],
-  }));
+  const fractions = [0, 0.18, 0.36, 0.54, 0.72, 0.88, 1];
+  const selectedIndexes = [
+    ...new Set(
+      fractions.map((fraction) =>
+        Math.min(
+          otherLines.length - 1,
+          Math.max(0, Math.round((otherLines.length - 1) * fraction)),
+        ),
+      ),
+    ),
+  ]
+    .filter((index) => index >= 0)
+    .sort((a, b) => a - b);
+  const selected = selectedIndexes.map((index) => otherLines[index]!);
+  const evidence: EvidenceItem[] = selected.map((line, index) => {
+    const conflict = /失望|抱歉|没说清|憋着|怕猜|不舒服|不开心/.test(line);
+    const boundary =
+      /提前|回慢|低电量|不想细说|安静|不催|空间|需要/.test(line);
+    const interest =
+      /想见你|成交|见面|有空|周末|周日|验收/.test(line);
+    const question = /[?？]/.test(line) || /你呢|你也|喜欢吗/.test(line);
+    return {
+      id: `evidence-${index + 1}`,
+      source: "聊天",
+      quote: line.replace(/^对方[:：]\s*/, ""),
+      observation: conflict
+        ? "对方直接回应了失望或误解，并解释了自己的表达问题。"
+        : boundary
+          ? "对方说明了回应节奏或空间需求，并给出可执行约定。"
+          : interest
+            ? "对方把互动推进到具体时间、见面或共同活动。"
+            : question
+              ? "对方主动把话题递回给你，并继续了解你的兴趣。"
+              : "对方提供了具体信息或行动线索，而非只作礼貌回应。",
+      inference: conflict
+        ? "双方具备澄清和修复互动的意愿，而非回避冲突。"
+        : boundary
+          ? "存在协商边界的意愿，关系可持续性线索较强。"
+          : interest
+            ? "存在继续投入并落到行动的意愿。"
+            : "当前有继续交流的兴趣，但投入程度仍需观察。",
+      confidence: conflict || boundary ? "较高" : "中",
+      caution: conflict
+        ? "单次修复不能保证以后一致，仍需观察同类场景。"
+        : boundary
+          ? "边界是否稳定执行，要看后续是否言行一致。"
+          : "单条消息可能受上下文、情绪和沟通习惯影响，不能单独作为结论。",
+      status: "confirmed",
+      evidenceIds: [`evidence-${index + 1}`],
+    };
+  });
 
   if (otherProfile.trim()) {
     evidence.push({
@@ -361,7 +396,7 @@ const buildEvidence = (chat: string, otherProfile: string): EvidenceItem[] => {
       evidenceIds: ["profile-evidence"],
     });
   }
-  return evidence.slice(0, 5);
+  return evidence.slice(0, 8);
 };
 
 export function buildLocalAnalysis(
@@ -453,8 +488,22 @@ export function buildLocalAnalysis(
         {
           key: "pace",
           label: "推进节奏",
-          score: calibrateScore(clamp(54 + warm * 2 - cold * 5), calibration),
-          summary: cold > 2 ? "推进节奏存在拉扯，需要减少连续加码。" : "当前节奏没有明显压迫感。",
+          score: calibrateScore(
+            clamp(
+              54 +
+                warm * 2 +
+                stats.repairSignals * 3 +
+                stats.boundarySignals * 2 -
+                cold * 7,
+            ),
+            calibration,
+          ),
+          summary:
+            cold > 2
+              ? "推进节奏存在拉扯，需要减少连续加码。"
+              : stats.repairSignals >= 2
+                ? "双方能说明节奏并修复误解，当前推进压力较低。"
+                : "当前节奏没有明显压迫感。",
         },
         {
           key: "expression",
@@ -469,10 +518,18 @@ export function buildLocalAnalysis(
           key: "boundaries",
           label: "边界尊重",
           score: calibrateScore(
-            clamp(58 + (includesAny(text, ["空间", "时间", "方便", "安排"]) ? 12 : -5)),
+            clamp(
+              58 +
+                (includesAny(text, ["空间", "时间", "方便", "安排"]) ? 8 : -5) +
+                stats.boundarySignals * 2 +
+                stats.repairSignals * 2,
+            ),
             calibration,
           ),
-          summary: "材料里能看到对时间和个人安排的提及，是积极信号。",
+          summary:
+            stats.boundarySignals >= 2
+              ? "双方能提前说明时间、空间与回应节奏，边界协商较清晰。"
+              : "材料里能看到对时间和个人安排的提及，是积极信号。",
         },
         {
           key: "values",
