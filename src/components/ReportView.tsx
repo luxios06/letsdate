@@ -17,8 +17,13 @@ import {
   TrendingUp,
   UsersRound,
 } from "lucide-react";
-import { useMemo, useState } from "react";
-import type { AnalysisReport, Confidence, TraitScore } from "../types";
+import { useEffect, useMemo, useState } from "react";
+import type {
+  AnalysisReport,
+  Confidence,
+  EvidenceStatus,
+  TraitScore,
+} from "../types";
 import { PROVIDER_LABELS } from "../lib/providers";
 
 interface ReportViewProps {
@@ -42,11 +47,20 @@ const confidenceText: Record<Confidence, string> = {
   较高: "证据较充分",
 };
 
+const evidenceStatusText: Record<EvidenceStatus, string> = {
+  insufficient: "证据不足",
+  tentative: "暂定线索",
+  supported: "多条支持",
+};
+
 function BigFiveRow({ trait }: { trait: TraitScore }) {
   return (
-    <div className="trait-row">
+    <div className={`trait-row ${trait.status === "insufficient" ? "is-uncertain" : ""}`}>
       <div className="trait-row__label">
-        <span>{trait.label}</span>
+        <span>
+          {trait.label}
+          <em>{evidenceStatusText[trait.status]}</em>
+        </span>
         <strong>{trait.score}</strong>
       </div>
       <div className="trait-row__track">
@@ -85,6 +99,7 @@ function downloadReport(report: AnalysisReport) {
     `生成时间：${fmtDate(report.createdAt)}`,
     `关系阶段：${report.stage}`,
     `结论：${report.decision} / ${report.compatibilityScore}`,
+    `分数校准：${report.calibration.evidenceMessages} 条对方消息，可靠性 ${Math.round(report.calibration.reliability * 100)}%，上限 ${report.calibration.scoreCap}`,
     "",
     `## ${report.overallTitle}`,
     report.overallSummary,
@@ -101,6 +116,8 @@ function downloadReport(report: AnalysisReport) {
     "",
     `## 下一步`,
     report.action.nextMessage,
+    "",
+    ...report.action.messageOptions.map((option) => `- ${option.tone}：${option.text}`),
     "",
     `## 证据`,
     ...report.evidence.map(
@@ -125,13 +142,25 @@ function downloadReport(report: AnalysisReport) {
 export function ReportView({ report, onBack }: ReportViewProps) {
   const [tab, setTab] = useState<ReportTab>("overview");
   const [copied, setCopied] = useState(false);
+  const [activeMessage, setActiveMessage] = useState(0);
   const topSignals = useMemo(
     () => report.interest.signals.slice(0, 3),
     [report.interest.signals],
   );
+  const selectedMessage =
+    report.action.messageOptions[activeMessage] ??
+    report.action.messageOptions[0] ?? {
+      tone: "建议",
+      text: report.action.nextMessage,
+    };
+
+  useEffect(() => {
+    setActiveMessage(0);
+    setCopied(false);
+  }, [report.id]);
 
   const handleCopy = async () => {
-    await copyText(report.action.nextMessage);
+    await copyText(selectedMessage.text);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1600);
   };
@@ -174,6 +203,14 @@ export function ReportView({ report, onBack }: ReportViewProps) {
                 {signal}
               </span>
             ))}
+          </div>
+          <div className="calibration-note">
+            <span>
+              样本 {report.calibration.evidenceMessages} 条 · 可靠性{" "}
+              {Math.round(report.calibration.reliability * 100)}%
+            </span>
+            <span>分数上限 {report.calibration.scoreCap}</span>
+            <span>{report.calibration.method}</span>
           </div>
         </div>
         <div className="verdict__score">
@@ -238,7 +275,15 @@ export function ReportView({ report, onBack }: ReportViewProps) {
               <div className="mbti-panel">
                 <div className="mbti-panel__title">
                   <span>MBTI 候选</span>
-                  <strong>{report.person.mbti.candidate}</strong>
+                  <strong
+                    className={
+                      report.person.mbti.candidate === "待观察"
+                        ? "mbti-panel__candidate--unknown"
+                        : ""
+                    }
+                  >
+                    {report.person.mbti.candidate}
+                  </strong>
                   <div>
                     {report.person.mbti.alternatives.map((item) => (
                       <em key={item}>{item}</em>
@@ -252,7 +297,10 @@ export function ReportView({ report, onBack }: ReportViewProps) {
                       <div>
                         <div className="mbti-row__labels">
                           <strong>{dimension.leaning}</strong>
-                          <em>{dimension.score}%</em>
+                          <em>
+                            {evidenceStatusText[dimension.status]} ·{" "}
+                            {dimension.score}%
+                          </em>
                         </div>
                         <div className="mbti-track">
                           <i style={{ left: `${dimension.score}%` }} />
@@ -426,6 +474,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
                     <div className="evidence-item__meta">
                       <span>{item.source}</span>
                       <em>{item.confidence}置信度</em>
+                      <em>{item.status === "confirmed" ? "原文可核实" : item.status === "tentative" ? "暂定解释" : "证据不足"}</em>
                     </div>
                     <blockquote>
                       <Quote size={16} />
@@ -522,7 +571,22 @@ export function ReportView({ report, onBack }: ReportViewProps) {
                   {copied ? "已复制" : "复制"}
                 </button>
               </div>
-              <p>{report.action.nextMessage}</p>
+              <div className="message-tone-tabs" aria-label="回复语气">
+                {report.action.messageOptions.map((option, index) => (
+                  <button
+                    type="button"
+                    key={`${option.tone}-${index}`}
+                    className={activeMessage === index ? "is-active" : ""}
+                    onClick={() => {
+                      setActiveMessage(index);
+                      setCopied(false);
+                    }}
+                  >
+                    {option.tone}
+                  </button>
+                ))}
+              </div>
+              <p>{selectedMessage.text}</p>
             </div>
             <div className="branch-actions">
               <div>

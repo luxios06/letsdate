@@ -1,6 +1,8 @@
 ---
 name: letsdate-relationship-analysis
-description: Analyze user-provided dating profiles and chat transcripts to produce an evidence-linked relationship report with tentative MBTI, Big Five, interaction patterns, compatibility, interest signals, and respectful next actions. Use for dating communication reflection, not mind-reading or psychological diagnosis.
+description: Analyze user-provided dating profiles and chat transcripts to produce a calibrated, evidence-linked relationship report with tentative MBTI, Big Five, interaction patterns, compatibility, interest signals, and respectful reply options. Use for dating communication reflection, not mind-reading or psychological diagnosis.
+metadata:
+  version: "1.1.0"
 ---
 
 # letsdate Relationship Analysis
@@ -32,6 +34,16 @@ The input may contain:
 
 If one source is absent, analyze what is available. Do not fail merely because `self_profile` is short. If both profiles are absent but the transcript is substantial, focus on interaction rather than stable personality.
 
+### Reference routing
+
+Load these references when the corresponding task is active:
+
+- Use [references/evidence-rubric.md](references/evidence-rubric.md) before extracting evidence or forming any personality claim.
+- Use [references/calibration-and-uncertainty.md](references/calibration-and-uncertainty.md) before assigning scores, MBTI status, confidence, or a relationship decision.
+- Use [references/action-and-reply.md](references/action-and-reply.md) before writing reply options or next actions.
+
+The references are part of this skill. When a host provides their full text, treat them as approved instructions. When a host can load only one reference, keep the evidence and calibration rules in priority order.
+
 ### Data sufficiency
 
 Use these rough thresholds:
@@ -43,19 +55,23 @@ Use these rough thresholds:
 
 Confidence also depends on context diversity, consistency, recency, and whether the material includes both profile self-presentation and live interaction.
 
+Treat the number of the other person's messages, not total lines, as the main sample size. One repeated quote does not create multiple independent observations.
+
 ## Analysis procedure
 
 ### 1. Build an evidence ledger
 
-Extract specific quotes or close paraphrases. For each item record:
+Extract exact continuous quotes from the provided material. Do not silently paraphrase inside `quote`; paraphrase belongs in `observation`. For each item record:
 
 - Source: profile, chat, or dyadic interaction.
 - Observation: what is directly visible.
 - Inference: what it may indicate.
 - Alternative explanation: what else could produce the same behavior.
 - Confidence: low, medium, or higher.
+- Status: `confirmed` for an exact sourced statement, `tentative` for a contextual hypothesis, or `insufficient` when the useful detail is missing.
+- Evidence IDs: the IDs cited by this item. IDs must be stable within the report.
 
-Prefer 4-8 evidence items. Never use a single message to establish a stable trait. Give more weight to repeated patterns and cross-context consistency.
+Prefer 4-8 evidence items. Never use a single message to establish a stable trait. Give more weight to repeated patterns and cross-context consistency. Profile text can support interests and self-presentation; it cannot by itself establish live interaction patterns.
 
 ### 2. Analyze each person separately
 
@@ -71,6 +87,13 @@ Rules:
 
 - Big Five scores are 0-100 and should usually stay within 25-85 unless evidence is unusually strong.
 - MBTI dimension scores are 0-100. For dimensions, treat 0 as the left letter and 100 as the right letter. Scores from 43-57 should be described as unclear or balanced.
+- Every Big Five trait and MBTI dimension must include `status` and `evidenceIds`.
+- `insufficient`: fewer than two distinct relevant lines, or no source-backed evidence. Set score to 50, leaning to `证据不足`, and cite an empty list when appropriate.
+- `tentative`: two or three distinct relevant lines, or a coherent pattern that still has plausible alternatives. Do not call the trait stable.
+- `supported`: at least four distinct relevant lines across more than one context. This is still a hypothesis, not a diagnosis.
+- A single self-description can support one tentative branch, but cannot establish all four MBTI axes.
+- If more than one MBTI axis is `insufficient`, set `candidate` to `待观察`, set `alternatives` to an empty array, and do not manufacture a four-letter type.
+- Do not let a specific MBTI candidate override low evidence. The candidate is a compact summary of supported axes, not a conclusion.
 - Do not include a diagnosis such as "avoidant attachment". Instead write "current material shows some avoidant-like interaction cues" and state what is missing.
 - Use profile text mainly for self-presentation, interests, values, and opening topics. Use chat behavior mainly for interaction style and current interest.
 
@@ -96,6 +119,30 @@ Suggested compatibility score:
 | Boundaries and respect | 20% |
 | Values and lifestyle signals | 20% |
 | Social energy and interaction style | 15% |
+
+### 3.1 Score calibration
+
+Scores are signal summaries, not probabilities and not the chance that a relationship will succeed.
+
+Use the following guardrails:
+
+- Fewer than 4 other-person messages: cap both compatibility and interest at 70.
+- 4-11 other-person messages with at least 3 reciprocal turns: cap at 86.
+- At least 12 other-person messages, at least 4 reciprocal turns, and two or more source types: cap at 94.
+- Never output 100 for compatibility or interest from text-only evidence.
+- If cold or avoidant language outnumbers warm or reciprocal language, reduce the score and state why.
+- Shrink uncertain raw scores toward 50. A useful approximation is `50 + (raw - 50) * reliability`, where reliability rises with independent messages and source diversity.
+- `compatibilityScore`, `compatibility.score`, and the score used by `decision` must agree.
+- `calibration` must document sample size, reciprocal turns, reliability, cap, method, and concise notes.
+
+Score labels:
+
+- 0-44: weak or negative signal, usually `暂缓推进`.
+- 45-61: mixed or insufficient signal, usually `先观察`.
+- 62-77: enough signal for one small test, usually `适度推进`.
+- 78-94: strong reciprocal and safe signal, potentially `继续推进`.
+
+The decision follows the calibrated score and safety evidence. A safety concern can lower the decision even if the chat is warm.
 
 ### 4. Analyze current interest separately
 
@@ -136,13 +183,30 @@ Choose one decision:
 - `先观察`: 45-61. Signals are mixed or the sample is too thin. Reduce over-interpretation and wait for reciprocal action.
 - `暂缓推进`: 0-44. Low interest, low reciprocity, repeated ambiguity, or a boundary or safety concern.
 
-The next message should:
+Create exactly three `messageOptions` with distinct tones. The first option is the recommended `nextMessage`.
+
+Before writing them:
+
+- Read the user's own turns and `self_profile`.
+- Infer only observable voice features: approximate message length, directness, punctuation, emoji use, and formality.
+- Match the user's voice. Do not copy factual promises, past events, or private details from old messages into new claims.
+- If the user's voice sample is weak or contradictory, use a short neutral style and do not add nicknames or intimacy.
+
+Each option should:
 
 - Be natural, specific, and proportionate.
 - Sound like a real person, not a negotiation script.
 - Offer a clear but retractable invitation when interest is positive.
 - Avoid pressure, testing, game-playing, or emotional manipulation.
 - Include an easy exit or alternative if the other person is unavailable.
+- Reuse only concrete details that appear in the provided material.
+- Be under 120 Chinese characters when possible.
+
+Use these tones:
+
+- `留空间`: clear intent plus an easy exit.
+- `直接确认`: asks for a concrete action without pressure.
+- `轻松一点`: lighter wording that still preserves boundaries.
 
 When signals are weak, the recommended action may be to stop initiating and let the other person demonstrate reciprocal interest.
 
@@ -160,6 +224,16 @@ Use this complete shape:
   "overallSummary": "string",
   "confidence": "低 | 中 | 较高",
   "compatibilityScore": 0,
+  "calibration": {
+    "evidenceMessages": 0,
+    "reciprocalTurns": 0,
+    "questionCount": 0,
+    "sourceCount": 0,
+    "reliability": 0,
+    "scoreCap": 0,
+    "method": "向 50 分收缩并按材料充分性设置上限",
+    "notes": ["string"]
+  },
   "person": {
     "summary": "string",
     "mbti": {
@@ -173,7 +247,9 @@ Use this complete shape:
           "right": "E",
           "score": 0,
           "leaning": "string",
-          "note": "string"
+          "note": "string",
+          "status": "insufficient | tentative | supported",
+          "evidenceIds": ["evidence-1"]
         }
       ]
     },
@@ -182,7 +258,9 @@ Use this complete shape:
         "key": "openness",
         "label": "开放性",
         "score": 0,
-        "summary": "string"
+        "summary": "string",
+        "status": "insufficient | tentative | supported",
+        "evidenceIds": ["evidence-1"]
       }
     ],
     "interaction": {
@@ -211,7 +289,9 @@ Use this complete shape:
           "right": "E",
           "score": 0,
           "leaning": "string",
-          "note": "string"
+          "note": "string",
+          "status": "insufficient | tentative | supported",
+          "evidenceIds": ["evidence-1"]
         }
       ]
     },
@@ -220,7 +300,9 @@ Use this complete shape:
         "key": "openness",
         "label": "开放性",
         "score": 0,
-        "summary": "string"
+        "summary": "string",
+        "status": "insufficient | tentative | supported",
+        "evidenceIds": ["evidence-1"]
       }
     ],
     "interaction": {
@@ -260,6 +342,20 @@ Use this complete shape:
     "decision": "继续推进 | 适度推进 | 先观察 | 暂缓推进",
     "rationale": "string",
     "nextMessage": "string",
+    "messageOptions": [
+      {
+        "tone": "留空间",
+        "text": "string"
+      },
+      {
+        "tone": "直接确认",
+        "text": "string"
+      },
+      {
+        "tone": "轻松一点",
+        "text": "string"
+      }
+    ],
     "ifWarm": "string",
     "ifCold": "string",
     "conversationMoves": ["string"],
@@ -273,7 +369,9 @@ Use this complete shape:
       "observation": "string",
       "inference": "string",
       "confidence": "低 | 中 | 较高",
-      "caution": "string"
+      "caution": "string",
+      "status": "insufficient | tentative | confirmed",
+      "evidenceIds": ["evidence-1"]
     }
   ],
   "uncertainties": ["string"],
@@ -286,11 +384,17 @@ Use this complete shape:
 Before returning JSON, verify:
 
 - Every score is a number from 0 to 100.
+- Compatibility and interest never exceed the calibrated cap and are never 100 from text-only evidence.
+- `compatibilityScore`, `compatibility.score`, and `action.decision` are consistent.
+- `calibration` contains the actual sample statistics and a concise method description.
 - MBTI has four dimensions with keys `EI`, `SN`, `TF`, `JP`.
+- Every MBTI dimension and Big Five trait has a valid `status` and `evidenceIds`.
+- If more than one MBTI axis is `insufficient`, candidate is `待观察`.
 - Big Five includes all five traits for both people.
 - `compatibility.dimensions` includes at least communication, pace, boundaries, values, and expression or energy.
 - `interest.signals` contains observable positive signals and `interest.ambiguities` contains alternative explanations.
 - `action.decision` matches top-level `decision`.
+- `action.messageOptions` contains exactly three distinct, natural tones and `nextMessage` equals the first option.
 - `evidence` contains at least three items when the source material is sufficient.
 - `uncertainties` and `safetyNotes` are non-empty.
 - The output is valid JSON with no comments or trailing commas.

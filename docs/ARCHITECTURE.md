@@ -8,6 +8,7 @@ letsdate uses a static React application plus a model-agnostic analysis protocol
 Browser
 ├── React workspace
 ├── Tesseract.js OCR
+├── zod report validation
 ├── localStorage / sessionStorage
 └── provider adapters
     ├── OpenAI-compatible
@@ -16,7 +17,7 @@ Browser
     ├── Gemini
     └── Ollama
 
-public/skill/SKILL.md
+public/skills/letsdate-relationship-analysis/SKILL.md
 └── system prompt + JSON contract used by all providers
 ```
 
@@ -41,7 +42,7 @@ Model output is normalized and merged with a local fallback report so a partiall
 
 ## Analysis contract
 
-The model receives `public/skill/SKILL.md` as the system instruction plus a structured user payload. The skill requires:
+The model receives `public/skills/letsdate-relationship-analysis/SKILL.md` and its selected references as system instructions plus a structured user payload. The skill requires:
 
 - evidence before trait synthesis;
 - separate MBTI, Big Five, interaction and interest analysis;

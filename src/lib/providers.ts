@@ -1,5 +1,7 @@
 import type { AnalysisInput, AnalysisReport, ProviderSettings } from "../types";
 import { buildLocalAnalysis } from "./analyzer";
+import { calibrateModelReport } from "./calibration";
+import { validateReport } from "./report-schema";
 
 const PROVIDER_DEFAULTS: Record<
   ProviderSettings["provider"],
@@ -31,12 +33,97 @@ export function getProviderDefaults(provider: ProviderSettings["provider"]) {
   return PROVIDER_DEFAULTS[provider];
 }
 
+export function validateProviderSettings(
+  settings: ProviderSettings,
+): ProviderSettings {
+  if (settings.provider === "demo") return settings;
+  if (
+    !settings.model.trim() ||
+    settings.model.length > 256 ||
+    /[\u0000-\u001f\u007f]/u.test(settings.model)
+  ) {
+    throw new Error("模型名称格式不正确。");
+  }
+  if (
+    settings.provider !== "ollama" &&
+    (!settings.apiKey?.trim() || /[\r\n]/u.test(settings.apiKey))
+  ) {
+    throw new Error("请先填写有效 API Key，或切换到本地演示。");
+  }
+  return {
+    ...settings,
+    baseUrl: validateBaseUrl(settings.baseUrl),
+    model: settings.model.trim(),
+    apiKey: settings.apiKey?.trim() ?? "",
+  };
+}
+
 const trimSlash = (value: string) => value.replace(/\/+$/, "");
 
 const resolveEndpoint = (baseUrl: string, suffix: string) => {
   const base = trimSlash(baseUrl);
   return base.endsWith(suffix) ? base : `${base}${suffix}`;
 };
+
+const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
+const REQUEST_TIMEOUT_MS = 120_000;
+
+function validateBaseUrl(value: string): string {
+  if (!value.trim() || value.length > 2048 || /[\s\\]/u.test(value)) {
+    throw new Error("Base URL 格式不正确。");
+  }
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error("Base URL 格式不正确。");
+  }
+  if (
+    !["http:", "https:"].includes(url.protocol) ||
+    url.username ||
+    url.password ||
+    url.search ||
+    url.hash
+  ) {
+    throw new Error("Base URL 只能包含 HTTP(S) 地址和路径。");
+  }
+  const loopback =
+    url.hostname === "localhost" ||
+    url.hostname === "::1" ||
+    /^127(?:\.\d{1,3}){3}$/u.test(url.hostname);
+  if (url.protocol === "http:" && !loopback) {
+    throw new Error("远程模型服务必须使用 HTTPS。");
+  }
+  return trimSlash(url.toString());
+}
+
+async function postJson(
+  endpoint: string,
+  label: string,
+  init: RequestInit,
+): Promise<unknown> {
+  const response = await fetch(endpoint, {
+    ...init,
+    redirect: "error",
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
+  const declared = Number(response.headers.get("content-length") ?? "0");
+  if (Number.isFinite(declared) && declared > MAX_RESPONSE_BYTES) {
+    throw new Error(`${label} 响应超过 2MB 限制。`);
+  }
+  const raw = await response.text();
+  if (new TextEncoder().encode(raw).byteLength > MAX_RESPONSE_BYTES) {
+    throw new Error(`${label} 响应超过 2MB 限制。`);
+  }
+  if (!response.ok) {
+    throw new Error(`${label} 返回 HTTP ${response.status}。`);
+  }
+  try {
+    return JSON.parse(raw) as unknown;
+  } catch {
+    throw new Error(`${label} 返回了无法解析的响应。`);
+  }
+}
 
 function extractJson(text: string): unknown {
   const trimmed = text.trim();
@@ -54,7 +141,7 @@ function mergeWithFallback(raw: unknown, input: AnalysisInput, provider: Provide
   const fallback = buildLocalAnalysis(input, provider);
   if (!raw || typeof raw !== "object") return fallback;
   const candidate = raw as Partial<AnalysisReport>;
-  return {
+  const merged: AnalysisReport = {
     ...fallback,
     ...candidate,
     id: fallback.id,
@@ -105,16 +192,31 @@ function mergeWithFallback(raw: unknown, input: AnalysisInput, provider: Provide
       ? candidate.safetyNotes
       : fallback.safetyNotes,
   };
+  return validateReport(calibrateModelReport(merged, input));
 }
 
 export async function loadSkillPrompt(): Promise<string> {
-  const response = await fetch(`${import.meta.env.BASE_URL}skill/SKILL.md`, {
-    cache: "force-cache",
-  });
-  if (!response.ok) {
+  const paths = [
+    "skills/letsdate-relationship-analysis/SKILL.md",
+    "skills/letsdate-relationship-analysis/references/evidence-rubric.md",
+    "skills/letsdate-relationship-analysis/references/calibration-and-uncertainty.md",
+    "skills/letsdate-relationship-analysis/references/action-and-reply.md",
+  ];
+  const responses = await Promise.all(
+    paths.map((path) =>
+      fetch(`${import.meta.env.BASE_URL}${path}`, { cache: "force-cache" }),
+    ),
+  );
+  if (responses.some((response) => !response.ok)) {
     throw new Error("分析 Skill 加载失败，请刷新页面后重试。");
   }
-  return response.text();
+  const sections = await Promise.all(responses.map((response) => response.text()));
+  return sections
+    .map(
+      (section, index) =>
+        `<approved-skill-reference path="${paths[index]}">\n${section}\n</approved-skill-reference>`,
+    )
+    .join("\n\n");
 }
 
 const buildUserPayload = (input: AnalysisInput) =>
@@ -141,6 +243,9 @@ const buildUserPayload = (input: AnalysisInput) =>
   );
 
 const friendlyError = (error: unknown) => {
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return "模型请求超时，请重试或切换本地演示。";
+  }
   if (error instanceof TypeError) {
     return "模型接口无法连接，可能是网络、CORS 或 Base URL 配置问题。可以切回本地演示继续体验。";
   }
@@ -169,16 +274,11 @@ async function requestOpenAICompatible(
   if (settings.provider === "deepseek" || settings.provider === "openai") {
     body.response_format = { type: "json_object" };
   }
-  const response = await fetch(endpoint, {
+  const data = (await postJson(endpoint, "模型接口", {
     method: "POST",
     headers,
     body: JSON.stringify(body),
-  });
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(`模型接口返回 ${response.status}：${detail.slice(0, 180)}`);
-  }
-  const data = (await response.json()) as {
+  })) as {
     choices?: Array<{ message?: { content?: string } }>;
   };
   return data.choices?.[0]?.message?.content ?? "";
@@ -190,7 +290,7 @@ async function requestAnthropic(
   input: AnalysisInput,
 ) {
   const endpoint = resolveEndpoint(settings.baseUrl, "/v1/messages");
-  const response = await fetch(endpoint, {
+  const data = (await postJson(endpoint, "Anthropic", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -205,12 +305,7 @@ async function requestAnthropic(
       system: systemPrompt,
       messages: [{ role: "user", content: buildUserPayload(input) }],
     }),
-  });
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(`Anthropic 返回 ${response.status}：${detail.slice(0, 180)}`);
-  }
-  const data = (await response.json()) as {
+  })) as {
     content?: Array<{ text?: string }>;
   };
   return data.content?.map((item) => item.text ?? "").join("") ?? "";
@@ -223,7 +318,7 @@ async function requestGemini(
 ) {
   const base = trimSlash(settings.baseUrl);
   const endpoint = `${base}/models/${encodeURIComponent(settings.model)}:generateContent?key=${encodeURIComponent(settings.apiKey ?? "")}`;
-  const response = await fetch(endpoint, {
+  const data = (await postJson(endpoint, "Gemini", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -234,12 +329,7 @@ async function requestGemini(
         responseMimeType: "application/json",
       },
     }),
-  });
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(`Gemini 返回 ${response.status}：${detail.slice(0, 180)}`);
-  }
-  const data = (await response.json()) as {
+  })) as {
     candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
   };
   return (
@@ -254,7 +344,7 @@ async function requestOllama(
   input: AnalysisInput,
 ) {
   const endpoint = resolveEndpoint(settings.baseUrl, "/api/chat");
-  const response = await fetch(endpoint, {
+  const data = (await postJson(endpoint, "Ollama", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -267,12 +357,7 @@ async function requestOllama(
         { role: "user", content: buildUserPayload(input) },
       ],
     }),
-  });
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(`Ollama 返回 ${response.status}：${detail.slice(0, 180)}`);
-  }
-  const data = (await response.json()) as {
+  })) as {
     message?: { content?: string };
   };
   return data.message?.content ?? "";
@@ -280,17 +365,13 @@ async function requestOllama(
 
 export async function analyzeWithProvider(
   input: AnalysisInput,
-  settings: ProviderSettings,
+  rawSettings: ProviderSettings,
 ): Promise<AnalysisReport> {
+  const settings = validateProviderSettings(rawSettings);
   if (settings.provider === "demo") {
     await new Promise((resolve) => window.setTimeout(resolve, 900));
     return buildLocalAnalysis(input, "demo");
   }
-  if (!settings.model.trim()) throw new Error("请先填写模型名称。");
-  if (settings.provider !== "ollama" && !settings.apiKey?.trim()) {
-    throw new Error("请先填写 API Key，或切换到本地演示。");
-  }
-
   try {
     const systemPrompt = await loadSkillPrompt();
     let output = "";

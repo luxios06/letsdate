@@ -1,9 +1,15 @@
 import { DEMO_REPORT, DEMO_SAMPLE, SAMPLE_HISTORY } from "./demo";
+import {
+  buildMessageOptions,
+  calibrateScore,
+  confidenceForStats,
+  conversationStats,
+  decisionFromScore,
+  scoreCalibration,
+} from "./calibration";
 import type {
   AnalysisInput,
   AnalysisReport,
-  Confidence,
-  Decision,
   EvidenceItem,
   MbtiDimension,
   PersonProfile,
@@ -19,19 +25,6 @@ const hash = (text: string) =>
 
 const includesAny = (text: string, words: string[]) =>
   words.some((word) => text.toLowerCase().includes(word.toLowerCase()));
-
-const confidenceFromScore = (score: number, materialLength: number): Confidence => {
-  if (score >= 76 && materialLength > 420) return "较高";
-  if (score >= 52 && materialLength > 180) return "中";
-  return "低";
-};
-
-const decisionFromScore = (score: number): Decision => {
-  if (score >= 78) return "继续推进";
-  if (score >= 62) return "适度推进";
-  if (score >= 45) return "先观察";
-  return "暂缓推进";
-};
 
 const createId = () =>
   globalThis.crypto?.randomUUID?.() ?? `analysis-${Date.now().toString(36)}`;
@@ -50,67 +43,130 @@ const countColdSignals = (text: string) =>
     text.match(/嗯嗯|好的|行吧|再说|看情况|忙|下次吧|不太方便|算了|随便/g) ?? []
   ).length;
 
-const buildMbti = (
-  text: string,
-  seed: number,
-  prefix: string,
-  introvertHint: boolean,
-): AnalysisReport["person"]["mbti"] => {
-  const eBoost = includesAny(text, ["一起", "主动", "朋友", "聚会", "见面", "哈哈"]) ? 9 : -3;
-  const nBoost = includesAny(text, ["感觉", "可能", "未来", "意义", "探索", "喜欢"]) ? 8 : 0;
-  const fBoost = includesAny(text, ["感受", "理解", "喜欢", "温暖", "陪伴"]) ? 8 : -2;
-  const jBoost = includesAny(text, ["计划", "安排", "确定", "周末", "时间"]) ? 7 : -4;
-  const dimensions: MbtiDimension[] = ([
-    {
-      key: "EI",
-      left: "I",
-      right: "E",
-      score: clamp((introvertHint ? 35 : 56) + eBoost + (seed % 9) - 4),
-      leaning: "",
-      note: "依据主动表达、自我披露与社交能量的文本线索估计。",
-    },
-    {
-      key: "SN",
-      left: "S",
-      right: "N",
-      score: clamp(50 + nBoost + (seed % 11) - 5),
-      leaning: "",
-      note: "依据具体经验与抽象探索语言的相对占比估计。",
-    },
-    {
-      key: "TF",
-      left: "T",
-      right: "F",
-      score: clamp(51 + fBoost + ((seed >> 3) % 9) - 4),
-      leaning: "",
-      note: "依据情绪表达、价值判断与问题解决语言估计。",
-    },
-    {
-      key: "JP",
-      left: "J",
-      right: "P",
-      score: clamp(49 + jBoost + ((seed >> 5) % 11) - 5),
-      leaning: "",
-      note: "依据计划性、开放安排与临时调整线索估计。",
-    },
-  ] satisfies MbtiDimension[]).map((dimension) => ({
-    ...dimension,
-    leaning: `${dimension.score >= 50 ? dimension.right : dimension.left} 倾向`,
-  }));
+const evidenceLineCount = (lines: string[], words: string[]) =>
+  lines.filter((line) => includesAny(line, words)).length;
 
-  const candidate = dimensions
-    .map((dimension) => (dimension.score >= 50 ? dimension.right : dimension.left))
-    .join("");
-  const alternatives = [
-    candidate.replace("E", "I"),
-    candidate.replace("N", "S"),
-    candidate.replace("F", "T"),
-  ].filter((item, index, list) => item !== candidate && list.indexOf(item) === index);
+const buildMbti = (
+  profile: string,
+  chat: string,
+  seed: number,
+): AnalysisReport["person"]["mbti"] => {
+  const lines = `${profile}\n${chat}`
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const axis = (
+    key: MbtiDimension["key"],
+    left: string,
+    right: string,
+    leftWords: string[],
+    rightWords: string[],
+    noteBase: string,
+  ): MbtiDimension => {
+    const leftCount = evidenceLineCount(lines, leftWords);
+    const rightCount = evidenceLineCount(lines, rightWords);
+    const total = leftCount + rightCount;
+    const status =
+      total >= 4 ? "supported" : total >= 2 ? "tentative" : "insufficient";
+    const jitter = ((seed >> key.length) % 5) - 2;
+    const score =
+      status === "insufficient"
+        ? 50
+        : clamp(50 + (rightCount - leftCount) * 11 + jitter, 24, 76);
+    return {
+      key,
+      left,
+      right,
+      score,
+      leaning:
+        status === "insufficient"
+          ? "证据不足"
+          : `${score >= 50 ? right : left} 倾向`,
+      note:
+        status === "insufficient"
+          ? `${noteBase} 当前不足两条独立线索。`
+          : `${noteBase} 当前有 ${total} 条相关文本线索，仍需真实场景验证。`,
+      status,
+      evidenceIds: [],
+    };
+  };
+
+  const dimensions = [
+    axis(
+      "EI",
+      "I",
+      "E",
+      ["独处", "安静", "慢热", "小范围", "不太喜欢连续追问"],
+      ["一起", "主动", "朋友", "聚会", "见面", "有空"],
+      "依据互动充电与独处偏好的行为线索。",
+    ),
+    axis(
+      "SN",
+      "S",
+      "N",
+      ["具体", "安排", "事实", "小店", "工作", "当天"],
+      ["感觉", "可能", "未来", "意义", "探索", "同频", "想法"],
+      "依据具体经验与概念探索偏好。",
+    ),
+    axis(
+      "TF",
+      "T",
+      "F",
+      ["逻辑", "效率", "方案", "确认", "原则"],
+      ["感受", "理解", "喜欢", "温暖", "陪伴", "尊重"],
+      "依据决策时更重视原则还是关系影响。",
+    ),
+    axis(
+      "JP",
+      "J",
+      "P",
+      ["安排", "确定", "确认", "时间", "周四", "周末"],
+      ["看心情", "临时", "随缘", "再说", "不一定", "探索"],
+      "依据计划收束与保持开放的自主选择。",
+    ),
+  ];
+  const usable = dimensions.filter(
+    (dimension) => dimension.status !== "insufficient",
+  );
+  const supported = dimensions.filter(
+    (dimension) => dimension.status === "supported",
+  );
+  const otherTurns = (chat.match(/^对方[:：]/gm) ?? []).length;
+  const enoughForCandidate =
+    (otherTurns >= 10 && usable.length >= 3) ||
+    (otherTurns >= 6 && usable.length === 4 && supported.length >= 2);
+  const candidate =
+    enoughForCandidate
+      ? dimensions
+          .map((dimension) =>
+            dimension.status === "insufficient"
+              ? ""
+              : dimension.score >= 50
+                ? dimension.right
+                : dimension.left,
+          )
+          .join("")
+      : "待观察";
+  const alternatives =
+    candidate === "待观察"
+      ? []
+      : [
+          candidate.replace("E", "I"),
+          candidate.replace("N", "S"),
+          candidate.replace("F", "T"),
+          candidate.replace("J", "P"),
+        ].filter(
+          (item, index, list) =>
+            item !== candidate && list.indexOf(item) === index,
+        );
 
   return {
-    candidate: prefix || candidate,
+    candidate,
     alternatives,
-    confidence: materialLength(text) > 420 ? "中" : "低",
+    confidence:
+      enoughForCandidate && materialLength(`${profile}\n${chat}`) > 420
+        ? "中"
+        : "低",
     dimensions,
   };
 };
@@ -118,46 +174,105 @@ const buildMbti = (
 const materialLength = (text: string) => text.replace(/\s/g, "").length;
 
 const buildBigFive = (text: string, seed: number): TraitScore[] => {
-  const openness = includesAny(text, ["展", "艺术", "探索", "旅行", "音乐", "新"]) ? 14 : 2;
-  const conscientiousness = includesAny(text, ["计划", "安排", "时间", "工作", "确定"]) ? 12 : 0;
-  const extraversion = includesAny(text, ["一起", "朋友", "聚会", "主动", "哈哈"]) ? 10 : -4;
-  const agreeableness = countQuestions(text) * 2 + (includesAny(text, ["谢谢", "理解", "可以", "没关系"]) ? 10 : 0);
-  const neuroticism = includesAny(text, ["焦虑", "担心", "害怕", "忽冷忽热", "内耗"]) ? 12 : -3;
+  const lines = text.split(/\n+/).filter(Boolean);
+  const trait = (
+    key: string,
+    label: string,
+    positive: string[],
+    negative: string[],
+    summaries: [string, string, string],
+    shift: number,
+  ): TraitScore => {
+    const positiveCount = evidenceLineCount(lines, positive);
+    const negativeCount = evidenceLineCount(lines, negative);
+    const signalCount = positiveCount + negativeCount;
+    const status =
+      signalCount >= 4 ? "supported" : signalCount >= 2 ? "tentative" : "insufficient";
+    const score =
+      status === "insufficient"
+        ? 50
+        : clamp(
+            50 + (positiveCount - negativeCount) * 8 + ((seed >> shift) % 7) - 3,
+            24,
+            84,
+          );
+    return {
+      key,
+      label,
+      score,
+      status,
+      evidenceIds: [],
+      summary:
+        status === "insufficient"
+          ? "材料不足以稳定判断，当前只保留为待验证假设。"
+          : score >= 64
+            ? summaries[0]
+            : score <= 42
+              ? summaries[1]
+              : summaries[2],
+    };
+  };
   return [
-    {
-      key: "openness",
-      label: "开放性",
-      score: clamp(57 + openness + (seed % 9)),
-      summary: openness > 5 ? "对新体验与多元表达有较高兴趣。" : "更偏向熟悉、可预测的体验。",
-    },
-    {
-      key: "conscientiousness",
-      label: "尽责性",
-      score: clamp(56 + conscientiousness + ((seed >> 2) % 8)),
-      summary:
-        conscientiousness > 5 ? "表达中能看到计划意识和行动推进。" : "更看重临场感，计划细度暂不明显。",
-    },
-    {
-      key: "extraversion",
-      label: "外向性",
-      score: clamp(54 + extraversion + ((seed >> 4) % 8)),
-      summary:
-        extraversion > 4 ? "愿意主动建立话题，也能承接社交能量。" : "更偏慢热或小范围交流。",
-    },
-    {
-      key: "agreeableness",
-      label: "宜人性",
-      score: clamp(58 + agreeableness + ((seed >> 6) % 7)),
-      summary:
-        agreeableness > 5 ? "表达中体现出照顾对方感受与协作倾向。" : "材料尚不足以稳定判断合作风格。",
-    },
-    {
-      key: "neuroticism",
-      label: "情绪敏感度",
-      score: clamp(47 + neuroticism + ((seed >> 8) % 7)),
-      summary:
-        neuroticism > 5 ? "可能对关系信号较敏感，需要更稳定的反馈。" : "当前没有明显的高敏感或波动线索。",
-    },
+    trait(
+      "openness",
+      "开放性",
+      ["摄影", "胶片", "艺术", "看展", "爵士", "音乐", "旅行", "探索", "新体验", "爬山"],
+      ["熟悉", "稳定", "习惯", "保守", "传统"],
+      [
+        "材料里多次出现艺术、探索或新体验线索。",
+        "目前更偏向熟悉、可预测的活动和节奏。",
+        "对新体验有兴趣，但探索强度尚不稳定。",
+      ],
+      1,
+    ),
+    trait(
+      "conscientiousness",
+      "尽责性",
+      ["计划", "安排", "时间", "工作", "确认", "周四", "周末"],
+      ["临时", "随缘", "看心情", "再说", "拖延"],
+      [
+        "表达中能看到计划、确认和行动推进。",
+        "更偏临场安排，计划细节尚不明显。",
+        "有一定计划意识，同时保留灵活空间。",
+      ],
+      3,
+    ),
+    trait(
+      "extraversion",
+      "外向性",
+      ["一起", "朋友", "聚会", "主动", "哈哈", "见面", "有空"],
+      ["慢热", "安静", "独处", "小范围", "不想聊"],
+      [
+        "愿意主动追问，也能承接社交能量。",
+        "更偏慢热或小范围交流。",
+        "愿意互动，但社交能量更偏中等或情境化。",
+      ],
+      5,
+    ),
+    trait(
+      "agreeableness",
+      "宜人性",
+      ["谢谢", "理解", "尊重", "没关系", "你呢", "不妨", "可以"],
+      ["贬低", "嘲讽", "命令", "必须", "不耐烦"],
+      [
+        "会照顾对方感受，并给互动留下空间。",
+        "材料中协作与照顾线索较少，需要更多样本。",
+        "表达有基本协作感，但边界与冲突场景仍未知。",
+      ],
+      7,
+    ),
+    trait(
+      "neuroticism",
+      "情绪敏感度",
+      ["焦虑", "担心", "害怕", "忽冷忽热", "内耗", "不安"],
+      ["稳定", "松弛", "不着急", "没关系", "放心"],
+      [
+        "材料中出现较多担心、内耗或关系不安线索。",
+        "当前情绪表达较稳定，没有明显波动线索。",
+        "存在一些敏感线索，但不足以判断稳定倾向。",
+      ],
+      9,
+    ),
   ];
 };
 
@@ -174,7 +289,7 @@ const buildPerson = (
       kind === "other"
         ? "材料显示 Ta 愿意分享、追问，并会主动把兴趣落到共同活动。整体更像在熟悉后逐步打开的体验型沟通者。"
         : "你的表达相对稳定，会给出具体回应，也重视关系里的确定感和舒适度。",
-    mbti: buildMbti(text, seed, "", introvertHint),
+    mbti: buildMbti(profile, chat, seed),
     bigFive: buildBigFive(text, seed),
     interaction: {
       attachment:
@@ -229,6 +344,8 @@ const buildEvidence = (chat: string, otherProfile: string): EvidenceItem[] => {
         : "当前有继续交流的兴趣，但投入程度仍需观察。",
     confidence: "中",
     caution: "单条消息可能受上下文、情绪和沟通习惯影响，不能单独作为结论。",
+    status: "confirmed",
+    evidenceIds: [`evidence-${index + 1}`],
   }));
 
   if (otherProfile.trim()) {
@@ -240,6 +357,8 @@ const buildEvidence = (chat: string, otherProfile: string): EvidenceItem[] => {
       inference: "可以作为破冰和互相了解的线索，但不等同于稳定人格。",
       confidence: "低",
       caution: "主页是经过编辑的自我呈现，适合用来找话题，不适合单独下判断。",
+      status: "tentative",
+      evidenceIds: ["profile-evidence"],
     });
   }
   return evidence.slice(0, 5);
@@ -267,20 +386,28 @@ export function buildLocalAnalysis(
   const cold = countColdSignals(input.chat);
   const initiative = (input.chat.match(/^我[:：]/gm) ?? []).length;
   const otherTurns = (input.chat.match(/^对方[:：]/gm) ?? []).length;
-  const material = materialLength(text);
   const evidence = buildEvidence(input.chat, input.otherProfile);
-  const compatibilityScore = clamp(52 + questions * 3 + warm * 4 - cold * 5 + Math.min(otherTurns, 5) * 2);
-  const interestScore = clamp(44 + questions * 5 + warm * 6 - cold * 7 + Math.min(otherTurns, 6) * 3);
-  const overallScore = clamp(compatibilityScore * 0.58 + interestScore * 0.42);
-  const confidence = confidenceFromScore(overallScore, material);
+  const stats = conversationStats(input);
+  const confidence = confidenceForStats(stats);
+  const calibration = scoreCalibration(input, confidence);
+  const rawCompatibility = clamp(
+    48 + questions * 3 + warm * 4 - cold * 6 + Math.min(otherTurns, 5) * 2,
+  );
+  const rawInterest = clamp(
+    42 + questions * 5 + warm * 6 - cold * 8 + Math.min(otherTurns, 6) * 3,
+  );
+  const compatibilitySubscore = calibrateScore(rawCompatibility, calibration);
+  const interestScore = calibrateScore(rawInterest, calibration);
+  const overallScore = calibrateScore(
+    compatibilitySubscore * 0.58 + interestScore * 0.42,
+    calibration,
+  );
   const decision = decisionFromScore(overallScore);
   const person = buildPerson(input.otherProfile, input.chat, seed, "other");
   const self = buildPerson(input.selfProfile, input.chat, seed + 13, "self");
   const coldRisk = cold > warm;
-  const nextMessage =
-    interestScore >= 65
-      ? "你之前提到的那个活动听起来还蛮有意思。等你这周节奏定下来，我们可以挑个下午一起去；如果时间不合适，也完全没关系，下次再找机会。"
-      : "这次聊天挺有意思，我先不急着往后推。等你方便的时候再接着聊，也想知道你最近有没有什么新发现。";
+  const messageOptions = buildMessageOptions(input, interestScore);
+  const nextMessage = messageOptions[0].text;
 
   return {
     id: createId(),
@@ -303,14 +430,15 @@ export function buildLocalAnalysis(
         : "当前材料能提供一些沟通偏好线索，但不足以形成稳定人格判断。更适合先用轻松话题收集更多样本，而不是过早给关系定性。",
     confidence,
     compatibilityScore: overallScore,
+    calibration,
     person,
     self,
     compatibility: {
-      score: compatibilityScore,
+      score: overallScore,
       label:
-        compatibilityScore >= 75
+        overallScore >= 75
           ? "互动顺畅，可继续验证"
-          : compatibilityScore >= 60
+          : overallScore >= 60
             ? "有连接点，需要对齐节奏"
             : "差异较明显，先观察",
       summary:
@@ -319,49 +447,65 @@ export function buildLocalAnalysis(
         {
           key: "communication",
           label: "沟通承接",
-          score: clamp(55 + questions * 4 + warm * 3),
+          score: calibrateScore(clamp(52 + questions * 4 + warm * 3), calibration),
           summary: questions > 2 ? "双方有较多追问与回应。" : "目前更多是单线叙述，追问还可以增加。",
         },
         {
           key: "pace",
           label: "推进节奏",
-          score: clamp(58 + warm * 2 - cold * 4),
+          score: calibrateScore(clamp(54 + warm * 2 - cold * 5), calibration),
           summary: cold > 2 ? "推进节奏存在拉扯，需要减少连续加码。" : "当前节奏没有明显压迫感。",
         },
         {
           key: "expression",
           label: "表达方式",
-          score: clamp(60 + (includesAny(text, ["哈哈", "😂", "喜欢", "感觉"]) ? 10 : 0)),
+          score: calibrateScore(
+            clamp(54 + (includesAny(text, ["哈哈", "😂", "喜欢", "感觉"]) ? 12 : 0)),
+            calibration,
+          ),
           summary: "你们都在用较具体的方式表达兴趣，但强度不完全一致。",
         },
         {
           key: "boundaries",
           label: "边界尊重",
-          score: clamp(70 + (includesAny(text, ["空间", "时间", "方便", "安排"]) ? 8 : -5)),
+          score: calibrateScore(
+            clamp(58 + (includesAny(text, ["空间", "时间", "方便", "安排"]) ? 12 : -5)),
+            calibration,
+          ),
           summary: "材料里能看到对时间和个人安排的提及，是积极信号。",
         },
         {
           key: "values",
           label: "价值线索",
-          score: clamp(55 + (includesAny(text, ["艺术", "运动", "旅行", "生活"]) ? 12 : 0)),
+          score: calibrateScore(
+            clamp(52 + (includesAny(text, ["艺术", "运动", "旅行", "生活", "摄影", "做饭"]) ? 12 : 0)),
+            calibration,
+          ),
           summary: "共同兴趣可以提供入口，长期匹配仍需要更多场景验证。",
         },
       ],
     },
     interest: {
       score: interestScore,
-      confidence: confidenceFromScore(interestScore, material),
+      confidence: confidenceForStats(stats),
       verdict:
         interestScore >= 70
           ? "有值得验证的积极兴趣信号。"
           : interestScore >= 50
             ? "兴趣存在，但投入稳定性尚未确认。"
             : "当前兴趣信号偏弱，不建议继续加码。",
-      signals:
-        evidence
-          .filter((item) => /主动|推进|回应/.test(item.inference + item.observation))
-          .slice(0, 3)
-          .map((item) => item.observation) || ["对方有基本回应"],
+      signals: (() => {
+        const unique = [
+          ...new Set(
+            evidence
+              .filter((item) =>
+                /主动|推进|回应/.test(item.inference + item.observation),
+              )
+              .map((item) => item.observation),
+          ),
+        ].slice(0, 3);
+        return unique.length ? unique : ["对方有基本回应"];
+      })(),
       ambiguities: [
         "友好回应不等于浪漫兴趣。",
         "真正的投入程度要看对方是否愿意共同确定下一次互动。",
@@ -374,6 +518,7 @@ export function buildLocalAnalysis(
           ? "当前投入与回应不对等，继续增加主动可能强化消耗。"
           : "用一次低压力、可撤回的具体行动验证关系温度，比反复解读语气更有效。",
       nextMessage,
+      messageOptions,
       ifWarm:
         "对方给出具体时间或主动提出替代安排时，直接确认地点、时长和交通，不需要继续试探。",
       ifCold:

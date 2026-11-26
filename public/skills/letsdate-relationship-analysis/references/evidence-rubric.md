@@ -12,6 +12,28 @@ Use this rubric when deciding whether a signal is strong enough to support a per
 
 Profile text is useful for interests, self-image, values, and possible opening topics. It is weak evidence for stable personality because users edit their profiles strategically.
 
+## Evidence ledger
+
+- `quote` must be an exact continuous substring of the supplied material. Paraphrase belongs in `observation`.
+- Do not attribute SELF content or third-party statements to the other person.
+- A repeated quote from the same original message is still one independent source.
+- Keep an alternative explanation for every inference that could also be caused by politeness, context, workload, mood, culture, or platform norms.
+- Cite stable evidence IDs on the fields they support. Do not use an unrelated quote merely to satisfy a schema.
+
+## Status
+
+- `confirmed`: the quote and direct observation are both present in the source.
+- `tentative`: the observation is present, but the personality or relationship meaning has plausible alternatives.
+- `insufficient`: the field cannot be supported without inventing missing context.
+
+For personality dimensions:
+
+- `insufficient`: fewer than two distinct relevant lines.
+- `tentative`: two or three distinct lines, or one explicit self-description that directly addresses the axis.
+- `supported`: at least four relevant lines across multiple contexts, with counterexamples considered.
+
+If a host applies a later evidence minimum, follow the stricter rule.
+
 ## Confidence
 
 - Low: one source, short material, contradictory signals, or a claim that depends on off-platform context.

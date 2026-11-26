@@ -32,6 +32,19 @@ export const DEMO_REPORT: AnalysisReport = {
     "对方主动追问、接住话题并提出可执行的见面方向，兴趣信号偏积极。Ta 同时明确保留日程确认空间，这更像边界感，而不是冷淡。适合用一次低压力、可撤回的具体邀约验证关系温度。",
   confidence: "中",
   compatibilityScore: 74,
+  calibration: {
+    evidenceMessages: 7,
+    reciprocalTurns: 7,
+    questionCount: 3,
+    sourceCount: 3,
+    reliability: 0.84,
+    scoreCap: 86,
+    method: "向 50 分收缩并按材料充分性设置上限",
+    notes: [
+      "双方主页和聊天均提供了可核实证据。",
+      "样本仍不足以判断稳定人格，关系分数不代表成功概率。",
+    ],
+  },
   person: {
     summary:
       "偏体验驱动，愿意分享生活细节，也重视有质量的交流。社交上并非持续高能量，更像是在熟悉后逐步打开。",
@@ -47,6 +60,8 @@ export const DEMO_REPORT: AnalysisReport = {
           score: 62,
           leaning: "偏 E",
           note: "主动追问、愿意发起活动，但也提到喜欢小范围深聊。",
+          status: "tentative",
+          evidenceIds: ["demo-1", "demo-4"],
         },
         {
           key: "SN",
@@ -55,6 +70,8 @@ export const DEMO_REPORT: AnalysisReport = {
           score: 68,
           leaning: "偏 N",
           note: "关注探索感、氛围与共同体验，而非只描述具体日程。",
+          status: "tentative",
+          evidenceIds: ["demo-2"],
         },
         {
           key: "TF",
@@ -63,6 +80,8 @@ export const DEMO_REPORT: AnalysisReport = {
           score: 71,
           leaning: "偏 F",
           note: "用感受与关系体验组织表达，但证据仍不足以定论。",
+          status: "tentative",
+          evidenceIds: ["demo-2", "demo-4"],
         },
         {
           key: "JP",
@@ -71,6 +90,8 @@ export const DEMO_REPORT: AnalysisReport = {
           score: 58,
           leaning: "略偏 P",
           note: "接受临时起意，也愿意提前确认计划。",
+          status: "tentative",
+          evidenceIds: ["demo-3"],
         },
       ],
     },
@@ -80,30 +101,40 @@ export const DEMO_REPORT: AnalysisReport = {
         label: "开放性",
         score: 84,
         summary: "对新体验、艺术和户外探索的接受度高。",
+        status: "supported",
+        evidenceIds: ["demo-2", "demo-1"],
       },
       {
         key: "conscientiousness",
         label: "尽责性",
         score: 61,
         summary: "有计划意识，但不追求事事确定。",
+        status: "tentative",
+        evidenceIds: ["demo-3"],
       },
       {
         key: "extraversion",
         label: "外向性",
         score: 66,
         summary: "愿意主动，但能量更偏向小范围互动。",
+        status: "tentative",
+        evidenceIds: ["demo-1", "demo-2"],
       },
       {
         key: "agreeableness",
         label: "宜人性",
         score: 73,
         summary: "会接住话题，并给对方留下舒服的参与空间。",
+        status: "supported",
+        evidenceIds: ["demo-1", "demo-4"],
       },
       {
         key: "neuroticism",
         label: "情绪敏感度",
         score: 42,
         summary: "当前材料看不到明显的情绪波动或过度索取。",
+        status: "insufficient",
+        evidenceIds: [],
       },
     ],
     interaction: {
@@ -134,6 +165,8 @@ export const DEMO_REPORT: AnalysisReport = {
           score: 38,
           leaning: "偏 I",
           note: "你描述了慢热和偏好小范围交流。",
+          status: "tentative",
+          evidenceIds: ["self-profile"],
         },
         {
           key: "SN",
@@ -142,6 +175,8 @@ export const DEMO_REPORT: AnalysisReport = {
           score: 58,
           leaning: "略偏 N",
           note: "会从活动延展到氛围和感受。",
+          status: "insufficient",
+          evidenceIds: [],
         },
         {
           key: "TF",
@@ -150,6 +185,8 @@ export const DEMO_REPORT: AnalysisReport = {
           score: 63,
           leaning: "偏 F",
           note: "关系中更关注回应质量和舒适度。",
+          status: "tentative",
+          evidenceIds: ["self-profile"],
         },
         {
           key: "JP",
@@ -158,6 +195,8 @@ export const DEMO_REPORT: AnalysisReport = {
           score: 64,
           leaning: "偏 J",
           note: "偏好较稳的日程和明确下一步。",
+          status: "tentative",
+          evidenceIds: ["self-profile"],
         },
       ],
     },
@@ -167,30 +206,40 @@ export const DEMO_REPORT: AnalysisReport = {
         label: "开放性",
         score: 76,
         summary: "对艺术、城市与新的共同体验保持兴趣。",
+        status: "tentative",
+        evidenceIds: ["self-profile"],
       },
       {
         key: "conscientiousness",
         label: "尽责性",
         score: 79,
         summary: "表达具体，倾向给出稳定安排。",
+        status: "tentative",
+        evidenceIds: ["self-profile"],
       },
       {
         key: "extraversion",
         label: "外向性",
         score: 43,
         summary: "慢热，但不会回避主动回应。",
+        status: "tentative",
+        evidenceIds: ["self-profile"],
       },
       {
         key: "agreeableness",
         label: "宜人性",
         score: 74,
         summary: "善于顺着对方兴趣推进，不强行主导。",
+        status: "tentative",
+        evidenceIds: ["self-profile"],
       },
       {
         key: "neuroticism",
         label: "情绪敏感度",
         score: 55,
         summary: "对关系信号较敏感，但表达仍克制。",
+        status: "insufficient",
+        evidenceIds: [],
       },
     ],
     interaction: {
@@ -264,6 +313,20 @@ export const DEMO_REPORT: AnalysisReport = {
       "当前出现连续追问、共同活动设想和时间确认，值得推进一次低压力邀约；但推进幅度应控制在单次具体安排，不用提前定义关系。",
     nextMessage:
       "周六如果你那边时间定了告诉我，我们可以挑一个下午去看展，之后找个安静的地方吃饭。时间不方便也完全没关系，我们再换个周末。",
+    messageOptions: [
+      {
+        tone: "留空间",
+        text: "周六如果你那边时间定了告诉我，我们可以挑一个下午去看展，之后找个安静的地方吃饭。时间不方便也完全没关系，我们再换个周末。",
+      },
+      {
+        tone: "直接确认",
+        text: "我想确认一下，周六时间定了的话，要不要把看展和吃饭安排上？",
+      },
+      {
+        tone: "轻松一点",
+        text: "周六见分晓。时间定了就去看展，我负责拍照，你负责挑一家好吃的小店。",
+      },
+    ],
     ifWarm:
       "对方给出具体时间时，直接确认地点和大致时长，并保留一个双方都可调整的备选方案。",
     ifCold:
@@ -288,6 +351,8 @@ export const DEMO_REPORT: AnalysisReport = {
       inference: "存在继续了解你的意愿，互动不是单向输出。",
       confidence: "较高",
       caution: "主动提问也可能来自友好沟通习惯。",
+      status: "confirmed",
+      evidenceIds: ["demo-1"],
     },
     {
       id: "demo-2",
@@ -297,6 +362,8 @@ export const DEMO_REPORT: AnalysisReport = {
       inference: "可能偏体验驱动，重视有质量的交流。",
       confidence: "中",
       caution: "简介是自我呈现，不等同于完整人格。",
+      status: "tentative",
+      evidenceIds: ["demo-2"],
     },
     {
       id: "demo-3",
@@ -306,6 +373,8 @@ export const DEMO_REPORT: AnalysisReport = {
       inference: "有一定兴趣，同时保留自己的计划边界。",
       confidence: "中",
       caution: "真正的投入程度要看后续是否按时回复。",
+      status: "confirmed",
+      evidenceIds: ["demo-3"],
     },
     {
       id: "demo-4",
@@ -315,6 +384,8 @@ export const DEMO_REPORT: AnalysisReport = {
       inference: "当前互动有共同创造感，关系推进阻力较低。",
       confidence: "中",
       caution: "轻松配合不自动等于浪漫兴趣。",
+      status: "tentative",
+      evidenceIds: ["demo-4"],
     },
   ],
   uncertainties: [

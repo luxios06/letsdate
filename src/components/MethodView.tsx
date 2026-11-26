@@ -20,7 +20,7 @@ export function MethodView() {
         </div>
         <a
           className="secondary-button"
-          href={`${import.meta.env.BASE_URL}skill/SKILL.md`}
+          href={`${import.meta.env.BASE_URL}skills/letsdate-relationship-analysis/SKILL.md`}
           target="_blank"
           rel="noreferrer"
         >

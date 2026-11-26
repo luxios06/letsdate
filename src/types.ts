@@ -2,6 +2,8 @@ export type View = "analyze" | "history" | "method";
 export type SourceKey = "self" | "other";
 export type Confidence = "低" | "中" | "较高";
 export type Decision = "继续推进" | "适度推进" | "先观察" | "暂缓推进";
+export type EvidenceStatus = "insufficient" | "tentative" | "supported";
+export type EvidenceStrength = "insufficient" | "tentative" | "confirmed";
 
 export type ProviderId =
   | "demo"
@@ -34,6 +36,8 @@ export interface TraitScore {
   label: string;
   score: number;
   summary: string;
+  status: EvidenceStatus;
+  evidenceIds: string[];
 }
 
 export interface MbtiDimension {
@@ -43,6 +47,8 @@ export interface MbtiDimension {
   score: number;
   leaning: string;
   note: string;
+  status: EvidenceStatus;
+  evidenceIds: string[];
 }
 
 export interface MbtiLens {
@@ -95,16 +101,35 @@ export interface EvidenceItem {
   inference: string;
   confidence: Confidence;
   caution: string;
+  status: EvidenceStrength;
+  evidenceIds: string[];
+}
+
+export interface MessageOption {
+  tone: string;
+  text: string;
 }
 
 export interface ActionPlan {
   decision: Decision;
   rationale: string;
   nextMessage: string;
+  messageOptions: MessageOption[];
   ifWarm: string;
   ifCold: string;
   conversationMoves: string[];
   stopSigns: string[];
+}
+
+export interface ScoreCalibration {
+  evidenceMessages: number;
+  reciprocalTurns: number;
+  questionCount: number;
+  sourceCount: number;
+  reliability: number;
+  scoreCap: number;
+  method: string;
+  notes: string[];
 }
 
 export interface AnalysisReport {
@@ -117,6 +142,7 @@ export interface AnalysisReport {
   overallSummary: string;
   confidence: Confidence;
   compatibilityScore: number;
+  calibration: ScoreCalibration;
   person: PersonProfile;
   self: PersonProfile;
   compatibility: {

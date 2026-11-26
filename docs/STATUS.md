@@ -10,7 +10,10 @@ Saved and deployed: 2026-11-26
 - Provider adapters for OpenAI, DeepSeek, Anthropic, Gemini, Ollama and custom OpenAI-compatible APIs.
 - MBTI lens, Big Five, interaction patterns, compatibility, interest signals, evidence chain and action plan.
 - History, report export, model/privacy settings and PWA base.
-- Cross-model Agent Skill under `public/skill/`.
+- Cross-model Agent Skill under `public/skills/letsdate-relationship-analysis/`.
+- Calibrated score caps, MBTI evidence status and three reply tones.
+- `zod` schema validation for every model-generated report.
+- WechatVibe 1.3.6 source review and reuse decisions in `docs/WECHATVIBE_REVIEW.md`.
 - GitHub Pages deployment workflow.
 - Product, architecture, privacy, demo script and submission documents.
 - Desktop, mobile, settings, evidence and action screenshots under `docs/assets/`.
@@ -19,13 +22,14 @@ Saved and deployed: 2026-11-26
 
 ## Verified
 
-- `pnpm test`: passed.
+- `pnpm test`: 11 tests passed.
 - `pnpm check`: passed.
 - `pnpm build`: passed.
 - Playwright desktop and 390px mobile flows: passed.
 - No horizontal overflow in verified viewports.
 - Browser console: no errors.
 - Browser OCR: Chinese screenshot recognized and normalized successfully.
+- Skill validator: passed.
 - Live GitHub Pages report flow: passed.
 - Live Agent Skill request: HTTP 200.
 - Live production page: no console errors and no horizontal overflow.

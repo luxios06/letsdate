@@ -1098,6 +1098,21 @@ h3 {
   line-height: 1.4;
 }
 
+.calibration-note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.calibration-note span {
+  padding: 4px 7px;
+  border: 1px solid rgba(255, 250, 241, 0.12);
+  border-radius: 3px;
+  color: rgba(255, 250, 241, 0.48);
+  font-size: 8px;
+}
+
 .verdict__score {
   position: relative;
   z-index: 1;
@@ -1315,6 +1330,14 @@ h3 {
   color: var(--forest);
 }
 
+.mbti-panel__title > strong.mbti-panel__candidate--unknown {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
+    "Hiragino Sans GB", sans-serif;
+  font-size: 30px;
+  line-height: 1.1;
+}
+
 .mbti-panel__title div {
   display: flex;
   gap: 5px;
@@ -1441,6 +1464,27 @@ h3 {
   gap: 12px;
   color: var(--ink-soft);
   font-size: 9px;
+}
+
+.trait-row__label span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.trait-row__label em {
+  color: var(--muted);
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.trait-row.is-uncertain .trait-row__track span {
+  background: var(--line-strong);
+}
+
+.trait-row.is-uncertain .trait-row__track i {
+  opacity: 0.35;
 }
 
 .trait-row__label strong {
@@ -1967,6 +2011,31 @@ h3 {
   font-family: "Iowan Old Style", "Songti SC", serif;
   font-size: 20px;
   line-height: 1.65;
+}
+
+.message-tone-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 15px;
+}
+
+.message-tone-tabs button {
+  min-height: 26px;
+  border: 1px solid rgba(255, 250, 241, 0.16);
+  border-radius: 13px;
+  background: transparent;
+  padding: 0 9px;
+  color: rgba(255, 250, 241, 0.58);
+  font-size: 8px;
+  cursor: pointer;
+}
+
+.message-tone-tabs button:hover,
+.message-tone-tabs button.is-active {
+  border-color: var(--coral);
+  background: var(--coral);
+  color: var(--forest);
 }
 
 .branch-actions {

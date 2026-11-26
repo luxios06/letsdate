@@ -6,7 +6,7 @@ letsdate 是一个面向 18-30 岁青年男女的关系沟通画像工具。它�
 
 项目不是“读心术”，也不会把 MBTI 或大五人格包装成确定结论。每条判断都要求绑定原话、说明可能解释，并标注置信度。
 
-[在线体验](https://luxios06.github.io/letsdate/) · [Agent Skill](./public/skill/SKILL.md) · [产品说明](./docs/PRODUCT.md) · [演示剧本](./docs/DEMO_SCRIPT.md)
+[在线体验](https://luxios06.github.io/letsdate/) · [Agent Skill](./public/skills/letsdate-relationship-analysis/SKILL.md) · [产品说明](./docs/PRODUCT.md) · [演示剧本](./docs/DEMO_SCRIPT.md) · [WechatVibe 评估](./docs/WECHATVIBE_REVIEW.md)
 
 ![letsdate 桌面端画像报告](./docs/assets/report-overview.png)
 
@@ -30,6 +30,8 @@ letsdate 把这些能力收束成一个可解释的闭环：
 - **多维人格透镜**：MBTI 候选与替代类型、大五人格、社交能量、冲突线索、边界感和价值需求。
 - **证据链**：事实观察、可能推断、反证和置信度分开呈现。
 - **关系动作**：给出继续推进、适度推进、先观察或暂缓推进的判断，并提供自然、可撤回的消息草稿。
+- **校准分数**：按对方消息量、双向回合和证据可靠性收缩，文本证据不会直接给出 100 分。
+- **三种回复语气**：留空间、直接确认和轻松一点，并优先复用聊天中已经出现的日期与活动。
 - **截图 OCR**：支持浏览器端识别中文聊天截图和主页截图。
 - **隐私可控**：历史记录默认只存在本地；API Key 默认只在当前标签页会话中保存；支持一键清除。
 - **PWA 基础**：可安装到桌面或手机主屏幕，为后续原生 App 上架预留基础。
@@ -39,7 +41,8 @@ letsdate 把这些能力收束成一个可解释的闭环：
 ```text
 .
 ├── public/
-│   ├── skill/                    # 跨模型 Agent Skill 与证据评分规则
+│   ├── skills/letsdate-relationship-analysis/
+│   │                              # 跨模型 Agent Skill 与证据评分规则
 │   ├── brand-mark.svg
 │   ├── manifest.webmanifest
 │   └── sw.js
@@ -47,7 +50,9 @@ letsdate 把这些能力收束成一个可解释的闭环：
 │   ├── components/               # 工作台、报告、历史、设置与方法页
 │   ├── lib/
 │   │   ├── analyzer.ts           # 无 API 也能运行的本地演示引擎
+│   │   ├── calibration.ts        # 分数收缩、MBTI 状态和上下文回复
 │   │   ├── providers.ts          # OpenAI / DeepSeek / Anthropic / Gemini / Ollama
+│   │   ├── report-schema.ts      # zod 报告结构校验
 │   │   ├── ocr.ts                # Tesseract.js 浏览器 OCR
 │   │   └── storage.ts            # 本地历史与密钥策略
 │   ├── App.tsx
@@ -88,17 +93,18 @@ API Key 默认只写入 `sessionStorage`，关闭当前标签页后清除。只�
 
 ## Agent Skill
 
-入口文件：[`public/skill/SKILL.md`](./public/skill/SKILL.md)
+入口文件：[`public/skills/letsdate-relationship-analysis/SKILL.md`](./public/skills/letsdate-relationship-analysis/SKILL.md)
 
 Skill 包含：
 
-- 输入充分性与证据评分。
+- 精确引文、证据 ID 与来源状态。
 - MBTI、大五人格和互动模式的分析规则。
-- 兴趣信号与关系适配的区分。
-- 决策阈值、置信度与安全边界。
+- 分数收缩、材料上限与决策阈值。
+- 三种语气的可执行回复建议。
+- 置信度、反证与安全边界。
 - 完整 JSON 输出协议。
 
-任意支持系统提示词和结构化输出的 Agent 都可以读取 `SKILL.md` 与 `references/evidence-rubric.md` 来复用分析协议。
+任意支持系统提示词和结构化输出的 Agent 都可以读取 `SKILL.md` 以及 `references/` 下的证据、校准和回复规则来复用分析协议。
 
 ## 数据与伦理
 
@@ -112,11 +118,12 @@ Skill 包含：
 
 ## 已验证
 
-- `pnpm test`：3 个本地分析测试通过。
+- `pnpm test`：11 个分析、校准与模型边界测试通过。
 - `pnpm check`：TypeScript 类型检查通过。
 - `pnpm build`：生产构建通过。
 - Playwright：桌面与 390px 手机视口完成输入、示例分析、报告页、证据页和行动页交互验证。
 - 关键视口无横向溢出，浏览器控制台无错误。
+- Skill 结构通过 `quick_validate.py` 校验。
 
 ## Roadmap
 
