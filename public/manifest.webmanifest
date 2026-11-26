@@ -1,0 +1,18 @@
+{
+  "name": "letsdate 关系沟通画像",
+  "short_name": "letsdate",
+  "description": "从主页与聊天中提取可验证的关系信号。",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f0e8",
+  "theme_color": "#173f39",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "./brand-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
