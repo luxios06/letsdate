@@ -1,6 +1,6 @@
 # Current Status
 
-Saved: 2026-11-26
+Saved and deployed: 2026-11-26
 
 ## Completed
 
@@ -14,6 +14,8 @@ Saved: 2026-11-26
 - GitHub Pages deployment workflow.
 - Product, architecture, privacy, demo script and submission documents.
 - Desktop, mobile, settings, evidence and action screenshots under `docs/assets/`.
+- GitHub repository: `https://github.com/luxios06/letsdate`.
+- GitHub Pages: `https://luxios06.github.io/letsdate/`.
 
 ## Verified
 
@@ -24,15 +26,16 @@ Saved: 2026-11-26
 - No horizontal overflow in verified viewports.
 - Browser console: no errors.
 - Browser OCR: Chinese screenshot recognized and normalized successfully.
+- Live GitHub Pages report flow: passed.
+- Live Agent Skill request: HTTP 200.
+- Live production page: no console errors and no horizontal overflow.
 
-## Pending
+## Optional Next Steps
 
-- Create `luxios06/letsdate` on GitHub.
-- Push the local project.
-- Enable GitHub Pages if the repository setting does not pick it up automatically.
-- Confirm the public URL: `https://luxios06.github.io/letsdate/`.
-- Optional: connect a real DeepSeek key for one live model smoke test.
-- Optional: record the 3-minute demo video from `docs/DEMO_SCRIPT.md`.
+- Connect a real DeepSeek key for one paid-model smoke test.
+- Record the 3-minute demo video from `docs/DEMO_SCRIPT.md`.
+- Conduct 5-10 interviews with target users.
+- Plan platform authorization, encrypted cloud sync and native app shell.
 
 ## Save Note
 
