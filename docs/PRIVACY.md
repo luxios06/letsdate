@@ -22,6 +22,8 @@ When the user imports a screenshot:
 - The image is processed in the browser and is not uploaded to letsdate.
 - PaddleOCR may download model files from the official PaddlePaddle model host.
 - OCR text is inserted into the local input field for review before analysis.
+- Batch screenshots are processed one at a time in the browser; only recognized text is retained in the input field.
+- The public website does not read WeChat databases, request database keys or inspect another application.
 
 Emotion and intimacy signal detection uses a local JSON lexicon. Text is not sent to an emotion-analysis service.
 

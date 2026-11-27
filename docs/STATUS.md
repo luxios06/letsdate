@@ -1,14 +1,15 @@
 # Current Status
 
-Saved and deployed: 2026-11-26
+Saved and deployed: 2026-11-27
 
-Current source version: `0.7.0`
+Current source version: `0.8.0`
 
 ## Completed
 
 - React + TypeScript + Vite Web App.
 - Input workspace for both profiles, chat transcript, screenshot OCR, relationship stage and goals.
 - PaddleOCR PP-OCRv6 primary OCR with Tesseract fallback.
+- Multi-image OCR import for up to 12 screenshots per batch, with per-file progress and boundary deduplication.
 - Chat bubble grouping, speaker recovery and timestamp-noise filtering.
 - Local DUTIR emotion analysis and intimacy/boundary signal detection.
 - Short conversations always receive an actionable suggestion and targeted follow-up questions.
@@ -37,7 +38,7 @@ Current source version: `0.7.0`
 
 ## Verified
 
-- `pnpm test`: 36 tests passed.
+- `pnpm test`: 39 tests passed.
 - `pnpm check`: passed.
 - `pnpm build`: passed.
 - Playwright desktop and 390px mobile flows: passed.

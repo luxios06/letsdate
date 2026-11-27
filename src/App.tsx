@@ -6,12 +6,18 @@ import type {
   AnalyzeProgress,
   HistoryRecord,
   ProviderSettings,
+  ScreenshotImportJob,
+  ScreenshotImportItem,
   SourceKey,
   View,
 } from "./types";
 import { DEMO_SAMPLE } from "./lib/demo";
 import { analyzeWithProvider } from "./lib/providers";
-import { recognizeScreenshot } from "./lib/ocr";
+import {
+  mergeScreenshotTexts,
+  recognizeScreenshot,
+  validateScreenshotFiles,
+} from "./lib/ocr";
 import {
   clearAllLocalData,
   clearHistory,
@@ -56,9 +62,11 @@ function App() {
     label: "准备分析",
   });
   const [error, setError] = useState("");
-  const [ocrBusy, setOcrBusy] = useState(false);
+  const [screenshotJob, setScreenshotJob] =
+    useState<ScreenshotImportJob | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
   const progressTimer = useRef<number | null>(null);
+  const ocrBusy = screenshotJob?.active ?? false;
 
   useEffect(() => {
     return () => {
@@ -79,6 +87,10 @@ function App() {
 
   const handleAnalyze = async () => {
     setError("");
+    if (ocrBusy) {
+      setError("请等待当前这批截图识别完成后再分析。");
+      return;
+    }
     if (!input.consent) {
       setError("请先确认材料已脱敏，并勾选授权说明。");
       return;
@@ -141,56 +153,155 @@ function App() {
     setToast({ kind: "success", message: "示例材料已载入，可以直接生成报告。" });
   };
 
-  const handleImportScreenshot = async (source: SourceKey, file: File) => {
+  const handleImportScreenshots = async (
+    source: SourceKey,
+    files: File[],
+  ) => {
     if (ocrBusy) {
-      setToast({ kind: "error", message: "上一张截图仍在识别中。" });
+      setToast({ kind: "error", message: "上一批截图仍在识别中。" });
       return;
     }
-    setOcrBusy(true);
-    setToast({ kind: "success", message: "正在识别截图，首次加载语言包可能需要一点时间。" });
-    try {
-      const result = await recognizeScreenshot(
-        file,
-        ({ status, progress: value }) => {
-        if (value > 0) {
-          setToast({ kind: "success", message: `截图识别中 ${value}%` });
-        }
-          if (status.includes("回退")) {
-            setToast({ kind: "success", message: status });
-          }
-        },
-        source === "chat" ? "chat" : "text",
-      );
-      const text = result.text;
-      if (!text) throw new Error("没有识别到可用文字。");
+    const checked = validateScreenshotFiles(files);
+    if (!checked.length) return;
+    const jobId =
+      globalThis.crypto?.randomUUID?.() ?? `ocr-${Date.now().toString(36)}`;
+    const initialErrors = checked.filter((item) => item.reason).length;
+    const items: ScreenshotImportItem[] = checked.map(({ file, reason }, index) => ({
+      id: `${jobId}-${index}`,
+      name: file.name,
+      status: reason ? "error" : "queued",
+      progress: reason ? 100 : 0,
+      message: reason ?? "等待识别",
+    }));
+    const accepted = checked.flatMap((item, index) =>
+      item.reason ? [] : [{ file: item.file, itemId: items[index].id }],
+    );
+    setScreenshotJob({
+      id: jobId,
+      source,
+      active: true,
+      completed: initialErrors,
+      total: checked.length,
+      items,
+    });
+    setToast({
+      kind: "success",
+      message: `已加入 ${accepted.length} 张截图，正在按选择顺序识别。`,
+    });
+
+    const patchItem = (
+      itemId: string,
+      patch: Partial<ScreenshotImportItem>,
+      completedDelta = 0,
+    ) => {
+      setScreenshotJob((current) => {
+        if (!current || current.id !== jobId) return current;
+        return {
+          ...current,
+          completed: Math.min(
+            current.total,
+            current.completed + completedDelta,
+          ),
+          items: current.items.map((item) =>
+            item.id === itemId ? { ...item, ...patch } : item,
+          ),
+        };
+      });
+    };
+
+    const recognized: string[] = [];
+    let successCount = 0;
+    let failedCount = initialErrors;
+    let confidenceTotal = 0;
+    for (let index = 0; index < accepted.length; index += 1) {
+      const { file, itemId } = accepted[index];
+      patchItem(itemId, {
+        status: "recognizing",
+        progress: 2,
+        message: `第 ${index + 1}/${accepted.length} 张，准备识别`,
+      });
+      try {
+        const result = await recognizeScreenshot(
+          file,
+          ({ status, progress }) => {
+            patchItem(itemId, {
+              status: "recognizing",
+              progress: Math.max(2, progress),
+              message: status,
+            });
+          },
+          source === "chat" ? "chat" : "text",
+        );
+        if (!result.text.trim()) throw new Error("没有识别到可用文字");
+        recognized.push(result.text);
+        successCount += 1;
+        confidenceTotal += result.confidence;
+        patchItem(
+          itemId,
+          {
+            status: "done",
+            progress: 100,
+            message: `识别完成 · ${Math.round(result.confidence * 100)}%`,
+            engine: result.engine,
+            confidence: result.confidence,
+            durationMs: result.durationMs,
+          },
+          1,
+        );
+      } catch (ocrError) {
+        failedCount += 1;
+        patchItem(
+          itemId,
+          {
+            status: "error",
+            progress: 100,
+            message:
+              ocrError instanceof Error ? ocrError.message : "截图识别失败",
+          },
+          1,
+        );
+      }
+    }
+
+    const mergedText = mergeScreenshotTexts(recognized);
+    if (mergedText) {
       setInput((current) => {
+        if (source === "chat") {
+          return {
+            ...current,
+            chat: mergeScreenshotTexts([current.chat, mergedText]),
+          };
+        }
         if (source === "self") {
           return {
             ...current,
-            selfProfile: [current.selfProfile, text].filter(Boolean).join("\n\n"),
+            selfProfile: [current.selfProfile, mergedText]
+              .filter(Boolean)
+              .join("\n\n"),
           };
         }
-        return source === "chat"
-          ? { ...current, chat: [current.chat, text].filter(Boolean).join("\n\n") }
-          : {
-              ...current,
-              otherProfile: [current.otherProfile, text].filter(Boolean).join("\n\n"),
-            };
+        return {
+          ...current,
+          otherProfile: [current.otherProfile, mergedText]
+            .filter(Boolean)
+            .join("\n\n"),
+        };
       });
+    }
+    setScreenshotJob((current) =>
+      current?.id === jobId ? { ...current, active: false } : current,
+    );
+
+    if (successCount > 0) {
       setToast({
         kind: "success",
-        message: `${result.engine === "paddleocr-v6" ? "PaddleOCR" : "Tesseract 兜底"}识别完成，置信度 ${Math.round(result.confidence * 100)}%。请检查文字和说话人。`,
+        message: `${successCount}/${checked.length} 张识别完成，平均置信度 ${Math.round((confidenceTotal / successCount) * 100)}%${failedCount ? `，${failedCount} 张未完成` : ""}。请检查顺序和说话人。`,
       });
-    } catch (ocrError) {
+    } else {
       setToast({
         kind: "error",
-        message:
-          ocrError instanceof Error
-            ? ocrError.message
-            : "截图识别失败，可以改用文字粘贴。",
+        message: "这批图片没有识别出可用文字，可以检查图片清晰度后重试。",
       });
-    } finally {
-      setOcrBusy(false);
     }
   };
 
@@ -262,7 +373,9 @@ function App() {
                 onChange={setInput}
                 onAnalyze={handleAnalyze}
                 onLoadSample={handleLoadSample}
-                onImportScreenshot={handleImportScreenshot}
+                screenshotJob={screenshotJob}
+                onImportScreenshots={handleImportScreenshots}
+                onDismissScreenshotJob={() => setScreenshotJob(null)}
                 onOpenSettings={() => setShowSettings(true)}
               />
             )}

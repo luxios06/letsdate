@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { assemblePaddleText } from "./ocr-paddle";
-import { normalizeOcrText } from "./ocr";
+import {
+  MAX_SCREENSHOT_BATCH,
+  mergeScreenshotTexts,
+  normalizeOcrText,
+  validateScreenshotFiles,
+} from "./ocr";
 
 describe("PaddleOCR text assembly", () => {
   it("sorts boxes by row then x", () => {
@@ -100,5 +105,45 @@ describe("normalizeOcrText", () => {
     expect(
       normalizeOcrText("我 们 周 日 见 ， 好 吗 ？\n对 方：可 以"),
     ).toBe("我们周日见，好吗？\n对方：可以");
+  });
+});
+
+describe("batch screenshot import", () => {
+  it("removes repeated boundary messages while preserving order", () => {
+    expect(
+      mergeScreenshotTexts([
+        "对方：你今天还好吗？\n我：有点累",
+        "我：有点累\n对方：那你先休息\n对方：晚点再聊",
+        "对方：晚点再聊\n我：好",
+      ]),
+    ).toBe(
+      "对方：你今天还好吗？\n我：有点累\n对方：那你先休息\n对方：晚点再聊\n我：好",
+    );
+  });
+
+  it("keeps legitimate repeated lines inside one screenshot", () => {
+    expect(
+      mergeScreenshotTexts(["对方：嗯\n对方：嗯\n我：好"]),
+    ).toBe("对方：嗯\n对方：嗯\n我：好");
+  });
+
+  it("validates count, format and size in selection order", () => {
+    const valid = Array.from({ length: MAX_SCREENSHOT_BATCH + 1 }, (_, index) => ({
+      name: `chat-${String(index + 1).padStart(2, "0")}.png`,
+      type: "image/png",
+      size: 1024,
+    }));
+    const checked = validateScreenshotFiles([
+      { name: "notes.txt", type: "text/plain", size: 40 },
+      ...valid,
+      { name: "large.jpg", type: "image/jpeg", size: 26 * 1024 * 1024 },
+    ]);
+
+    expect(checked.slice(1, MAX_SCREENSHOT_BATCH + 1).every((item) => !item.reason)).toBe(
+      true,
+    );
+    expect(checked[0]?.reason).toContain("图片格式");
+    expect(checked[MAX_SCREENSHOT_BATCH + 1]?.reason).toContain("最多");
+    expect(checked.at(-1)?.reason).toContain("25MB");
   });
 });

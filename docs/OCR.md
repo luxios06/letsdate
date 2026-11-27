@@ -11,6 +11,20 @@ letsdate uses a browser-native hybrid OCR pipeline.
 
 The first OCR request downloads the official PaddleOCR model archives and can take longer than later requests.
 
+## Batch import
+
+Chat and profile screenshot controls accept up to 12 images in one selection. The batch importer:
+
+1. Validates image format and the 25MB per-file limit.
+2. Processes accepted images sequentially with one shared OCR engine.
+3. Shows queued, recognizing, completed and failed state for every file.
+4. Keeps processing when one image fails.
+5. merges successful results in selection order.
+6. Removes repeated lines at screenshot boundaries, so overlapping screenshots do not duplicate messages.
+7. Appends the merged text once to the current field instead of overwriting manual edits.
+
+Sequential processing is intentional. Running several PaddleOCR inferences in parallel can multiply WASM memory use and freeze mobile browsers without improving practical throughput much.
+
 ## Image preprocessing
 
 - Screenshots are scaled up when they are small.
@@ -72,6 +86,21 @@ Output:
 ```
 
 No fallback was used for these fixtures.
+
+Batch boundary fixtures verify that an overlap such as:
+
+```text
+screenshot 1: 对方：那你先休息 / 我：好
+screenshot 2: 我：好 / 对方：周日见
+```
+
+is merged once as:
+
+```text
+对方：那你先休息
+我：好
+对方：周日见
+```
 
 ## Visual verification
 

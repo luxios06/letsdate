@@ -6,7 +6,7 @@ letsdate 是一个面向 18-30 岁青年男女的关系沟通画像工具。它�
 
 项目不是“读心术”，也不会把 MBTI 或大五人格包装成确定结论。每条判断都要求绑定原话、说明可能解释，并标注置信度。
 
-[在线体验](https://luxios06.github.io/letsdate/) · [Agent Skill](./public/skills/letsdate-relationship-analysis/SKILL.md) · [产品说明](./docs/PRODUCT.md) · [演示剧本](./docs/DEMO_SCRIPT.md) · [WechatVibe 评估](./docs/WECHATVIBE_REVIEW.md)
+[在线体验](https://luxios06.github.io/letsdate/) · [Agent Skill](./public/skills/letsdate-relationship-analysis/SKILL.md) · [产品说明](./docs/PRODUCT.md) · [导入说明](./docs/IMPORT.md) · [演示剧本](./docs/DEMO_SCRIPT.md) · [WechatVibe 评估](./docs/WECHATVIBE_REVIEW.md)
 
 ![letsdate 桌面端画像报告](./docs/assets/report-overview.png)
 
@@ -38,7 +38,7 @@ letsdate 把这些能力收束成一个可解释的闭环：
 - **人话优先报告**：先说明能确认什么、可能是什么、还有什么解释以及下一步观察。
 - **情感与亲密信号**：本地 DUTIR 七类情绪词典结合亲密关系规则，短对话也会给出建议和补充信息。
 - **匿名案例检索增强**：从公开授权数据派生并脱敏的情境案例中检索相似模式，只扩展解释和行动建议，不作为对方证据。
-- **高精度截图 OCR**：PaddleOCR PP-OCRv6 识别中文聊天截图和主页截图，Tesseract 作为兼容兜底。
+- **批量截图 OCR**：一次选择最多 12 张中文聊天或主页截图，顺序识别、逐张显示进度，并去除相邻截图边界重复消息；PaddleOCR PP-OCRv6 主识别，Tesseract 兜底。
 - **隐私可控**：历史记录默认只存在本地；API Key 默认只在当前标签页会话中保存；支持一键清除。
 - **PWA 基础**：可安装到桌面或手机主屏幕，为后续原生 App 上架预留基础。
 
@@ -132,7 +132,7 @@ Skill 包含：
 
 ## 已验证
 
-- `pnpm test`：36 个分析、会话、短回复、情感、案例检索、OCR、两阶段模型与边界测试通过。
+- `pnpm test`：39 个分析、会话、短回复、情感、案例检索、批量 OCR、两阶段模型与边界测试通过。
 - `pnpm check`：TypeScript 类型检查通过。
 - `pnpm build`：生产构建通过。
 - Playwright：桌面与 390px 手机视口完成输入、示例分析、报告页、证据页和行动页交互验证。

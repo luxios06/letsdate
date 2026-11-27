@@ -2,20 +2,24 @@ import {
   ArrowRight,
   Check,
   ChevronDown,
+  CircleAlert,
   FileText,
   ImagePlus,
+  Images,
   LoaderCircle,
   MessageCircleMore,
   RotateCcw,
   ShieldCheck,
   Sparkles,
   Upload,
+  X,
 } from "lucide-react";
 import { useRef, useState } from "react";
 import type {
   AnalyzeProgress,
   AnalysisInput,
   ProviderSettings,
+  ScreenshotImportJob,
   SourceKey,
 } from "../types";
 import { GOALS, STAGES } from "../lib/demo";
@@ -26,11 +30,13 @@ interface AnalyzeWorkspaceProps {
   settings: ProviderSettings;
   busy: boolean;
   progress: AnalyzeProgress;
+  screenshotJob: ScreenshotImportJob | null;
   error: string;
   onChange: (next: AnalysisInput) => void;
   onAnalyze: () => void;
   onLoadSample: () => void;
-  onImportScreenshot: (source: SourceKey, file: File) => void;
+  onImportScreenshots: (source: SourceKey, files: File[]) => void;
+  onDismissScreenshotJob: () => void;
   onOpenSettings: () => void;
 }
 
@@ -42,11 +48,13 @@ const PROGRESS_STEPS = [
 ];
 
 function ScreenshotButton({
-  onFile,
+  onFiles,
   label,
+  disabled,
 }: {
-  onFile: (file: File) => void;
+  onFiles: (files: File[]) => void;
   label: string;
+  disabled: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   return (
@@ -55,10 +63,11 @@ function ScreenshotButton({
         ref={inputRef}
         type="file"
         accept="image/*"
+        multiple
         hidden
         onChange={(event) => {
-          const file = event.target.files?.[0];
-          if (file) onFile(file);
+          const files = Array.from(event.target.files ?? []);
+          if (files.length) onFiles(files);
           event.currentTarget.value = "";
         }}
       />
@@ -66,7 +75,8 @@ function ScreenshotButton({
         type="button"
         className="text-button"
         onClick={() => inputRef.current?.click()}
-        title={label}
+        disabled={disabled}
+        title={`${label}，可一次选择多张，按选择顺序合并`}
       >
         <ImagePlus size={16} />
         {label}
@@ -75,19 +85,92 @@ function ScreenshotButton({
   );
 }
 
+function ScreenshotImportQueue({
+  job,
+  onDismiss,
+}: {
+  job: ScreenshotImportJob;
+  onDismiss: () => void;
+}) {
+  const finished = job.items.filter(
+    (item) => item.status === "done" || item.status === "error",
+  ).length;
+  const progress = job.total
+    ? Math.round(
+        job.items.reduce(
+          (sum, item) =>
+            sum +
+            (item.status === "done" || item.status === "error"
+              ? 100
+              : item.progress),
+          0,
+        ) / job.total,
+      )
+    : 0;
+  return (
+    <div className="screenshot-queue" aria-live="polite">
+      <div className="screenshot-queue__head">
+        <Images size={16} />
+        <div>
+          <strong>{job.active ? "正在批量识别" : "本批识别结果"}</strong>
+          <span>
+            {finished}/{job.total} 张已处理
+          </span>
+        </div>
+        {!job.active && (
+          <button type="button" onClick={onDismiss} title="清除本批识别记录">
+            <X size={14} />
+          </button>
+        )}
+      </div>
+      <div className="screenshot-queue__track">
+        <span style={{ width: `${progress}%` }} />
+      </div>
+      <div className="screenshot-queue__list">
+        {job.items.map((item, index) => (
+          <div
+            className={`screenshot-queue__item is-${item.status}`}
+            key={item.id}
+          >
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <div>
+              <strong title={item.name}>{item.name}</strong>
+              <small>{item.message}</small>
+            </div>
+            <em>
+              {item.status === "done" ? (
+                <Check size={14} />
+              ) : item.status === "error" ? (
+                <CircleAlert size={14} />
+              ) : item.status === "recognizing" ? (
+                <LoaderCircle className="spin" size={14} />
+              ) : (
+                `${item.progress}%`
+              )}
+            </em>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function AnalyzeWorkspace({
   input,
   settings,
   busy,
   progress,
+  screenshotJob,
   error,
   onChange,
   onAnalyze,
   onLoadSample,
-  onImportScreenshot,
+  onImportScreenshots,
+  onDismissScreenshotJob,
   onOpenSettings,
 }: AnalyzeWorkspaceProps) {
   const [stageOpen, setStageOpen] = useState(false);
+  const importing = screenshotJob?.active ?? false;
   const update = <K extends keyof AnalysisInput>(key: K, value: AnalysisInput[K]) =>
     onChange({ ...input, [key]: value });
 
@@ -113,8 +196,9 @@ export function AnalyzeWorkspace({
               <h3>你的表达方式</h3>
             </div>
             <ScreenshotButton
-              label="导入截图"
-              onFile={(file) => onImportScreenshot("self", file)}
+              label="导入多张"
+              disabled={importing}
+              onFiles={(files) => onImportScreenshots("self", files)}
             />
           </div>
           <label className="field-label" htmlFor="self-profile">
@@ -127,6 +211,12 @@ export function AnalyzeWorkspace({
             onChange={(event) => update("selfProfile", event.target.value)}
             placeholder="例如：慢热但会认真回应，喜欢运动和看展。"
           />
+          {screenshotJob?.source === "self" && (
+            <ScreenshotImportQueue
+              job={screenshotJob}
+              onDismiss={onDismissScreenshotJob}
+            />
+          )}
         </section>
 
         <section className="source-block source-block--other">
@@ -136,8 +226,9 @@ export function AnalyzeWorkspace({
               <h3>对方主页</h3>
             </div>
             <ScreenshotButton
-              label="导入截图"
-              onFile={(file) => onImportScreenshot("other", file)}
+              label="导入多张"
+              disabled={importing}
+              onFiles={(files) => onImportScreenshots("other", files)}
             />
           </div>
           <label className="field-label" htmlFor="other-profile">
@@ -150,6 +241,12 @@ export function AnalyzeWorkspace({
             onChange={(event) => update("otherProfile", event.target.value)}
             placeholder="粘贴对方愿意公开的文字信息，建议先去除姓名和账号。"
           />
+          {screenshotJob?.source === "other" && (
+            <ScreenshotImportQueue
+              job={screenshotJob}
+              onDismiss={onDismissScreenshotJob}
+            />
+          )}
         </section>
 
         <section className="source-block source-block--chat">
@@ -164,8 +261,9 @@ export function AnalyzeWorkspace({
                 我 / 对方逐条标注
               </span>
               <ScreenshotButton
-                label="识别聊天截图"
-                onFile={(file) => onImportScreenshot("chat", file)}
+                label="批量识别截图"
+                disabled={importing}
+                onFiles={(files) => onImportScreenshots("chat", files)}
               />
             </div>
           </div>
@@ -176,6 +274,12 @@ export function AnalyzeWorkspace({
             onChange={(event) => update("chat", event.target.value)}
             placeholder={`我：最近在听什么歌？\n对方：最近循环一支后摇乐队，你呢？\n\n尽量保留上下文，不要只截取单句。`}
           />
+          {screenshotJob?.source === "chat" && (
+            <ScreenshotImportQueue
+              job={screenshotJob}
+              onDismiss={onDismissScreenshotJob}
+            />
+          )}
           <div className="source-block__footer">
             <span>
               <FileText size={14} />
@@ -183,7 +287,7 @@ export function AnalyzeWorkspace({
             </span>
             <span>
               <ShieldCheck size={14} />
-              PaddleOCR 中文截图识别
+              PaddleOCR 批量中文截图识别
             </span>
           </div>
         </section>
@@ -263,12 +367,17 @@ export function AnalyzeWorkspace({
               type="button"
               className="primary-button primary-button--large"
               onClick={onAnalyze}
-              disabled={busy}
+              disabled={busy || importing}
             >
               {busy ? (
                 <>
                   <LoaderCircle className="spin" size={18} />
                   正在分析
+                </>
+              ) : importing ? (
+                <>
+                  <LoaderCircle className="spin" size={18} />
+                  正在识别截图
                 </>
               ) : (
                 <>

@@ -10,6 +10,15 @@ export interface OcrExtractionResult {
   durationMs: number;
 }
 
+export interface ScreenshotFileLike {
+  name: string;
+  type: string;
+  size: number;
+}
+
+export const MAX_SCREENSHOT_BATCH = 12;
+export const MAX_SCREENSHOT_FILE_BYTES = 25 * 1024 * 1024;
+
 export function normalizeOcrText(value: string) {
   return value
     .replace(/\r\n?/gu, "\n")
@@ -19,6 +28,52 @@ export function normalizeOcrText(value: string) {
     .replace(/([，。！？；：])[ \t]+/g, "$1")
     .replace(/[ \t]+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n");
+}
+
+export function validateScreenshotFiles<T extends ScreenshotFileLike>(
+  files: T[],
+): Array<{ file: T; reason?: string }> {
+  let acceptedCount = 0;
+  return files.map((file) => {
+    const looksLikeImage =
+      file.type.startsWith("image/") ||
+      /\.(?:png|jpe?g|webp|bmp|gif|heic|heif)$/iu.test(file.name);
+    if (!looksLikeImage) return { file, reason: "不是受支持的图片格式" };
+    if (file.size <= 0) return { file, reason: "图片为空" };
+    if (file.size > MAX_SCREENSHOT_FILE_BYTES) {
+      return { file, reason: "单张图片超过 25MB" };
+    }
+    if (acceptedCount >= MAX_SCREENSHOT_BATCH) {
+      return { file, reason: `一次最多识别 ${MAX_SCREENSHOT_BATCH} 张` };
+    }
+    acceptedCount += 1;
+    return { file };
+  });
+}
+
+function overlapLength(previous: string[], next: string[]) {
+  const maximum = Math.min(8, previous.length, next.length);
+  for (let size = maximum; size > 0; size -= 1) {
+    const previousTail = previous.slice(-size);
+    const nextHead = next.slice(0, size);
+    if (previousTail.every((line, index) => line === nextHead[index])) {
+      return size;
+    }
+  }
+  return 0;
+}
+
+export function mergeScreenshotTexts(segments: string[]) {
+  let merged: string[] = [];
+  for (const segment of segments) {
+    const lines = normalizeOcrText(segment)
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (!lines.length) continue;
+    merged = merged.concat(lines.slice(overlapLength(merged, lines)));
+  }
+  return merged.join("\n");
 }
 
 export async function recognizeScreenshot(

@@ -25,7 +25,7 @@ The full source tree was inspected by directory and dependency role:
 | API guidance | `electron/api-guidance.ts` | Subtext, scenario reading, strategies and reply options | Reuse self-voice matching and status contract |
 | Reply options | `electron/api-reply-options.ts` | Three bounded replies, no tools, no fabrication | Reuse three-option action design |
 | Local Laya model | `electron/laya/**`, `scripts/setup-models.ts` | ONNX multilingual local inference, model download and validation | Do not import |
-| WeChat reader | `native-reader/**`, `bridge/wechat_source.py` | Windows WeChat read-only database and UI access | Do not import |
+| WeChat reader | `native-reader/**`, `bridge/wechat_source.py` | Windows WeChat read-only database and UI access | Reference protocol only |
 | Desktop UI | `chatui/**`, Electron preload/main scripts | Windows desktop application | Do not import |
 | Tests | `bridge/test_*.py`, `tests/**` | Extensive regression suite for the desktop app | Reference only |
 
@@ -112,9 +112,29 @@ Local web inference can be revisited after the cloud workflow is validated.
 
 ### WeChat native reader
 
-The native reader is Windows-specific and accesses local WeChat data. letsdate deliberately does not log in to or scrape third-party platforms in the MVP.
+WechatVibe reads locally stored WeChat 4.x SQLCipher shards on Windows. Its reader:
 
-Platform import should only be added with explicit authorization, transparent permissions and encrypted storage.
+- discovers `xwechat_files` and the active account;
+- locates a bounded raw-key candidate already cached by the local WeChat process;
+- validates and decrypts database pages in memory;
+- replays committed WAL frames;
+- opens a decrypted in-memory SQLite image and queries text messages;
+- keeps keys in memory and never writes decrypted source databases;
+- requires Windows, WeChat 4.x, Python dependencies and a desktop runtime.
+
+A static GitHub Pages application cannot perform any of those reads. Browsers cannot enumerate `xwechat_files`, inspect another process's memory, or open a SQLCipher database with local keys. Adding that capability to the public website would also create unacceptable key-handling and cross-platform risk.
+
+The MVP therefore implements multi-image OCR for every platform. A future WeChat import would need a separate, explicitly installed local bridge with:
+
+- Windows-only capability detection.
+- Loopback-only communication with origin checks.
+- A visible account and conversation picker.
+- Read-only message retrieval with no key persistence.
+- User-controlled date range and message limit.
+- Encryption at rest for any temporary cache.
+- Explicit confirmation before sending selected text to a cloud model.
+
+Until that bridge exists, letsdate will not claim to read WeChat directly and will not ask users to paste database keys into the website.
 
 ### Provider SDKs
 

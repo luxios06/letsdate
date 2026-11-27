@@ -1,5 +1,10 @@
 export type View = "analyze" | "history" | "method";
 export type SourceKey = "self" | "other" | "chat";
+export type ScreenshotImportStatus =
+  | "queued"
+  | "recognizing"
+  | "done"
+  | "error";
 export type Confidence = "低" | "中" | "较高";
 export type Decision = "继续推进" | "适度推进" | "先观察" | "暂缓推进";
 export type EvidenceStatus = "insufficient" | "tentative" | "supported";
@@ -50,6 +55,26 @@ export interface AnalysisInput {
   relationshipStage: string;
   goal: string;
   consent: boolean;
+}
+
+export interface ScreenshotImportItem {
+  id: string;
+  name: string;
+  status: ScreenshotImportStatus;
+  progress: number;
+  message: string;
+  engine?: "paddleocr-v6" | "tesseract-fallback";
+  confidence?: number;
+  durationMs?: number;
+}
+
+export interface ScreenshotImportJob {
+  id: string;
+  source: SourceKey;
+  active: boolean;
+  completed: number;
+  total: number;
+  items: ScreenshotImportItem[];
 }
 
 export interface TraitScore {
