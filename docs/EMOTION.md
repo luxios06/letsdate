@@ -34,6 +34,10 @@ It never stops at only "insufficient evidence" or "wait and see".
 
 Control signals such as phone checking, location demands, isolation or forced reporting take priority over romantic interpretation. They are treated as boundary and safety risks.
 
+When a control signal is present, the final decision is forced to `暂缓推进`, compatibility is capped at 32 and interest at 28, even if the surrounding conversation contains warmth.
+
+Repair is checked before generic boundary wording when an apology is followed by a concrete future adjustment. This prevents a conflict sentence such as "you did not tell me in advance" from hiding the later repair behavior.
+
 ## Limitations
 
 - A word can belong to multiple emotion families.

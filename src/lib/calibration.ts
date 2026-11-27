@@ -280,6 +280,23 @@ export function buildMessageOptions(
   ];
 }
 
+export function buildSafetyMessageOptions(): MessageOption[] {
+  return [
+    {
+      tone: "明确边界",
+      text: "我需要保留自己的隐私和正常社交。查手机、持续定位这类要求我不能接受。",
+    },
+    {
+      tone: "留出协商",
+      text: "可以商量双方都能接受的沟通方式，但不能用“爱我”来要求我交出隐私或切断朋友联系。",
+    },
+    {
+      tone: "暂停推进",
+      text: "这件事让我不舒服，我们先停一下。等你愿意尊重我的边界，再继续沟通。",
+    },
+  ];
+}
+
 export function calibrateModelReport(
   report: AnalysisReport,
   input: AnalysisInput,
@@ -365,12 +382,24 @@ export function calibrateModelReport(
   const parsed = parseConversation(input.chat);
   const person = normalizePerson(report.person);
   const self = normalizePerson(report.self);
-  const compatibilityScore = bounded(
+  const hasControlRisk = report.emotion.intimacySignals.some(
+    (signal) => signal.key === "control",
+  );
+  const rawCompatibilityScore = bounded(
     report.compatibility.score * 0.58 + report.interest.score * 0.42,
   );
-  const decision = decisionFromScore(compatibilityScore);
-  const messageOptions =
-    report.action.messageOptions.length > 0
+  const compatibilityScore = hasControlRisk
+    ? Math.min(rawCompatibilityScore, 32)
+    : rawCompatibilityScore;
+  const interestScore = hasControlRisk
+    ? Math.min(bounded(report.interest.score), 28)
+    : bounded(report.interest.score);
+  const decision = hasControlRisk
+    ? "暂缓推进"
+    : decisionFromScore(compatibilityScore);
+  const messageOptions = hasControlRisk
+    ? buildSafetyMessageOptions()
+    : report.action.messageOptions.length > 0
       ? report.action.messageOptions.slice(0, 3)
       : buildMessageOptions(input, report.interest.score);
 
@@ -385,27 +414,72 @@ export function calibrateModelReport(
     compatibility: {
       ...report.compatibility,
       score: compatibilityScore,
+      label: hasControlRisk ? "安全边界优先" : report.compatibility.label,
+      summary: hasControlRisk
+        ? "当前最关键的匹配维度不是兴趣，而是对方能否尊重隐私、社交自由和明确拒绝。"
+        : report.compatibility.summary,
       dimensions: report.compatibility.dimensions.map((dimension) => ({
         ...dimension,
-        score: bounded(dimension.score),
+        score:
+          hasControlRisk && dimension.key === "boundaries"
+            ? 18
+            : bounded(dimension.score),
+        summary:
+          hasControlRisk && dimension.key === "boundaries"
+            ? "出现了控制性要求，边界尊重不足。"
+            : dimension.summary,
       })),
     },
     interest: {
       ...report.interest,
-      score: bounded(report.interest.score),
+      score: interestScore,
       confidence,
+      verdict: hasControlRisk
+        ? "目前不应把兴趣信号放在安全边界之前。"
+        : report.interest.verdict,
     },
     action: {
       ...report.action,
       decision,
       messageOptions,
       nextMessage: messageOptions[0]!.text,
+      rationale: hasControlRisk
+        ? "控制性要求不能被解释成关心或爱的证明。先确认边界，再观察对方能否尊重拒绝。"
+        : report.action.rationale,
+      ifWarm: hasControlRisk
+        ? "如果对方能收回要求、道歉并停止施压，可以继续观察，但仍需看到稳定行动。"
+        : report.action.ifWarm,
+      ifCold: hasControlRisk
+        ? "如果对方用冷暴力、羞辱或威胁回应拒绝，停止自证并优先拉开距离。"
+        : report.action.ifCold,
+      conversationMoves: hasControlRisk
+        ? [
+            "先暂停推进，不用继续证明信任或服从。",
+            "直接说明不能接受的隐私和社交限制。",
+            "观察拒绝后，对方是尊重边界还是升级施压。",
+          ]
+        : report.action.conversationMoves,
+      stopSigns: hasControlRisk
+        ? [
+            "用爱、吃醋或安全感要求交出隐私。",
+            "拒绝后继续施压、羞辱或惩罚。",
+            "限制与朋友家人的正常联系。",
+          ]
+        : report.action.stopSigns,
     },
     evidence: report.evidence.map((item) => ({
       ...item,
       evidenceIds: checkedIds(item.evidenceIds),
     })),
     shortReplies: parsed.shortReplies,
+    safetyNotes: hasControlRisk
+      ? [
+          ...new Set([
+            ...report.safetyNotes,
+            "查手机、持续定位、强制报备和切断社交属于高风险控制信号，不应被浪漫化。",
+          ]),
+        ]
+      : report.safetyNotes,
     pipeline: {
       ...report.pipeline,
       messageCount: parsed.messages.length,

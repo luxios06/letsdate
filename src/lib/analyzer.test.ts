@@ -146,4 +146,43 @@ describe("buildLocalAnalysis", () => {
     expect(replies).toContain("展馆");
     expect(replies).not.toContain("咖喱");
   });
+
+  it("keeps a confirmed mutual plan actionable without overstating confidence", () => {
+    const report = buildLocalAnalysis({
+      ...DEMO_SAMPLE,
+      selfProfile: "表达直接，希望得到清楚回应。",
+      otherProfile: "慢热，但更看重具体行动和稳定兑现。",
+      chat: `我：最近有点想你
+对方：我也是，周日想见你
+我：那一起吃饭？
+对方：好，我查了展馆附近的小店
+对方：周日两点展馆门口见`,
+    });
+    expect(["先观察", "适度推进"]).toContain(report.decision);
+    expect(report.confidence).toBe("低");
+    expect(report.action.nextMessage).toContain("周日");
+  });
+
+  it("forces control risk to pause and returns a boundary message", () => {
+    const report = buildLocalAnalysis({
+      ...DEMO_SAMPLE,
+      selfProfile: "需要个人空间，不接受查手机或限制正常社交。",
+      otherProfile: "会用吃醋和关心要求报备。",
+      chat: `对方：把定位一直开着
+我：不太舒服
+对方：你爱我就应该让我查手机
+对方：以后别和那个朋友联系
+我：这不行，我需要边界`,
+    });
+    expect(report.decision).toBe("暂缓推进");
+    expect(report.action.decision).toBe("暂缓推进");
+    expect(report.compatibilityScore).toBeLessThanOrEqual(32);
+    expect(report.action.nextMessage).toContain("隐私");
+    expect(
+      report.compatibility.dimensions.find(
+        (dimension) => dimension.key === "boundaries",
+      )?.score,
+    ).toBeLessThanOrEqual(20);
+    expect(report.safetyNotes.join("\n")).toContain("查手机");
+  });
 });

@@ -57,6 +57,19 @@ describe("emotion and intimacy analysis", () => {
     expect(result.quickRead.suggestion).toContain("边界");
   });
 
+  it("treats an apology and follow-up adjustment as repair, not a boundary violation", () => {
+    const result = analyzeEmotionFallback(
+      input(`我：你临时取消没提前说，我有点失落
+对方：抱歉，我应该早点告诉你
+我：我也不想憋着不说
+对方：以后有变化我提前说
+我：好，这次先翻篇
+对方：谢谢你直接讲，周日我重新安排`),
+    );
+    expect(result.quickRead.headline).toContain("修复");
+    expect(result.quickRead.suggestion).toContain("后续行动");
+  });
+
   it("estimates positive and negative valence", () => {
     const positive = analyzeEmotionFallback(
       input("我：今天很开心，也很期待见你"),

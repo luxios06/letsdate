@@ -139,6 +139,8 @@ const INTIMACY_PATTERNS: IntimacyPattern[] = [
       /理解/u,
       /说清楚/u,
       /以后会/u,
+      /以后.{0,12}(?:提前|告诉|讲|说清楚)/u,
+      /应该.{0,8}(?:提前|告诉|解释)/u,
       /我会注意/u,
       /不是故意/u,
     ],
@@ -149,7 +151,11 @@ const INTIMACY_PATTERNS: IntimacyPattern[] = [
     weight: 16,
     expressions: [
       /需要空间/u,
-      /提前说/u,
+      /会提前/u,
+      /提前告诉/u,
+      /提前讲/u,
+      /有变化.{0,8}(?:说|告诉)/u,
+      /需要.{0,4}边界/u,
       /不方便/u,
       /别催/u,
       /慢慢来/u,
@@ -312,6 +318,8 @@ function buildQuickRead(
   const sorted = [...signals].sort((a, b) => b.score - a.score);
   const top = sorted[0];
   const hasControl = signals.some((signal) => signal.key === "control");
+  const hasRepair = signals.some((signal) => signal.key === "repair");
+  const hasBoundary = signals.some((signal) => signal.key === "boundary");
   const missing = [
     ...(parsed.timestampCoverage < 0.2 ? ["回复间隔和消息出现的时间顺序"] : []),
     ...(short ? ["你们目前的关系阶段，以及这段对话前后发生了什么"] : []),
@@ -330,6 +338,16 @@ function buildQuickRead(
         "材料里出现了限制、查手机、报备或排他性要求等表达。这类信号不应被浪漫化。",
       suggestion:
         "先不要顺着话术继续推进。直接确认边界，并观察对方是否能尊重你的拒绝。",
+      confidence: "中",
+      missingInformation: missing,
+    };
+  }
+  if (hasRepair) {
+    return {
+      headline: "出现了澄清和修复关系的意愿",
+      observation: "材料里有道歉、解释或希望以后说清楚的表达。",
+      suggestion:
+        "先接住修复意愿，再确认双方下次具体怎么做。检验修复要看后续行动，而不是只听道歉。",
       confidence: "中",
       missingInformation: missing,
     };
@@ -364,13 +382,13 @@ function buildQuickRead(
       missingInformation: missing,
     };
   }
-  if (top?.key === "repair") {
+  if (top?.key === "boundary" || hasBoundary) {
     return {
-      headline: "出现了澄清和修复关系的意愿",
-      observation: "材料里有道歉、解释或希望以后说清楚的表达。",
+      headline: "出现了边界或关系的节奏说明",
+      observation: "材料里提到了空间、提前沟通、不方便或可接受的方式。",
       suggestion:
-        "先接住修复意愿，再确认双方下次具体怎么做。检验修复要看后续行动，而不是只听道歉。",
-      confidence: "中",
+        "先确认你能接受的节奏和边界，再看对方是否愿意具体配合；边界被尊重比口头热情更重要。",
+      confidence: short ? "低" : "中",
       missingInformation: missing,
     };
   }

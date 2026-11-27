@@ -1,6 +1,7 @@
 import { DEMO_REPORT, DEMO_SAMPLE, SAMPLE_HISTORY } from "./demo";
 import {
   buildMessageOptions,
+  buildSafetyMessageOptions,
   calibrateScore,
   confidenceForStats,
   conversationStats,
@@ -614,19 +615,57 @@ export function buildLocalAnalysis(
   const stats = conversationStats(input);
   const confidence = confidenceForStats(stats);
   const calibration = scoreCalibration(input, confidence);
+  const controlRisk = emotion.intimacySignals.some(
+    (signal) => signal.key === "control",
+  );
+  const hasCloseness = emotion.intimacySignals.some(
+    (signal) => signal.key === "closeness" || signal.key === "flirtation",
+  );
+  const hasRepair = emotion.intimacySignals.some(
+    (signal) => signal.key === "repair",
+  );
+  const confirmedPlan =
+    parsed.planState.status === "confirmed" && otherTurns >= 2;
+  const planBonus = confirmedPlan
+    ? 10
+    : parsed.planState.status === "proposed"
+      ? 3
+      : 0;
+  const repairBonus = hasRepair ? Math.min(8, stats.repairSignals * 3) : 0;
+  const closenessBonus = hasCloseness ? 5 : 0;
   const rawCompatibility = clamp(
-    48 + questions * 3 + warm * 4 - cold * 6 + Math.min(otherTurns, 5) * 2,
+    48 +
+      questions * 3 +
+      warm * 4 -
+      cold * 6 +
+      Math.min(otherTurns, 5) * 2 +
+      planBonus +
+      repairBonus +
+      closenessBonus,
   );
   const rawInterest = clamp(
-    42 + questions * 5 + warm * 6 - cold * 8 + Math.min(otherTurns, 6) * 3,
+    42 +
+      questions * 5 +
+      warm * 6 -
+      cold * 8 +
+      Math.min(otherTurns, 6) * 3 +
+      planBonus +
+      repairBonus +
+      closenessBonus,
   );
   const compatibilitySubscore = calibrateScore(rawCompatibility, calibration);
-  const interestScore = calibrateScore(rawInterest, calibration);
-  const overallScore = calibrateScore(
-    compatibilitySubscore * 0.58 + interestScore * 0.42,
+  const rawInterestScore = calibrateScore(rawInterest, calibration);
+  const rawOverallScore = calibrateScore(
+    compatibilitySubscore * 0.58 + rawInterestScore * 0.42,
     calibration,
   );
-  const decision = decisionFromScore(overallScore);
+  const interestScore = controlRisk
+    ? Math.min(rawInterestScore, 28)
+    : rawInterestScore;
+  const overallScore = controlRisk
+    ? Math.min(rawOverallScore, 32)
+    : rawOverallScore;
+  const decision = controlRisk ? "暂缓推进" : decisionFromScore(overallScore);
   const person = buildPerson(
     input.otherProfile,
     input.chat,
@@ -642,7 +681,9 @@ export function buildLocalAnalysis(
     parsed,
   );
   const coldRisk = cold > warm;
-  const messageOptions = buildMessageOptions(input, interestScore);
+  const messageOptions = controlRisk
+    ? buildSafetyMessageOptions()
+    : buildMessageOptions(input, interestScore);
   const nextMessage = messageOptions[0].text;
   const humanRead = buildHumanRead(
     parsed,
@@ -652,6 +693,28 @@ export function buildLocalAnalysis(
     knowledge,
   );
   const contextGaps = buildContextGaps(parsed, person, emotion);
+  const conversationMoves = controlRisk
+    ? [
+        "先暂停推进，不用继续证明信任或服从。",
+        "直接说明你不能接受的隐私和社交限制。",
+        "观察对方在你拒绝后，是尊重边界还是升级施压。",
+      ]
+    : [
+        "把兴趣从抽象好感转成一个双方都容易完成的小活动。",
+        "每推进一次，只观察对方是否同等地向前一步。",
+        "保留退出空间，避免用自我暴露换取对方回应。",
+      ];
+  const stopSigns = controlRisk
+    ? [
+        "用爱、吃醋或安全感要求你交出隐私。",
+        "在你拒绝后继续施压、羞辱或惩罚你。",
+        "限制你与朋友家人的正常联系。",
+      ]
+    : [
+        "长期只在你主动时回复。",
+        "持续制造忽冷忽热却不解释。",
+        "贬低你的兴趣、边界或感受。",
+      ];
 
   return {
     id: createId(),
@@ -659,15 +722,18 @@ export function buildLocalAnalysis(
     provider,
     stage: input.relationshipStage,
     decision,
-    overallTitle:
-      decision === "继续推进"
+    overallTitle: controlRisk
+      ? "先处理控制与边界风险，不建议继续加码"
+      : decision === "继续推进"
         ? "兴趣与互动质量都支持继续推进"
         : decision === "适度推进"
           ? "可以用一次小行动验证关系温度"
           : decision === "先观察"
             ? "信号还不够稳定，先保留判断"
             : "当前不建议增加投入",
-    overallSummary: coldRisk
+    overallSummary: controlRisk
+      ? "聊天里出现了隐私限制、查手机或切断社交等控制性要求。当前最重要的不是判断好感度，而是确认你的拒绝能否被尊重；在此之前不建议增加投入。"
+      : coldRisk
       ? "聊天里出现了更多收缩性表达，兴趣信号并不稳定。此时继续加码容易放大试探和消耗，更适合先降低频率，观察对方是否主动补位。"
       : initiative > 0 && otherTurns > 0
         ? "双方都参与了话题推进，但对方是否有稳定投入仍需要行动验证。建议把判断标准从语气转向对方是否愿意共同确定一次具体安排。"
@@ -701,14 +767,16 @@ export function buildLocalAnalysis(
     self,
     compatibility: {
       score: overallScore,
-      label:
-        overallScore >= 75
+      label: controlRisk
+        ? "安全边界优先"
+        : overallScore >= 75
           ? "互动顺畅，可继续验证"
           : overallScore >= 60
             ? "有连接点，需要对齐节奏"
             : "差异较明显，先观察",
-      summary:
-        "匹配度来自双方表达、主动性和话题承接质量的组合估计，不代表关系结果预测。最能说明问题的，仍是双方在真实安排中的一致性。",
+      summary: controlRisk
+        ? "当前最关键的匹配维度不是兴趣，而是对方能否尊重隐私、社交自由和明确拒绝。控制性要求会显著降低安全互动质量。"
+        : "匹配度来自双方表达、主动性和话题承接质量的组合估计，不代表关系结果预测。最能说明问题的，仍是双方在真实安排中的一致性。",
       dimensions: [
         {
           key: "communication",
@@ -748,17 +816,22 @@ export function buildLocalAnalysis(
         {
           key: "boundaries",
           label: "边界尊重",
-          score: calibrateScore(
-            clamp(
-              58 +
-                (includesAny(text, ["空间", "时间", "方便", "安排"]) ? 8 : -5) +
-                stats.boundarySignals * 2 +
-                stats.repairSignals * 2,
-            ),
-            calibration,
-          ),
-          summary:
-            stats.boundarySignals >= 2
+          score: controlRisk
+            ? 18
+            : calibrateScore(
+                clamp(
+                  58 +
+                    (includesAny(text, ["空间", "时间", "方便", "安排"])
+                      ? 8
+                      : -5) +
+                    stats.boundarySignals * 2 +
+                    stats.repairSignals * 2,
+                ),
+                calibration,
+              ),
+          summary: controlRisk
+            ? "出现了查手机、定位或限制社交的要求，边界尊重不足。"
+            : stats.boundarySignals >= 2
               ? "双方能提前说明时间、空间与回应节奏，边界协商较清晰。"
               : "材料里能看到对时间和个人安排的提及，是积极信号。",
         },
@@ -777,50 +850,55 @@ export function buildLocalAnalysis(
       score: interestScore,
       confidence: confidenceForStats(stats),
       verdict:
-        interestScore >= 70
+        controlRisk
+          ? "目前不应把兴趣信号放在安全边界之前。"
+          : interestScore >= 70
           ? "有值得验证的积极兴趣信号。"
           : interestScore >= 50
             ? "兴趣存在，但投入稳定性尚未确认。"
             : "当前兴趣信号偏弱，不建议继续加码。",
-      signals: (() => {
-        const unique = [
-          ...new Set(
-            evidence
-              .filter((item) =>
-                /主动|推进|回应/.test(item.inference + item.observation),
-              )
-              .map((item) => item.observation),
-          ),
-        ].slice(0, 3);
-        return unique.length ? unique : ["对方有基本回应"];
-      })(),
+      signals: controlRisk
+        ? ["出现了控制、定位或限制社交的要求"]
+        : (() => {
+            const unique = [
+              ...new Set(
+                evidence
+                  .filter((item) =>
+                    /主动|推进|回应/.test(
+                      item.inference + item.observation,
+                    ),
+                  )
+                  .map((item) => item.observation),
+              ),
+            ].slice(0, 3);
+            return unique.length ? unique : ["对方有基本回应"];
+          })(),
       ambiguities: [
-        "友好回应不等于浪漫兴趣。",
-        "真正的投入程度要看对方是否愿意共同确定下一次互动。",
+        controlRisk
+          ? "对方是否会尊重明确拒绝，比任何浪漫表达都更关键。"
+          : "友好回应不等于浪漫兴趣。",
+        controlRisk
+          ? "若拒绝后遭遇威胁、羞辱或持续施压，应优先拉开距离并寻求现实支持。"
+          : "真正的投入程度要看对方是否愿意共同确定下一次互动。",
       ],
     },
     action: {
       decision,
-      rationale:
-        decision === "暂缓推进"
+      rationale: controlRisk
+        ? "控制性要求不能被解释成关心或爱的证明。先用一句清楚的话确认边界，再观察对方能否尊重拒绝。"
+        : decision === "暂缓推进"
           ? "当前投入与回应不对等，继续增加主动可能强化消耗。"
           : "用一次低压力、可撤回的具体行动验证关系温度，比反复解读语气更有效。",
       nextMessage,
       messageOptions,
-      ifWarm:
-        "对方给出具体时间或主动提出替代安排时，直接确认地点、时长和交通，不需要继续试探。",
-      ifCold:
-        "如果对方继续模糊、超过约定时间不回应或只给礼貌短句，停止追加邀约，把主动权交还给对方。",
-      conversationMoves: [
-        "把兴趣从抽象好感转成一个双方都容易完成的小活动。",
-        "每推进一次，只观察对方是否同等地向前一步。",
-        "保留退出空间，避免用自我暴露换取对方回应。",
-      ],
-      stopSigns: [
-        "长期只在你主动时回复。",
-        "持续制造忽冷忽热却不解释。",
-        "贬低你的兴趣、边界或感受。",
-      ],
+      ifWarm: controlRisk
+        ? "如果对方能收回要求、道歉并停止施压，可以继续观察，但仍需看到稳定行动，而不是只听保证。"
+        : "对方给出具体时间或主动提出替代安排时，直接确认地点、时长和交通，不需要继续试探。",
+      ifCold: controlRisk
+        ? "如果对方用冷暴力、羞辱或“你不爱我就……”回应你的拒绝，停止解释和自证，优先拉开距离。"
+        : "如果对方继续模糊、超过约定时间不回应或只给礼貌短句，停止追加邀约，把主动权交还给对方。",
+      conversationMoves,
+      stopSigns,
     },
     evidence,
     uncertainties: [
@@ -835,6 +913,9 @@ export function buildLocalAnalysis(
     safetyNotes: [
       "不要把推断当作事实，更不要用画像结果操控或试探对方。",
       "上传前请删除真实姓名、电话、住址、账号等可识别信息。",
+      ...(controlRisk
+        ? ["查手机、持续定位、强制报备和切断社交属于高风险控制信号，不应被浪漫化。"]
+        : []),
       "如果关系持续带来自我怀疑、恐惧或边界侵蚀，请优先寻求现实支持。",
     ],
   };
