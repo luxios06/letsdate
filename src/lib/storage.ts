@@ -54,12 +54,28 @@ export function loadHistory(): HistoryRecord[] {
       if (!item || typeof item !== "object") return [];
       const record = item as HistoryRecord;
       if (!record.report || typeof record.report !== "object") return [];
+      const hydrateMbtiSummary = (
+        person: HistoryRecord["report"]["person"],
+      ) =>
+        person?.mbti?.summary
+          ? person
+          : {
+              ...person,
+              mbti: {
+                ...person.mbti,
+                summary: person.mbti?.candidate
+                  ? `当前最像 ${person.mbti.candidate} 倾向。旧版报告未保存判断说明，建议重新分析以更新。`
+                  : "当前材料还不足以形成人格倾向。",
+              },
+            };
       return [
         {
           ...record,
           report: {
             ...record.report,
             knowledge: record.report.knowledge ?? emptyKnowledge(),
+            person: hydrateMbtiSummary(record.report.person),
+            self: hydrateMbtiSummary(record.report.self),
           },
         },
       ];

@@ -101,6 +101,7 @@ export interface MbtiLens {
   candidate: string;
   alternatives: string[];
   confidence: Confidence;
+  summary: string;
   dimensions: MbtiDimension[];
 }
 

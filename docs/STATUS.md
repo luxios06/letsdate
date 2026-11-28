@@ -2,7 +2,7 @@
 
 Saved and deployed: 2026-11-27
 
-Current source version: `0.8.1`
+Current source version: `0.9.0`
 
 ## Completed
 
@@ -12,6 +12,9 @@ Current source version: `0.8.1`
 - Multi-image OCR import for up to 12 screenshots per batch, with per-file progress and boundary deduplication.
 - Safety override forces control and boundary-risk scenarios to `暂缓推进` instead of treating them as ordinary ambiguity.
 - Repair language is prioritized over boundary wording, so apologies plus future adjustments are analyzed as repair rather than generic short material.
+- Best-fit MBTI tendency is always produced when any behavioral signal exists.
+- MBTI dimensions now use weighted behavioral rules inspired by KnowMe and OpenJung's confidence structure.
+- Personality reports include alternatives, confidence and a practical interaction summary.
 - Chat bubble grouping, speaker recovery and timestamp-noise filtering.
 - Local DUTIR emotion analysis and intimacy/boundary signal detection.
 - Short conversations always receive an actionable suggestion and targeted follow-up questions.
@@ -40,7 +43,7 @@ Current source version: `0.8.1`
 
 ## Verified
 
-- `pnpm test`: 42 tests passed.
+- `pnpm test`: 43 tests passed.
 - `pnpm check`: passed.
 - `pnpm build`: passed.
 - Playwright desktop and 390px mobile flows: passed.

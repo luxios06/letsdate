@@ -2,7 +2,7 @@
 name: letsdate-relationship-analysis
 description: Analyze user-provided dating profiles and chat transcripts to produce a calibrated, evidence-linked relationship report with tentative MBTI, Big Five, interaction patterns, compatibility, interest signals, and respectful reply options. Use for dating communication reflection, not mind-reading or psychological diagnosis.
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
 ---
 
 # letsdate Relationship Analysis
@@ -44,6 +44,7 @@ Load these references when the corresponding task is active:
 - Use [references/short-replies-and-attachment.md](references/short-replies-and-attachment.md) whenever short replies, message-length changes, reply timing, withdrawal, conflict repair, or attachment-related cues appear.
 - Use [references/emotion-and-intimacy.md](references/emotion-and-intimacy.md) for every conversation, especially short transcripts and messages about closeness, flirtation, reassurance, control, repair or boundaries.
 - Use [references/knowledge-retrieval.md](references/knowledge-retrieval.md) whenever retrieved cases or cluster hints are supplied. They are context patterns, never evidence about the current person.
+- Use [references/personality-tendency.md](references/personality-tendency.md) before producing MBTI or Big Five results. Give a best-fit directional tendency with confidence and alternatives instead of defaulting to `待观察`.
 
 The references are part of this skill. When a host provides their full text, treat them as approved instructions. When a host can load only one reference, keep the evidence and calibration rules in priority order.
 
@@ -51,8 +52,8 @@ The references are part of this skill. When a host provides their full text, tre
 
 Use these rough thresholds:
 
-- Under 120 Chinese characters or fewer than 6 turns: low confidence. Avoid stable type claims.
-- 120-400 characters or 6-15 turns: medium-low confidence. Offer candidate types and clear alternatives.
+- Under 120 Chinese characters or fewer than 6 turns: low confidence. Still provide the current best-fit type, labeled as a low-confidence tendency.
+- 120-400 characters or 6-15 turns: medium-low confidence. Offer a best-fit type with alternatives.
 - 400-900 characters or 15-35 turns: medium confidence if behavior is consistent across contexts.
 - More than 900 characters with multiple situations: potentially higher confidence, but still describe results as hypotheses.
 
@@ -98,12 +99,14 @@ Rules:
 - Big Five scores are 0-100 and should usually stay within 25-85 unless evidence is unusually strong.
 - MBTI dimension scores are 0-100. For dimensions, treat 0 as the left letter and 100 as the right letter. Scores from 43-57 should be described as unclear or balanced.
 - Every Big Five trait and MBTI dimension must include `status` and `evidenceIds`.
-- `insufficient`: fewer than two distinct relevant lines, or no source-backed evidence. Set score to 50, leaning to `证据不足`, and cite an empty list when appropriate.
+- `insufficient`: no relevant source-backed evidence for that axis. You may keep a weak fallback direction, but label it as a first-pass tendency rather than hiding the result.
 - `tentative`: two or three distinct relevant lines, or a coherent pattern that still has plausible alternatives. Do not call the trait stable.
 - `supported`: at least four distinct relevant lines across more than one context. This is still a hypothesis, not a diagnosis.
 - A single self-description can support one tentative branch, but cannot establish all four MBTI axes.
-- If more than one MBTI axis is `insufficient`, set `candidate` to `待观察`, set `alternatives` to an empty array, and do not manufacture a four-letter type.
-- Do not let a specific MBTI candidate override low evidence. The candidate is a compact summary of supported axes, not a conclusion.
+- Always provide one best-fit four-letter `candidate` when any profile or chat text is available.
+- Low evidence lowers confidence; it does not remove the best-fit tendency. Use `低` confidence and give alternative types instead of returning `待观察`.
+- Treat the candidate as the most useful current hypothesis for communication, not as a fixed identity or clinical result.
+- Include `summary` with the best-fit type, the visible dimensions driving it, and one practical interaction implication.
 - Do not include a diagnosis such as "avoidant attachment". Instead write "current material shows some avoidant-like interaction cues" and state what is missing.
 - Use profile text mainly for self-presentation, interests, values, and opening topics. Use chat behavior mainly for interaction style and current interest.
 
@@ -341,6 +344,7 @@ Use this complete shape:
       "candidate": "ENFP",
       "alternatives": ["INFP"],
       "confidence": "低 | 中 | 较高",
+      "summary": "当前最像 ENFP 倾向，以及依据和互动建议。",
       "dimensions": [
         {
           "key": "EI",
@@ -400,6 +404,7 @@ Use this complete shape:
       "candidate": "INFJ",
       "alternatives": ["ISFJ"],
       "confidence": "低 | 中 | 较高",
+      "summary": "当前最像 INFJ 倾向，以及依据和互动建议。",
       "dimensions": [
         {
           "key": "EI",
@@ -530,7 +535,7 @@ Before returning JSON, verify:
 - `pipeline.exactQuoteVerification` is true only after quotes have been checked against the source.
 - MBTI has four dimensions with keys `EI`, `SN`, `TF`, `JP`.
 - Every MBTI dimension and Big Five trait has a valid `status` and `evidenceIds`.
-- If more than one MBTI axis is `insufficient`, candidate is `待观察`.
+- Candidate must be one best-fit four-letter tendency; low evidence must be represented through `confidence`, dimension status, alternatives and `summary`, not by defaulting to `待观察`.
 - Big Five includes all five traits for both people.
 - Both people include `attachmentAssessment`, with safe/anxious/avoidant cues marked `insufficient` when evidence is lacking.
 - `compatibility.dimensions` includes at least communication, pace, boundaries, values, and expression or energy.

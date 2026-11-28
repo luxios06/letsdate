@@ -327,18 +327,52 @@ export function calibrateModelReport(
     const insufficient = dimensions.filter(
       (dimension) => dimension.status === "insufficient",
     ).length;
-    const candidate =
-      insufficient > 1 ? "待观察" : person.mbti.candidate;
+    const hasAnyAxisEvidence = dimensions.some(
+      (dimension) =>
+        dimension.status !== "insufficient" ||
+        dimension.evidenceIds.length > 0,
+    );
+    const inferredCandidate = dimensions
+      .map((dimension) =>
+        dimension.score >= 50 ? dimension.right : dimension.left,
+      )
+      .join("");
+    const candidate = hasAnyAxisEvidence ? inferredCandidate : "待观察";
+    const alternatives =
+      candidate === "待观察"
+        ? []
+        : dimensions
+            .map((dimension, index) => ({
+              alternative:
+                candidate.slice(0, index) +
+                (dimension.score >= 50 ? dimension.left : dimension.right) +
+                candidate.slice(index + 1),
+              margin: Math.abs(dimension.score - 50),
+            }))
+            .sort((a, b) => a.margin - b.margin)
+            .map((item) => item.alternative)
+            .filter((item, index, list) => list.indexOf(item) === index)
+            .slice(0, 3);
+    const summaryWithCandidate = person.mbti.summary.replace(
+      /\b[EI][SN][TF][JP]\b/u,
+      candidate,
+    );
     return {
       ...person,
       mbti: {
         ...person.mbti,
         candidate,
-        alternatives: candidate === "待观察" ? [] : person.mbti.alternatives,
+        alternatives,
         confidence:
-          insufficient > 1
+          insufficient > 1 || candidate === "待观察"
             ? "低"
             : person.mbti.confidence,
+        summary:
+          candidate === "待观察"
+            ? person.mbti.summary
+            : summaryWithCandidate.includes(candidate)
+              ? summaryWithCandidate
+              : `当前最像 ${candidate} 倾向。${summaryWithCandidate}`,
         dimensions,
       },
       bigFive: person.bigFive.map((trait) => {

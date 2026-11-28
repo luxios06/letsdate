@@ -56,3 +56,32 @@ Raw CPED dialogue is not redistributed because source samples can contain names 
 - License: CC0-1.0
 
 These dialogues are fully fictional and created for product testing.
+
+## OpenJung Core
+
+- Project: https://github.com/openjung/core
+- License: MIT for code; questionnaire content is CC BY-NC-SA 4.0.
+- Used: confidence-level and clarity concepts for bipolar Jungian dimensions.
+
+The OEJTS questionnaire text is not included in letsdate because its noncommercial/share-alike license is not appropriate for directly bundling here.
+
+## KnowMe
+
+- Project: https://github.com/AIPMAndy/KnowMe
+- License: Apache-2.0
+
+Used as a reference for Chinese behavioral signal categories, sample-adjusted confidence and directional MBTI reporting. letsdate uses an original TypeScript implementation over dating profiles and chat messages.
+
+## MbtiBench
+
+- Project: https://github.com/Personality-NLP/MbtiBench
+- Role: research reference for per-dimension soft labels and evaluation.
+
+No dataset or model artifact is bundled.
+
+## Personality Prediction from Text
+
+- Project: https://github.com/jkwieser/personality-prediction-from-text
+- License: MIT
+
+Reviewed for Big Five text-signal structure. No English-language model artifact or third-party training dataset is bundled.

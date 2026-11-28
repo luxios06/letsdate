@@ -227,6 +227,7 @@ export async function loadSkillPrompt(): Promise<string> {
     "skills/letsdate-relationship-analysis/references/short-replies-and-attachment.md",
     "skills/letsdate-relationship-analysis/references/emotion-and-intimacy.md",
     "skills/letsdate-relationship-analysis/references/knowledge-retrieval.md",
+    "skills/letsdate-relationship-analysis/references/personality-tendency.md",
   ];
   const responses = await Promise.all(
     paths.map((path) =>

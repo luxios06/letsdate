@@ -1739,6 +1739,16 @@ h3 {
   font-style: normal;
 }
 
+.mbti-panel__summary {
+  grid-column: 1 / -1;
+  margin-top: 9px;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 9px;
+  line-height: 1.65;
+}
+
 .mbti-dimensions {
   display: flex;
   flex-direction: column;

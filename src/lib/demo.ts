@@ -154,6 +154,8 @@ export const DEMO_REPORT: AnalysisReport = {
       candidate: "ENFP",
       alternatives: ["INFP", "ESFP"],
       confidence: "低",
+      summary:
+        "当前最像 ENFP：主动把话题推进到共同活动，偏好新体验，也重视两个人的深聊。互动时适合先给具体安排，同时保留彼此空间。",
       dimensions: [
         {
           key: "EI",
@@ -300,6 +302,8 @@ export const DEMO_REPORT: AnalysisReport = {
       candidate: "INFJ",
       alternatives: ["ISFJ", "INTJ"],
       confidence: "低",
+      summary:
+        "当前最像 INFJ：慢热、重视稳定回应，也会把兴趣落到具体行动。互动时适合先给清楚安排，同时保留思考空间。",
       dimensions: [
         {
           key: "EI",

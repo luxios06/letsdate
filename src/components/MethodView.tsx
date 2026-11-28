@@ -102,7 +102,7 @@ export function MethodView() {
           <div>
             <span>01</span>
             <strong>MBTI 概率透镜</strong>
-            <p>四个维度分别给出倾向和置信度，始终保留候选类型。</p>
+            <p>四个维度分别给出方向与置信度，并汇总为当前最像的类型。</p>
           </div>
           <div>
             <span>02</span>

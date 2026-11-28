@@ -155,7 +155,9 @@ function downloadReport(report: AnalysisReport) {
         ]
       : []),
     `## 对方人格透镜`,
-    `MBTI 候选：${report.person.mbti.candidate}（${report.person.mbti.confidence}置信度）`,
+    `MBTI 倾向：${report.person.mbti.candidate}（${report.person.mbti.confidence}置信度）`,
+    `判断依据：${report.person.mbti.summary}`,
+    `替代倾向：${report.person.mbti.alternatives.join("、") || "暂无"}`,
     ...report.person.bigFive.map((trait) => `- ${trait.label}: ${trait.score}/100，${trait.summary}`),
     "",
     `## 依恋相关互动线索`,
@@ -454,7 +456,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
                 <span className="section-index">A</span>
                 <div>
                   <h3>对方人格透镜</h3>
-                  <p>把表达线索收束成假设，同时保留替代解释。</p>
+                  <p>给出当前最可能的倾向，同时说明依据和替代方向。</p>
                 </div>
               </div>
               <span className={`confidence-chip confidence-chip--${report.person.mbti.confidence}`}>
@@ -465,7 +467,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
             <div className="personality-grid">
               <div className="mbti-panel">
                 <div className="mbti-panel__title">
-                  <span>MBTI 候选</span>
+                  <span>当前最像</span>
                   <strong
                     className={
                       report.person.mbti.candidate === "待观察"
@@ -480,6 +482,9 @@ export function ReportView({ report, onBack }: ReportViewProps) {
                       <em key={item}>{item}</em>
                     ))}
                   </div>
+                  <p className="mbti-panel__summary">
+                    {report.person.mbti.summary}
+                  </p>
                 </div>
                 <div className="mbti-dimensions">
                   {report.person.mbti.dimensions.map((dimension) => (
@@ -674,7 +679,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
                   <p>{report.self.summary}</p>
                 </div>
               </div>
-              <span className="confidence-chip">{report.self.mbti.candidate} 候选</span>
+              <span className="confidence-chip">{report.self.mbti.candidate} 倾向</span>
             </div>
             <div className="self-grid">
               <div>

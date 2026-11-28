@@ -57,7 +57,12 @@ describe("buildLocalAnalysis", () => {
     expect(report.action.nextMessage).toBe(
       report.action.messageOptions[0]?.text,
     );
-    expect(report.person.mbti.candidate).toBe("待观察");
+    expect(report.person.mbti.candidate).toMatch(/^[EI][SN][TF][JP]$/);
+    expect(["低", "中"]).toContain(report.person.mbti.confidence);
+    expect(report.person.mbti.alternatives.length).toBeGreaterThan(0);
+    expect(report.person.mbti.summary).toContain(
+      report.person.mbti.candidate,
+    );
   });
 
   it("uses concrete day and chat topics in reply options", () => {
@@ -76,7 +81,7 @@ describe("buildLocalAnalysis", () => {
     expect(combined).not.toContain("你之前提到的那个活动");
   });
 
-  it("does not force a four-letter MBTI type from insufficient evidence", () => {
+  it("uses 待观察 only when the text contains no personality signal", () => {
     const report = buildLocalAnalysis({
       ...DEMO_SAMPLE,
       selfProfile: "",
@@ -89,6 +94,20 @@ describe("buildLocalAnalysis", () => {
         (dimension) => dimension.status === "insufficient",
       ),
     ).toHaveLength(4);
+  });
+
+  it("infers the other person's type only from that person's own messages", () => {
+    const report = buildLocalAnalysis({
+      ...DEMO_SAMPLE,
+      selfProfile: "喜欢聚会、热闹、未来想象和临时探索。",
+      otherProfile: "慢热，喜欢独处、安静和小范围交流。",
+      chat: `我：我们一起去聚会吧，想象一下未来，感觉会很热闹
+对方：我喜欢独处和安静
+对方：具体安排、时间地点和逻辑方案都要确认
+对方：计划确定后我会提前告诉你，周日两点门口见`,
+    });
+    expect(report.person.mbti.candidate).toBe("ISTJ");
+    expect(report.person.mbti.summary).toContain("ISTJ");
   });
 
   it("always returns a schema-valid report", () => {

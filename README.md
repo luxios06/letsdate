@@ -6,7 +6,7 @@ letsdate 是一个面向 18-30 岁青年男女的关系沟通画像工具。它�
 
 项目不是“读心术”，也不会把 MBTI 或大五人格包装成确定结论。每条判断都要求绑定原话、说明可能解释，并标注置信度。
 
-[在线体验](https://luxios06.github.io/letsdate/) · [Agent Skill](./public/skills/letsdate-relationship-analysis/SKILL.md) · [产品说明](./docs/PRODUCT.md) · [导入说明](./docs/IMPORT.md) · [演示剧本](./docs/DEMO_SCRIPT.md) · [WechatVibe 评估](./docs/WECHATVIBE_REVIEW.md)
+[在线体验](https://luxios06.github.io/letsdate/) · [Agent Skill](./public/skills/letsdate-relationship-analysis/SKILL.md) · [产品说明](./docs/PRODUCT.md) · [人格说明](./docs/PERSONALITY.md) · [导入说明](./docs/IMPORT.md) · [演示剧本](./docs/DEMO_SCRIPT.md) · [WechatVibe 评估](./docs/WECHATVIBE_REVIEW.md)
 
 ![letsdate 桌面端画像报告](./docs/assets/report-overview.png)
 
@@ -27,7 +27,7 @@ letsdate 把这些能力收束成一个可解释的闭环：
 
 - **跨模型 Agent Skill**：分析协议不依赖单一模型，可接入 OpenAI、DeepSeek、Anthropic、Gemini、Ollama 和 OpenAI 兼容接口。
 - **双人视角**：分别分析用户与对方，同时评估双方互动，不把所有结果归因给一个人。
-- **多维人格透镜**：MBTI 候选与替代类型、大五人格、社交能量、冲突线索、边界感和价值需求。
+- **决断型人格倾向**：基于 KnowMe 行为信号与 OpenJung 维度清晰度思路，给出最可能的 MBTI 类型、替代类型、判断依据和可直接使用的沟通建议，不再默认停在“待观察”。
 - **证据链**：事实观察、可能推断、反证和置信度分开呈现。
 - **关系动作**：给出继续推进、适度推进、先观察或暂缓推进的判断，并提供自然、可撤回的消息草稿。
 - **校准分数**：按对方消息量、双向回合和证据可靠性收缩，文本证据不会直接给出 100 分。
@@ -132,7 +132,7 @@ Skill 包含：
 
 ## 已验证
 
-- `pnpm test`：42 个分析、会话、短回复、情感、案例检索、批量 OCR、两阶段模型与边界测试通过。
+- `pnpm test`：43 个分析、人格倾向、会话、短回复、情感、案例检索、批量 OCR、两阶段模型与边界测试通过。
 - `pnpm check`：TypeScript 类型检查通过。
 - `pnpm build`：生产构建通过。
 - Playwright：桌面与 390px 手机视口完成输入、示例分析、报告页、证据页和行动页交互验证。

@@ -34,6 +34,7 @@ const mbtiSchema = z.object({
   candidate: text(16),
   alternatives: z.array(text(16)).max(8),
   confidence,
+  summary: text(500),
   dimensions: z.array(mbtiDimensionSchema).length(4),
 });
 
