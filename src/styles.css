@@ -3627,6 +3627,45 @@ h3 {
   line-height: 1.6;
 }
 
+.local-model-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 12px;
+  margin-top: 9px;
+}
+
+.local-model-actions button,
+.local-model-actions a {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--forest-2);
+  font-size: 8px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.local-model-actions button:disabled {
+  color: var(--muted);
+  cursor: wait;
+}
+
+.local-model-status {
+  display: block;
+  margin-top: 7px;
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.local-model-status--success {
+  color: var(--forest);
+}
+
+.local-model-status--error {
+  color: #9b493a;
+}
+
 .privacy-notes {
   display: flex;
   flex-wrap: wrap;

@@ -85,3 +85,13 @@ No dataset or model artifact is bundled.
 - License: MIT
 
 Reviewed for Big Five text-signal structure. No English-language model artifact or third-party training dataset is bundled.
+
+## Qwen3-0.6B-GGUF
+
+- Model: `Qwen/Qwen3-0.6B-GGUF`
+- Host: ModelScope
+- License: Apache-2.0
+- Runtime: Ollama
+- Integration: optional local download through `local-model/install.sh` or `install.ps1`.
+
+The approximately 639MB model file is not bundled in the repository or GitHub Pages artifact.

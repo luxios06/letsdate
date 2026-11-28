@@ -45,12 +45,17 @@ export function SettingsModal({
   const [draft, setDraft] = useState(settings);
   const [showKey, setShowKey] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [localModelStatus, setLocalModelStatus] = useState<{
+    kind: "idle" | "testing" | "success" | "error";
+    message: string;
+  }>({ kind: "idle", message: "" });
 
   useEffect(() => {
     if (open) {
       setDraft(settings);
       setShowKey(false);
       setConfirmClear(false);
+      setLocalModelStatus({ kind: "idle", message: "" });
     }
   }, [open, settings]);
 
@@ -73,6 +78,45 @@ export function SettingsModal({
       baseUrl: defaults.baseUrl,
       model: defaults.model,
     }));
+    setLocalModelStatus({ kind: "idle", message: "" });
+  };
+
+  const testLocalModel = async () => {
+    setLocalModelStatus({ kind: "testing", message: "正在连接本机 Ollama…" });
+    try {
+      const baseUrl = draft.baseUrl.replace(/\/+$/u, "");
+      const response = await fetch(`${baseUrl}/api/tags`, {
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const data = (await response.json()) as {
+        models?: Array<{ name?: string }>;
+      };
+      const names = (data.models ?? [])
+        .map((item) => item.name)
+        .filter(Boolean);
+      if (!names.includes(draft.model)) {
+        setLocalModelStatus({
+          kind: "error",
+          message: `服务已连接，但没有找到 ${draft.model}。`,
+        });
+        return;
+      }
+      setLocalModelStatus({
+        kind: "success",
+        message: `已连接，${draft.model} 可用。`,
+      });
+    } catch (error) {
+      setLocalModelStatus({
+        kind: "error",
+        message:
+          error instanceof Error
+            ? `连接失败：${error.message}`
+            : "连接本机模型失败。",
+      });
+    }
   };
 
   return (
@@ -192,10 +236,37 @@ export function SettingsModal({
             {draft.provider === "ollama" && (
               <div className="demo-note">
                 <ServerCog size={17} />
-                <p>
-                  模型在本机运行，并可增强逐消息情绪与意图标签。先启动 Ollama
-                  并拉取所填模型，无需 API Key。
-                </p>
+                <div>
+                  <p>
+                    模型在本机运行，并可增强逐消息情绪与意图标签。国内网络可使用
+                    ModelScope 的 Qwen3-0.6B。
+                  </p>
+                  <div className="local-model-actions">
+                    <button
+                      type="button"
+                      onClick={testLocalModel}
+                      disabled={localModelStatus.kind === "testing"}
+                    >
+                      {localModelStatus.kind === "testing"
+                        ? "正在测试"
+                        : "测试本机模型"}
+                    </button>
+                    <a
+                      href="https://github.com/luxios06/letsdate/tree/main/local-model"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      安装说明
+                    </a>
+                  </div>
+                  {localModelStatus.kind !== "idle" && (
+                    <small
+                      className={`local-model-status local-model-status--${localModelStatus.kind}`}
+                    >
+                      {localModelStatus.message}
+                    </small>
+                  )}
+                </div>
               </div>
             )}
           </section>

@@ -32,7 +32,10 @@ const PROVIDER_DEFAULTS: Record<
     baseUrl: "https://generativelanguage.googleapis.com/v1beta",
     model: "gemini-2.5-flash",
   },
-  ollama: { baseUrl: "http://localhost:11434", model: "qwen3:8b" },
+  ollama: {
+    baseUrl: "http://localhost:11434",
+    model: "letsdate-qwen3:0.6b",
+  },
   custom: { baseUrl: "https://api.example.com/v1", model: "your-model" },
 };
 

@@ -72,6 +72,7 @@ letsdate 把这些能力收束成一个可解释的闭环：
 │   ├── App.tsx
 │   └── styles.css
 ├── data-pipeline/                # 可复现的匿名化、聚类与案例构建管线
+├── local-model/                  # ModelScope Qwen3 + Ollama 一键本机模型
 ├── docs/
 └── .github/workflows/deploy-pages.yml
 ```
