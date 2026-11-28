@@ -380,6 +380,8 @@ export function ReportView({ report, onBack }: ReportViewProps) {
                           ? "本地规则"
                           : item.source === "local-llm"
                             ? "Ollama 本地模型"
+                            : item.source === "browser-local"
+                              ? "浏览器本地模型"
                             : "模型增强"}
                       </em>
                     </div>

@@ -89,6 +89,7 @@ export const ReportSchema = z.object({
     "anthropic",
     "gemini",
     "ollama",
+    "browser",
     "custom",
   ]),
   stage: text(80),
@@ -188,7 +189,12 @@ export const ReportSchema = z.object({
         cue: z.enum(MESSAGE_CUES),
         confidence,
         explanation: text(400),
-        source: z.enum(["local-rules", "local-llm", "provider"]),
+        source: z.enum([
+          "local-rules",
+          "local-llm",
+          "browser-local",
+          "provider",
+        ]),
       }),
     )
     .max(120),

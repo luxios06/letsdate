@@ -124,7 +124,17 @@ function App() {
     }, 280);
 
     try {
-      const nextReport = await analyzeWithProvider(input, settings);
+      const nextReport = await analyzeWithProvider(
+        input,
+        settings,
+        ({ status, percent }) => {
+          if (progressTimer.current) {
+            window.clearInterval(progressTimer.current);
+            progressTimer.current = null;
+          }
+          setProgress({ percent, label: status });
+        },
+      );
       setProgress({ percent: 100, label: "报告已生成" });
       window.setTimeout(() => {
         setReport(nextReport);

@@ -73,6 +73,30 @@ describe("per-message emotion and intent labels", () => {
     expect(insight?.cue).toBe("冲突");
   });
 
+  it("never lets a model downgrade a local control-risk label", () => {
+    const parsed = parseConversation("对方：把定位一直开着，手机给我查");
+    const local = buildLocalMessageInsights(parsed.messages);
+    const merged = mergeMessageInsights(
+      local,
+      [
+        {
+          messageId: "msg-1",
+          quote: "把定位一直开着，手机给我查",
+          emotion: "平静",
+          intent: "了解",
+          cue: "稳定",
+          confidence: "低",
+          explanation: "模型误判为普通询问。",
+        },
+      ],
+      "browser-local",
+      parsed.messages,
+    );
+    expect(merged[0]?.cue).toBe("风险");
+    expect(merged[0]?.intent).toBe("控制要求");
+    expect(merged[0]?.source).toBe("local-rules");
+  });
+
   it("includes local message labels in every analysis report", () => {
     const report = buildLocalAnalysis({
       ...DEMO_SAMPLE,

@@ -2,7 +2,7 @@
 
 Saved and deployed: 2026-11-28
 
-Current source version: `0.11.0`
+Current source version: `0.12.0`
 
 ## Completed
 
@@ -19,6 +19,9 @@ Current source version: `0.11.0`
 - Method page compares the product's cross-platform, dyadic and safety-first advantages with native WeChat readers.
 - Per-message emotion, communication intent and relationship-cue labels.
 - Optional Ollama local-model enhancement for message labels without an API key.
+- One-click browser-local Qwen3-0.6B using Wllama and ModelScope.
+- Browser-local labels cached in OPFS, with WebGPU acceleration and CPU fallback.
+- Safety-aware merge that prevents a local model from downgrading control-risk labels.
 - Chat bubble grouping, speaker recovery and timestamp-noise filtering.
 - Local DUTIR emotion analysis and intimacy/boundary signal detection.
 - Short conversations always receive an actionable suggestion and targeted follow-up questions.
@@ -47,7 +50,7 @@ Current source version: `0.11.0`
 
 ## Verified
 
-- `pnpm test`: 47 tests passed.
+- `pnpm test`: 49 tests passed.
 - `pnpm check`: passed.
 - `pnpm build`: passed.
 - Playwright desktop and 390px mobile flows: passed.
@@ -74,4 +77,4 @@ Current source version: `0.11.0`
 
 The main project files remain in this workspace. A portable source snapshot is stored at:
 
-`outputs/letsdate-source-0.11.0.tar.gz`
+`outputs/letsdate-source-0.12.0.tar.gz`

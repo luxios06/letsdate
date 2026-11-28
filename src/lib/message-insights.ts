@@ -97,7 +97,7 @@ function labelMessage(
       ...base,
       emotion: "关心",
       intent: "修复",
-      cue: following && /周日|明天|可以|见面|安排/u.test(following) ? "修复" : "修复",
+      cue: "修复",
       confidence: "中",
       explanation: "出现了道歉、解释或后续调整线索，重点看之后是否真的改变。",
     };
@@ -110,6 +110,16 @@ function labelMessage(
       cue: "试探",
       confidence: "低",
       explanation: "更像在寻求关系确认；单条消息不足以判断依恋模式。",
+    };
+  }
+  if (/有点累|很累|疲惫|困了|低电量|没力气/u.test(text)) {
+    return {
+      ...base,
+      emotion: "低落",
+      intent: "分享",
+      cue: "稳定",
+      confidence: "中",
+      explanation: "这条消息在表达当前疲惫状态，更适合先承接感受而不是急着推进关系。",
     };
   }
   if (
@@ -150,20 +160,6 @@ function labelMessage(
       explanation: "这是一次计划拒绝或改期表达，继续看是否解释、补偿和重新约定。",
     };
   }
-  if (
-    message.kind === "plan" ||
-    (/周[一二三四五六日天]|明天|今天|几点|门口/u.test(text) &&
-      /见|可以|点|门口|安排/u.test(text))
-  ) {
-    return {
-      ...base,
-      emotion: "期待",
-      intent: /好|可以|成交|定了|确认/u.test(text) ? "确认计划" : "邀约",
-      cue: "稳定",
-      confidence: "中",
-      explanation: "出现了具体时间、地点或行动，计划正在从表达走向落实。",
-    };
-  }
   if (/想你|想见你|喜欢你|抱抱|亲亲|宝贝|爱你|主要想见你/u.test(text)) {
     return {
       ...base,
@@ -172,6 +168,20 @@ function labelMessage(
       cue: "靠近",
       confidence: /想你|想见你/u.test(text) ? "中" : "低",
       explanation: "出现了靠近或浪漫表达，但是否双向仍要看对方如何接住。",
+    };
+  }
+  if (
+    message.kind === "plan" ||
+    (/周[一二三四五六日天]|明天|今天|周末|几点|门口/u.test(text) &&
+      /见面|可以|[0-9一二三四五六七八九十两]+点|门口|安排/u.test(text))
+  ) {
+    return {
+      ...base,
+      emotion: "期待",
+      intent: /好|可以|成交|定了|确认/u.test(text) ? "确认计划" : "邀约",
+      cue: "稳定",
+      confidence: "中",
+      explanation: "出现了具体时间、地点或行动，计划正在从表达走向落实。",
     };
   }
   if (/辛苦|抱抱|陪你|听你|先休息|别硬撑|没关系|理解你/u.test(text)) {
@@ -264,7 +274,7 @@ export function buildLocalMessageInsights(
 export function mergeMessageInsights(
   local: MessageInsight[],
   extracted: ExtractedMessageInsight[],
-  source: "local-llm" | "provider",
+  source: "local-llm" | "browser-local" | "provider",
   messages: ChatMessage[],
 ): MessageInsight[] {
   const byId = new Map(
@@ -279,6 +289,32 @@ export function mergeMessageInsights(
     if (!model || !message || model.quote !== message.text.trim()) {
       return fallback;
     }
+    if (fallback.cue === "风险") {
+      return fallback;
+    }
+    const localIntentIsAuthoritative = [
+      "确认计划",
+      "邀请",
+      "邀约",
+      "拒绝",
+      "婉拒",
+      "分享",
+      "安慰",
+      "修复",
+      "表达不满",
+      "表达边界",
+      "控制要求",
+      "表达想念",
+      "调情",
+    ].includes(fallback.intent);
+    const localCueIsAuthoritative = [
+      "靠近",
+      "稳定",
+      "冲突",
+      "修复",
+      "边界",
+      "风险",
+    ].includes(fallback.cue);
     return {
       ...model,
       messageId: message.id,
@@ -286,6 +322,8 @@ export function mergeMessageInsights(
       sender: message.sender,
       timestamp: message.timestamp,
       source,
+      intent: localIntentIsAuthoritative ? fallback.intent : model.intent,
+      cue: localCueIsAuthoritative ? fallback.cue : model.cue,
     };
   });
 }

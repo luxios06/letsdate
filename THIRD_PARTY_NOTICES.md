@@ -95,3 +95,12 @@ Reviewed for Big Five text-signal structure. No English-language model artifact 
 - Integration: optional local download through `local-model/install.sh` or `install.ps1`.
 
 The approximately 639MB model file is not bundled in the repository or GitHub Pages artifact.
+
+## Wllama / llama.cpp
+
+- Project: https://github.com/ngxson/wllama
+- Packages: `@wllama/wllama` 4.0.0
+- License: MIT
+- Upstream: llama.cpp
+
+Wllama runs the optional GGUF model in a browser worker using WebGPU or WebAssembly.

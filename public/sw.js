@@ -1,4 +1,4 @@
-const CACHE = "letsdate-v7";
+const CACHE = "letsdate-v8";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./brand-mark.svg"];
 
 self.addEventListener("install", (event) => {
@@ -19,6 +19,14 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  const url = new URL(event.request.url);
+  if (
+    url.origin !== self.location.origin ||
+    event.request.headers.has("range") ||
+    url.pathname.endsWith(".gguf")
+  ) {
+    return;
+  }
   event.respondWith(
     fetch(event.request)
       .then((response) => {

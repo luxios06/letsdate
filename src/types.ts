@@ -75,6 +75,7 @@ export type MessageInsightCue =
 export type MessageInsightSource =
   | "local-rules"
   | "local-llm"
+  | "browser-local"
   | "provider";
 
 export type ProviderId =
@@ -84,6 +85,7 @@ export type ProviderId =
   | "anthropic"
   | "gemini"
   | "ollama"
+  | "browser"
   | "custom";
 
 export interface ProviderSettings {

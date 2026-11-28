@@ -48,6 +48,18 @@ describe("validateProviderSettings", () => {
       }).baseUrl,
     ).toBe("http://localhost:11434");
   });
+
+  it("allows the browser-local model without an endpoint or key", () => {
+    const checked = validateProviderSettings({
+      ...base,
+      provider: "browser",
+      baseUrl: "",
+      model: "Qwen3-0.6B-Q8_0.gguf",
+      apiKey: "",
+    });
+    expect(checked.provider).toBe("browser");
+    expect(checked.apiKey).toBe("");
+  });
 });
 
 describe("two-stage provider pipeline", () => {

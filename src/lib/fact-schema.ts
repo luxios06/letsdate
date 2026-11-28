@@ -6,6 +6,7 @@ import {
 } from "./message-insights";
 
 const text = (max: number) => z.string().trim().min(1).max(max);
+const confidence = z.enum(["低", "中", "较高"]).catch("低");
 
 export const FactSchema = z.object({
   id: text(80),
@@ -26,7 +27,7 @@ export const FactSchema = z.object({
   sessionId: text(80),
   observation: text(500),
   alternative: text(500),
-  confidence: z.enum(["低", "中", "较高"]),
+  confidence,
 });
 
 export const ExtractedMessageInsightSchema = z.object({
@@ -35,7 +36,7 @@ export const ExtractedMessageInsightSchema = z.object({
   emotion: z.enum(MESSAGE_EMOTIONS),
   intent: z.enum(MESSAGE_INTENTS),
   cue: z.enum(MESSAGE_CUES),
-  confidence: z.enum(["低", "中", "较高"]),
+  confidence,
   explanation: text(400),
 });
 

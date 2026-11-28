@@ -32,6 +32,7 @@ const PROVIDERS: ProviderId[] = [
   "anthropic",
   "gemini",
   "ollama",
+  "browser",
   "custom",
 ];
 
@@ -49,6 +50,11 @@ export function SettingsModal({
     kind: "idle" | "testing" | "success" | "error";
     message: string;
   }>({ kind: "idle", message: "" });
+  const [browserModelStatus, setBrowserModelStatus] = useState<{
+    kind: "idle" | "loading" | "ready" | "error";
+    message: string;
+    percent?: number;
+  }>({ kind: "idle", message: "" });
 
   useEffect(() => {
     if (open) {
@@ -56,6 +62,19 @@ export function SettingsModal({
       setShowKey(false);
       setConfirmClear(false);
       setLocalModelStatus({ kind: "idle", message: "" });
+      import("../lib/browser-local-model").then(
+        ({ isBrowserLocalModelReady }) => {
+          const ready = isBrowserLocalModelReady();
+          setBrowserModelStatus(
+            ready
+              ? { kind: "ready", message: "模型已缓存，可直接使用。" }
+              : {
+                  kind: "idle",
+                  message: "首次使用需下载约 610MB，仅下载一次。",
+                },
+          );
+        },
+      );
     }
   }, [open, settings]);
 
@@ -77,6 +96,9 @@ export function SettingsModal({
       provider,
       baseUrl: defaults.baseUrl,
       model: defaults.model,
+      ...(provider === "browser"
+        ? { apiKey: "", rememberKey: false }
+        : {}),
     }));
     setLocalModelStatus({ kind: "idle", message: "" });
   };
@@ -118,6 +140,64 @@ export function SettingsModal({
       });
     }
   };
+
+  const setupBrowserModel = async () => {
+    setBrowserModelStatus({
+      kind: "loading",
+      message: "正在准备浏览器本地模型…",
+      percent: 0,
+    });
+    try {
+      const { loadBrowserLocalModel } = await import(
+        "../lib/browser-local-model"
+      );
+      await loadBrowserLocalModel(({ status, percent }) => {
+        setBrowserModelStatus({
+          kind: "loading",
+          message: status,
+          percent,
+        });
+      });
+      setBrowserModelStatus({
+        kind: "ready",
+        message: "本地模型已加载，可以开始分析。",
+        percent: 100,
+      });
+    } catch (error) {
+      setBrowserModelStatus({
+        kind: "error",
+        message:
+          error instanceof Error
+            ? `加载失败：${error.message}`
+            : "本地模型加载失败。",
+      });
+    }
+  };
+
+  const removeBrowserModel = async () => {
+    setBrowserModelStatus({
+      kind: "loading",
+      message: "正在删除本机模型缓存…",
+    });
+    try {
+      const { clearBrowserLocalModel } = await import(
+        "../lib/browser-local-model"
+      );
+      await clearBrowserLocalModel();
+      setBrowserModelStatus({
+        kind: "idle",
+        message: "模型缓存已删除。",
+      });
+    } catch (error) {
+      setBrowserModelStatus({
+        kind: "error",
+        message:
+          error instanceof Error ? error.message : "删除模型缓存失败。",
+      });
+    }
+  };
+
+  const usesEndpoint = !["demo", "browser"].includes(draft.provider);
 
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
@@ -163,7 +243,7 @@ export function SettingsModal({
               ))}
             </div>
 
-            {draft.provider !== "demo" && (
+            {usesEndpoint && (
               <div className="settings-fields">
                 <label>
                   <span>Base URL</span>
@@ -264,6 +344,48 @@ export function SettingsModal({
                       className={`local-model-status local-model-status--${localModelStatus.kind}`}
                     >
                       {localModelStatus.message}
+                    </small>
+                  )}
+                </div>
+              </div>
+            )}
+            {draft.provider === "browser" && (
+              <div className="demo-note">
+                <Sparkles size={17} />
+                <div>
+                  <p>
+                    在浏览器内运行 Qwen3-0.6B，模型从 ModelScope
+                    下载并缓存到本机，不会上传聊天内容。
+                  </p>
+                  <div className="local-model-actions">
+                    <button
+                      type="button"
+                      onClick={setupBrowserModel}
+                      disabled={browserModelStatus.kind === "loading"}
+                    >
+                      {browserModelStatus.kind === "loading"
+                        ? `准备中 ${browserModelStatus.percent ?? 0}%`
+                        : browserModelStatus.kind === "ready"
+                          ? "重新加载模型"
+                          : "下载并启用"}
+                    </button>
+                    {browserModelStatus.kind !== "idle" && (
+                      <button type="button" onClick={removeBrowserModel}>
+                        删除缓存
+                      </button>
+                    )}
+                  </div>
+                  {browserModelStatus.message && (
+                    <small
+                      className={`local-model-status local-model-status--${
+                        browserModelStatus.kind === "error"
+                          ? "error"
+                          : browserModelStatus.kind === "ready"
+                            ? "success"
+                            : ""
+                      }`}
+                    >
+                      {browserModelStatus.message}
                     </small>
                   )}
                 </div>

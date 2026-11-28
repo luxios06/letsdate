@@ -11,6 +11,9 @@ importers:
       '@paddleocr/paddleocr-js':
         specifier: ^0.4.2
         version: 0.4.2
+      '@wllama/wllama':
+        specifier: 4.0.0
+        version: 4.0.0
       lucide-react:
         specifier: ^0.468.0
         version: 0.468.0(react@19.3.1)
@@ -686,6 +689,9 @@ packages:
 
   '@vitest/utils@2.1.9':
     resolution: {integrity: sha512-v0psaMSkNJ3A2NMrUEHFRzJtDPFn+/VWZ5WxImB21T9fjucJRmS7xCS3ppEnARb9y11OAzaD+P2Ps+b+BGX5iQ==}
+
+  '@wllama/wllama@4.0.0':
+    resolution: {integrity: sha512-fIDWRlHPT9J+kLQouL0PPSVYfrnNz3WkKRA2QvJCW+gd8Fk50MNfe1tj/per7EG60CQwd8gFvaK/DoHHzttnJA==}
 
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
@@ -1586,6 +1592,8 @@ snapshots:
       '@vitest/pretty-format': 2.1.9
       loupe: 3.2.1
       tinyrainbow: 1.2.0
+
+  '@wllama/wllama@4.0.0': {}
 
   argparse@2.0.1: {}
 

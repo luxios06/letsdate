@@ -36,6 +36,10 @@ const PROVIDER_DEFAULTS: Record<
     baseUrl: "http://localhost:11434",
     model: "letsdate-qwen3:0.6b",
   },
+  browser: {
+    baseUrl: "",
+    model: "Qwen3-0.6B-Q8_0.gguf",
+  },
   custom: { baseUrl: "https://api.example.com/v1", model: "your-model" },
 };
 
@@ -46,6 +50,7 @@ export const PROVIDER_LABELS: Record<ProviderSettings["provider"], string> = {
   anthropic: "Anthropic",
   gemini: "Gemini",
   ollama: "Ollama 本地模型",
+  browser: "浏览器本地模型",
   custom: "OpenAI 兼容接口",
 };
 
@@ -56,7 +61,9 @@ export function getProviderDefaults(provider: ProviderSettings["provider"]) {
 export function validateProviderSettings(
   settings: ProviderSettings,
 ): ProviderSettings {
-  if (settings.provider === "demo") return settings;
+  if (settings.provider === "demo" || settings.provider === "browser") {
+    return settings;
+  }
   if (
     !settings.model.trim() ||
     settings.model.length > 256 ||
@@ -635,10 +642,43 @@ async function requestProvider(
 export async function analyzeWithProvider(
   input: AnalysisInput,
   rawSettings: ProviderSettings,
+  onProgress?: (update: { status: string; percent: number }) => void,
 ): Promise<AnalysisReport> {
   const settings = validateProviderSettings(rawSettings);
   const emotion = await analyzeEmotion(input);
   const knowledge = await retrieveKnowledge(input, emotion);
+  if (settings.provider === "browser") {
+    const { enhanceMessageInsightsWithBrowserModel } = await import(
+      "./browser-local-model"
+    );
+    const enhancement = await enhanceMessageInsightsWithBrowserModel(
+      input,
+      onProgress,
+    );
+    const report = buildLocalAnalysis(
+      input,
+      "browser",
+      emotion,
+      knowledge,
+    );
+    return {
+      ...report,
+      messageInsights: enhancement.insights,
+      uncertainties: enhancement.warning
+        ? [...report.uncertainties, enhancement.warning]
+        : report.uncertainties,
+      pipeline: {
+        ...report.pipeline,
+        stages: [
+          ...report.pipeline.stages,
+          enhancement.modelUsed
+            ? "浏览器本地 Qwen3 标注逐消息情绪与意图"
+            : "浏览器本地模型不可用，保留本地规则标注",
+        ],
+        localRuleMode: !enhancement.modelUsed,
+      },
+    };
+  }
   if (settings.provider === "demo") {
     await new Promise((resolve) => window.setTimeout(resolve, 900));
     return buildLocalAnalysis(input, "demo", emotion, knowledge);

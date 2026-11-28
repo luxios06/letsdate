@@ -1,5 +1,9 @@
 # letsdate Local Model
 
+For most users, use the built-in `浏览器本地模型` option in letsdate settings: it downloads Qwen3-0.6B from ModelScope, caches it in the browser and requires no terminal commands.
+
+The scripts below are the Ollama fallback for users who prefer an external local runtime or need a larger model.
+
 This optional package runs a domestic-network-friendly local model:
 
 - Model source: `Qwen/Qwen3-0.6B-GGUF` on ModelScope.
