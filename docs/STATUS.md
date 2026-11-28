@@ -58,6 +58,8 @@ Current source version: `0.10.0`
 - Live GitHub Pages report flow: passed.
 - Live Agent Skill request: HTTP 200.
 - Live production page: no console errors and no horizontal overflow.
+- Live five-scenario relationship suite: passed.
+- Live history continuity and competitive-position screens: passed.
 
 ## Optional Next Steps
 
@@ -70,4 +72,4 @@ Current source version: `0.10.0`
 
 The main project files remain in this workspace. A portable source snapshot is stored at:
 
-`outputs/letsdate-local-snapshot-2026-11-26.tar.gz`
+`outputs/letsdate-source-0.10.0.tar.gz`
