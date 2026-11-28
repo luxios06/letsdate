@@ -333,61 +333,61 @@ function buildQuickRead(
 
   if (hasControl) {
     return {
-      headline: "出现了需要优先重视的控制或边界风险",
+      headline: "有些“关心”，已经变成了控制",
       observation:
-        "材料里出现了限制、查手机、报备或排他性要求等表达。这类信号不应被浪漫化。",
+        "这些话里出现了限制、查手机、报备或排他性的要求。它们听起来像在意，却不该被浪漫化。",
       suggestion:
-        "先不要顺着话术继续推进。直接确认边界，并观察对方是否能尊重你的拒绝。",
+        "先别顺着话术往前走。把边界说清楚，再看对方能不能尊重这句拒绝。",
       confidence: "中",
       missingInformation: missing,
     };
   }
   if (hasRepair) {
     return {
-      headline: "出现了澄清和修复关系的意愿",
-      observation: "材料里有道歉、解释或希望以后说清楚的表达。",
+      headline: "Ta 在试着修复这段关系",
+      observation: "这里有道歉、解释，也有“以后想做得更好”的意思。",
       suggestion:
-        "先接住修复意愿，再确认双方下次具体怎么做。检验修复要看后续行动，而不是只听道歉。",
+        "可以先接住这份修复的意愿，再一起约定下次具体怎么做。真正的修复，最后都要落回后续行动。",
       confidence: "中",
       missingInformation: missing,
     };
   }
   if (top?.key === "closeness" || top?.key === "flirtation") {
     return {
-      headline: "这段短对话里已经有亲密或靠近信号",
-      observation: `最明显的信号是“${top.label}”，例如：${top.hits.slice(0, 2).join("、")}。`,
+      headline: "这段话里，已经有一点亲密的靠近",
+      observation: `最清楚的一处是“${top.label}”，比如：${top.hits.slice(0, 2).join("、")}。`,
       suggestion:
-        "可以先回应温度，再提一个低压力、具体的问题。例如表达你也愿意见面，同时问对方方便的时间。",
+        "可以先回应这份温度，再轻轻问一个具体的问题。比如告诉 Ta 你也愿意见面，再把时间交给两个人一起定。",
       confidence: short ? "低" : "中",
       missingInformation: missing,
     };
   }
   if (top?.key === "reassurance") {
     return {
-      headline: "更像是在寻求关系确认",
-      observation: "出现了反复确认、担心被忽略或害怕关系变化的表达。",
+      headline: "Ta 在反复确认：这段关系还在不在",
+      observation: "这些话里有一点担心被忽略，也有一点害怕关系突然变淡。",
       suggestion:
-        "先直接确认你当前的态度和可投入程度，避免用含糊回应继续激发试探；同时不要承诺你并不确定的事。",
+        "可以先诚实说出你现在的投入程度。清楚比含糊更能让人安心，但也别承诺自己还没想好的事。",
       confidence: short ? "低" : "中",
       missingInformation: missing,
     };
   }
   if (top?.key === "withdrawal") {
     return {
-      headline: "更像暂时低能量或需要空间",
-      observation: "短回复前后出现了低电量、想安静或晚点再说等表达。",
+      headline: "Ta 现在，可能只是没有力气再解释",
+      observation: "短回复前后出现了低电量、想安静，或者“晚点再说”的痕迹。",
       suggestion:
-        "给一个不催促的回应，并留下明确但低压力的回归入口，例如“你先休息，等方便时再回我”。",
+        "回一句不催促的话，给 Ta 留一条容易回来的路。比如“你先休息，等方便时再回我就好”。",
       confidence: "低",
       missingInformation: missing,
     };
   }
   if (top?.key === "boundary" || hasBoundary) {
     return {
-      headline: "出现了边界或关系的节奏说明",
-      observation: "材料里提到了空间、提前沟通、不方便或可接受的方式。",
+      headline: "Ta 在说：请按这个节奏靠近",
+      observation: "这里提到了空间、提前沟通、不方便，或什么样的方式更舒服。",
       suggestion:
-        "先确认你能接受的节奏和边界，再看对方是否愿意具体配合；边界被尊重比口头热情更重要。",
+        "先说清你也能接受的节奏，再看对方会不会真的配合。愿意尊重边界，比一句好听的话更重要。",
       confidence: short ? "低" : "中",
       missingInformation: missing,
     };
@@ -395,15 +395,15 @@ function buildQuickRead(
   const mood = [...categories].sort((a, b) => b.score - a.score)[0];
   return {
     headline: short
-      ? "材料很短，但可以先给一条安全的回应"
-      : "情绪信号存在，但关系含义还不够明确",
+      ? "话还很少，但可以先轻轻接住"
+      : "有情绪在流动，只是关系的意思还没站稳",
     observation:
       mood && mood.count > 0
-        ? `当前更明显的情绪是“${mood.label}”，但没有形成足够稳定的关系信号。`
-        : "当前没有足够明确的亲密、退缩、修复或控制信号。",
+        ? `眼下最明显的是“${mood.label}”，但它还不足以说明一段稳定的关系。`
+        : "现在还没有足够清楚的靠近、退后、修复或边界信号。",
     suggestion: short
-      ? "不要急着问“你到底怎么想”。可以先回应对方刚才说的内容，再问一个具体、容易回答的问题，观察对方是否愿意继续投入。"
-      : "先用一个低压力、具体的问题验证对方是否愿意共同推进，不必从这段材料中强行确定人格或依恋类型。",
+      ? "不用急着问“你到底怎么想”。先回应 Ta 刚说的话，再问一个具体、容易回答的小问题，看看对方愿不愿意把话题继续下去。"
+      : "先用一个轻一点、具体一点的问题，看对方愿不愿意一起往前走。别从这么少的文字里，硬替一个人定性格。",
     confidence: "低",
     missingInformation:
       missing.length > 0

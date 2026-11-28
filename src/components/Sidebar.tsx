@@ -43,7 +43,7 @@ export function Sidebar({
             type="button"
             className={`nav-item ${view === "history" ? "is-active" : ""}`}
             onClick={() => onViewChange("history")}
-            title="历史记录"
+            title="关系札记"
           >
             <History size={18} strokeWidth={1.8} />
             <span>历史</span>
@@ -53,7 +53,7 @@ export function Sidebar({
             type="button"
             className={`nav-item ${view === "method" ? "is-active" : ""}`}
             onClick={() => onViewChange("method")}
-            title="分析框架"
+            title="解读方法"
           >
             <BrainCircuit size={18} strokeWidth={1.8} />
             <span>方法</span>

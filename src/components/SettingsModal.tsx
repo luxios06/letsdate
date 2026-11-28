@@ -211,7 +211,7 @@ export function SettingsModal({
         <header className="settings-modal__header">
           <div>
             <span className="eyebrow">模型与隐私</span>
-            <h2 id="settings-title">选择你信任的推理方式</h2>
+            <h2 id="settings-title">选择一种你愿意信任的推理方式</h2>
           </div>
           <button type="button" className="icon-button" onClick={onClose} title="关闭设置">
             <X size={19} />
@@ -225,7 +225,7 @@ export function SettingsModal({
               <div>
                 <h3>推理模型</h3>
                 <p>
-                  分析会分两次调用模型：先提取事实，再综合报告；费用按两次请求计算。
+                  多数模型会先读清事实，再慢慢写出判断，因此通常会产生两次请求。
                 </p>
               </div>
             </div>
@@ -310,7 +310,7 @@ export function SettingsModal({
             {draft.provider === "demo" && (
               <div className="demo-note">
                 <Sparkles size={17} />
-                <p>使用内置规则引擎跑通完整报告，不会产生模型请求，也不会消耗 API。</p>
+                <p>先用内置规则把整段关系走一遍，不发起模型请求，也不消耗 API。</p>
               </div>
             )}
             {draft.provider === "ollama" && (
@@ -398,7 +398,7 @@ export function SettingsModal({
               <LockKeyhole size={17} />
               <div>
                 <h3>数据边界</h3>
-                <p>历史记录保存在浏览器本地；API Key 默认不写入持久存储。</p>
+                <p>故事留在你的浏览器里，密钥默认也不会被长期记住。</p>
               </div>
             </div>
             <div className="privacy-notes">
@@ -408,7 +408,7 @@ export function SettingsModal({
               </span>
               <span>
                 <Check size={14} />
-                支持随时清除本机历史
+                随时可以清空本机故事
               </span>
               <span>
                 <AlertTriangle size={14} />
@@ -429,7 +429,7 @@ export function SettingsModal({
               }}
             >
               {confirmClear ? <Trash2 size={16} /> : <RotateCcw size={16} />}
-              {confirmClear ? "再次点击确认清除" : "清除本机历史与配置"}
+              {confirmClear ? "再次点击，确认清空" : "清空本机故事与配置"}
             </button>
           </section>
         </div>
@@ -437,7 +437,7 @@ export function SettingsModal({
         <footer className="settings-modal__footer">
           <span>
             <LockKeyhole size={14} />
-            配置不会同步到 letsdate 服务器
+            这些配置不会离开你的设备
           </span>
           <div>
             <button type="button" className="secondary-button" onClick={onClose}>

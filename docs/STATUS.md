@@ -2,7 +2,7 @@
 
 Saved and deployed: 2026-11-28
 
-Current source version: `0.13.0`
+Current source version: `0.13.1`
 
 ## Completed
 
@@ -25,6 +25,7 @@ Current source version: `0.13.0`
 - Motion-based page and report transitions, score animation and animated tab indicator.
 - Filterable per-message labels with smooth list transitions.
 - Auto-animated history rows and screenshot import queues.
+- Warmer, less mechanical Chinese copy across input, report, history, settings and method pages.
 - Chat bubble grouping, speaker recovery and timestamp-noise filtering.
 - Local DUTIR emotion analysis and intimacy/boundary signal detection.
 - Short conversations always receive an actionable suggestion and targeted follow-up questions.
@@ -80,4 +81,4 @@ Current source version: `0.13.0`
 
 The main project files remain in this workspace. A portable source snapshot is stored at:
 
-`outputs/letsdate-source-0.13.0.tar.gz`
+`outputs/letsdate-source-0.13.1.tar.gz`

@@ -29,9 +29,9 @@ export const DEMO_REPORT: AnalysisReport = {
   provider: "demo",
   stage: "刚匹配，聊了 2 天",
   decision: "适度推进",
-  overallTitle: "有真实兴趣信号，也保留了健康边界",
+  overallTitle: "有靠近，也有分寸",
   overallSummary:
-    "对方主动追问、接住话题并提出可执行的见面方向，兴趣信号偏积极。Ta 同时明确保留日程确认空间，这更像边界感，而不是冷淡。适合用一次低压力、可撤回的具体邀约验证关系温度。",
+    "Ta 会主动把话题递回来，也愿意一起想到见面。与此同时，Ta 明确给自己留了确认日程的空间。前者是靠近，后者不是冷淡，而是分寸。先让一次轻一点的邀约替你们回答下一步。",
   confidence: "中",
   compatibilityScore: 74,
   calibration: {
@@ -43,8 +43,8 @@ export const DEMO_REPORT: AnalysisReport = {
     scoreCap: 86,
     method: "向 50 分收缩并按材料充分性设置上限",
     notes: [
-      "双方主页和聊天均提供了可核实证据。",
-      "样本仍不足以判断稳定人格，关系分数不代表成功概率。",
+      "主页与聊天都给这段判断留下了可以回看的痕迹。",
+      "故事还短，分数只描述当下的互动，不预告结局。",
     ],
   },
   emotion: {
@@ -76,9 +76,9 @@ export const DEMO_REPORT: AnalysisReport = {
       },
     ],
     quickRead: {
-      headline: "对话里有明确的靠近和共同活动信号",
-      observation: "对方主动追问并接受邀约，但仍需要真实安排来验证投入。",
-      suggestion: "先用一次低压力邀约验证，不需要过早定义关系。",
+      headline: "这段话里，有清楚的靠近",
+      observation: "Ta 主动追问，也接住了共同活动的设想。只是投入有多深，还要看现实里那一步。",
+      suggestion: "先发出一次轻一点、退得回来的邀约，不必太早替关系定义。",
       confidence: "中",
       missingInformation: ["对方平时的回复节奏"],
     },
@@ -94,7 +94,7 @@ export const DEMO_REPORT: AnalysisReport = {
       intent: "分享",
       cue: "靠近",
       confidence: "中",
-      explanation: "主动分享具体经历和情绪细节，是继续展开话题的良好入口。",
+      explanation: "愿意分享具体经历和情绪细节，是在把话题轻轻往你这边推。",
       source: "local-rules",
     },
     {
@@ -106,7 +106,7 @@ export const DEMO_REPORT: AnalysisReport = {
       intent: "确认计划",
       cue: "稳定",
       confidence: "中",
-      explanation: "从玩笑式回应推进到具体时间，属于把兴趣落到行动的信号。",
+      explanation: "从一句玩笑走到具体时间，兴趣开始有了可以落地的形状。",
       source: "local-rules",
     },
   ],
@@ -140,20 +140,20 @@ export const DEMO_REPORT: AnalysisReport = {
   },
   humanRead: {
     canConfirm:
-      "对方主动追问、给出确认时间，并把话题推进到看展和吃饭。",
+      "Ta 主动追问，给出了确认时间，也把话题慢慢推到了看展和吃饭。",
     likely:
-      "更可能是双方都有继续了解的兴趣，当前互动具备真实的推进信号。",
+      "更像是两个人都愿意再往前走一点。现在的热度是真的，只是还需要一次现实里的安排来把它接住。",
     alternatives:
-      "热情也可能来自友好沟通习惯，仍需用一次具体安排验证。",
+      "这份热情也可能来自 Ta 本来的沟通习惯。一次具体安排，会比猜测更接近答案。",
     observeNext:
-      "重点观察周六是否按约定回复，以及临时变化时是否提前说明。",
+      "看看周六那句话会不会如约回来，也看看计划有变化时，Ta 会不会提前把话说清楚。",
     supportNote:
-      "这份分析不替你判断关系值不值得，只帮助你把猜测变成可观察的信号。",
+      "这份解读不替你决定值不值得，只把心里悬着的猜测，放回可以观察的地方。",
   },
   contextGaps: [
     {
       question: "对方平时的回复间隔和表达长度大概是什么样？",
-      why: "时间变化比单句语气更能帮助判断兴趣和边界。",
+      why: "回复的节奏，常常比一句语气更能看清一个人的投入与分寸。",
       priority: 1,
     },
   ],
@@ -177,13 +177,13 @@ export const DEMO_REPORT: AnalysisReport = {
   },
   person: {
     summary:
-      "偏体验驱动，愿意分享生活细节，也重视有质量的交流。社交上并非持续高能量，更像是在熟悉后逐步打开。",
+      "有一点探索者的轻盈，也有一点慢热者的分寸。愿意分享生活，却更珍惜有质量的交流，像是在熟悉之后才慢慢把门打开。",
     mbti: {
       candidate: "ENFP",
       alternatives: ["INFP", "ESFP"],
       confidence: "低",
       summary:
-        "当前最像 ENFP：主动把话题推进到共同活动，偏好新体验，也重视两个人的深聊。互动时适合先给具体安排，同时保留彼此空间。",
+        "把这些细节放在一起，Ta 更接近 ENFP 的沟通倾向：愿意把话题推向共同体验，也珍惜两个人的深聊。靠近时给一点具体安排，同时留一点呼吸。",
       dimensions: [
         {
           key: "EI",
@@ -232,7 +232,7 @@ export const DEMO_REPORT: AnalysisReport = {
         key: "openness",
         label: "开放性",
         score: 84,
-        summary: "对新体验、艺术和户外探索的接受度高。",
+        summary: "会被新体验、艺术和户外吸引，也愿意把生活过成探索。",
         status: "supported",
         evidenceIds: ["demo-2", "demo-1"],
       },
@@ -240,7 +240,7 @@ export const DEMO_REPORT: AnalysisReport = {
         key: "conscientiousness",
         label: "尽责性",
         score: 61,
-        summary: "有计划意识，但不追求事事确定。",
+        summary: "并非事事计划，但会给重要的事留一个清楚的着落点。",
         status: "tentative",
         evidenceIds: ["demo-3"],
       },
@@ -248,7 +248,7 @@ export const DEMO_REPORT: AnalysisReport = {
         key: "extraversion",
         label: "外向性",
         score: 66,
-        summary: "愿意主动，但能量更偏向小范围互动。",
+        summary: "愿意主动，却更享受小范围、能真正聊进去的热度。",
         status: "tentative",
         evidenceIds: ["demo-1", "demo-2"],
       },
@@ -256,7 +256,7 @@ export const DEMO_REPORT: AnalysisReport = {
         key: "agreeableness",
         label: "宜人性",
         score: 73,
-        summary: "会接住话题，并给对方留下舒服的参与空间。",
+        summary: "会接住话题，也懂得给别人留一个舒服的入口。",
         status: "supported",
         evidenceIds: ["demo-1", "demo-4"],
       },
@@ -264,23 +264,23 @@ export const DEMO_REPORT: AnalysisReport = {
         key: "neuroticism",
         label: "情绪敏感度",
         score: 42,
-        summary: "当前材料看不到明显的情绪波动或过度索取。",
+        summary: "眼下还听不到太多情绪起伏，这段材料也还不足以下结论。",
         status: "insufficient",
         evidenceIds: [],
       },
     ],
     interaction: {
-      attachment: "暂未看到明显的不安全互动模式，短期样本不足以判断依恋类型。",
-      conflict: "更可能采用先缓和、再沟通的方式，冲突场景尚无直接证据。",
-      pace: "愿意靠近，但需要保留自己的节奏和安排。",
-      energy: "偏体验型社交，喜欢有内容的共同活动。",
-      humor: "轻盈、自嘲式幽默，能降低互动压力。",
+      attachment: "暂时没看见明显的不安全互动，但一段短对话还不足以判断依恋类型。",
+      conflict: "更像会先把气氛放缓，再找机会说清楚；真正的冲突场景还没有出现。",
+      pace: "愿意靠近，也需要自己的节奏和一小块不被打扰的空间。",
+      energy: "更容易在共同体验和有内容的交流里获得能量。",
+      humor: "会用轻盈的自嘲把气氛放软，让靠近不那么有压力。",
     },
     values: ["探索感", "有质量的交流", "自主空间", "共同体验"],
     needs: ["被认真回应", "可共同参与的活动", "不被催促的节奏"],
     boundaries: ["个人日程需要自己确认", "不喜欢纯应酬式热闹"],
     greenFlags: ["主动追问", "提出具体见面方向", "会接梗也会收束话题"],
-    watchouts: ["目前样本仍短", "尚未看到冲突或低能量状态"],
+    watchouts: ["现在看到的故事还不长", "真正低落或起冲突时会怎样，还不知道"],
     attachmentAssessment: {
       summary:
         "出现了日程边界和可修复线索，但没有冲突或拉开距离后的再联系，无法判断依恋模式。",
@@ -325,13 +325,13 @@ export const DEMO_REPORT: AnalysisReport = {
   },
   self: {
     summary:
-      "表达相对克制但稳定，偏重真实兴趣与可执行安排。你会主动给对方具体回应，也注重关系中的安全感。",
+      "你表达得克制，却不是冷淡。你在意真实兴趣，也愿意把喜欢落到具体安排里；只是在靠近之前，希望心里有一点确定。",
     mbti: {
       candidate: "INFJ",
       alternatives: ["ISFJ", "INTJ"],
       confidence: "低",
       summary:
-        "当前最像 INFJ：慢热、重视稳定回应，也会把兴趣落到具体行动。互动时适合先给清楚安排，同时保留思考空间。",
+        "把自己的表达和回应放在一起，你更接近 INFJ：慢热，重视稳定回应，也愿意把心意落到行动。靠近时记得给自己留一点思考的余地。",
       dimensions: [
         {
           key: "EI",
@@ -418,11 +418,11 @@ export const DEMO_REPORT: AnalysisReport = {
       },
     ],
     interaction: {
-      attachment: "重视稳定回应，短期样本下看不出明显回避或焦虑倾向。",
-      conflict: "倾向先自己消化，再寻找合适时机沟通。",
-      pace: "希望明确一点，但也愿意给对方确认时间。",
-      energy: "偏安静陪伴与深度交流。",
-      humor: "回应式幽默，更多是接住对方而不是主导玩梗。",
+      attachment: "你在意稳定回应，也会给对方确认的时间；更深的依恋模式，还需要更长的相处。",
+      conflict: "遇到不舒服时，你可能会先自己消化，再找一个合适的时机说出来。",
+      pace: "你希望关系清楚一点，也愿意把确认的时间留给对方。",
+      energy: "在安静的陪伴和更深的交流里，你更容易感到连接。",
+      humor: "你的幽默更像轻轻接住对方，而不是抢着主导玩笑。",
     },
     values: ["稳定回应", "真实兴趣", "共同成长", "边界感"],
     needs: ["明确信号", "不被忽冷忽热消耗", "可持续的互动节奏"],
@@ -473,60 +473,60 @@ export const DEMO_REPORT: AnalysisReport = {
   },
   compatibility: {
     score: 74,
-    label: "互补且有推进空间",
+    label: "节奏不同，却能互相看见",
     summary:
-      "你们都看重共同体验与真实交流，节奏上也能互相留空间。主要差异在于对方更偏临场探索，你更偏稳定规划，适合通过一次低压力约会验证。",
+      "你们都愿意把时间给共同体验，也愿意给彼此留一点空间。差异在于，Ta 更随性，你更需要确定。一次轻一点的见面，会比反复猜想更接近答案。",
     dimensions: [
       {
         key: "pace",
         label: "节奏匹配",
         score: 78,
-        summary: "都愿意靠近，也能接受短期确认。",
+        summary: "都愿意靠近，也愿意给确认留一点时间。",
       },
       {
         key: "energy",
         label: "能量互补",
         score: 71,
-        summary: "对外社交能量不同，但都喜欢小范围深聊。",
+        summary: "在人前的能量不同，却都在小范围的深聊里更自在。",
       },
       {
         key: "communication",
         label: "沟通方式",
         score: 82,
-        summary: "会接话题、追问并给出具体回应。",
+        summary: "会接住彼此的话，也愿意继续问下去。",
       },
       {
         key: "stability",
         label: "稳定预期",
         score: 68,
-        summary: "你更需要确定性，Ta 更偏灵活安排。",
+        summary: "你更需要确定，Ta 更习惯给安排留一点弹性。",
       },
       {
         key: "values",
         label: "价值共鸣",
         score: 76,
-        summary: "探索、体验和边界感是目前可见的共同点。",
+        summary: "对探索、体验与边界的珍惜，是现在最清楚的共同点。",
       },
     ],
   },
   interest: {
     score: 72,
     confidence: "中",
-    verdict: "兴趣信号偏积极，但仍处于需要验证的早期阶段。",
+    verdict: "有真实的靠近，也还在等一次现实里的回应。",
     signals: [
-      "对方主动反问你的兴趣。",
-      "对方把话题从展览延伸到共同活动。",
-      "对方给出明确回复时间，而不是模糊拖延。",
+      "Ta 会把问题轻轻递回来，想听你的答案。",
+      "话题从展览慢慢延伸到了共同活动。",
+      "Ta 给了明确回复时间，而不是把话悬在半空。",
     ],
     ambiguities: [
-      "尚未确认具体日期，兴趣仍需行动验证。",
-      "当前对话氛围轻松，不能排除友善型表达。",
+      "具体日期还没有落下，兴趣仍要等行动来回答。",
+      "气氛轻松是真的，但也要给友善型表达留出解释。",
     ],
   },
   action: {
     decision: "适度推进",
     rationale:
-      "当前出现连续追问、共同活动设想和时间确认，值得推进一次低压力邀约；但推进幅度应控制在单次具体安排，不用提前定义关系。",
+      "已经有连续追问、共同活动的设想，也有了时间的着落点。值得向前半步，但只走一小步——先安排一次见面，不急着替关系命名。",
     nextMessage:
       "周六如果你那边时间定了告诉我，我们可以挑一个下午去看展，之后找个安静的地方吃饭。时间不方便也完全没关系，我们再换个周末。",
     messageOptions: [
@@ -544,18 +544,18 @@ export const DEMO_REPORT: AnalysisReport = {
       },
     ],
     ifWarm:
-      "对方给出具体时间时，直接确认地点和大致时长，并保留一个双方都可调整的备选方案。",
+      "如果 Ta 给出具体时间，就顺着这份诚意确认地点和大致时长，也给变化留一点余地。",
     ifCold:
-      "如果对方继续模糊或超过约定时间没有回复，先停止追加邀约，把注意力放回自己的生活。",
+      "如果约定时间过去，回应仍然模糊，就把伸出去的手收回来，回到自己的生活里。",
     conversationMoves: [
-      "把共同兴趣落到一次 2 至 3 小时的具体活动。",
-      "用可撤回的措辞表达邀约，降低对方压力。",
-      "观察对方是否愿意共同确定时间，而不只是口头说好。",
+      "把共同兴趣落成一次两三个小时的小活动。",
+      "邀约轻一点，让两个人都能舒服地进退。",
+      "看看 Ta 愿不愿意一起把时间真正定下来。",
     ],
     stopSigns: [
-      "连续多次只在你推动时回复。",
-      "长期回避任何具体安排。",
-      "让你持续处在猜测和自我怀疑中。",
+      "总是只有你在推动话题。",
+      "一次次回避具体安排。",
+      "让你长期停在猜测和自我怀疑里。",
     ],
   },
   evidence: [
@@ -605,14 +605,14 @@ export const DEMO_REPORT: AnalysisReport = {
     },
   ],
   uncertainties: [
-    "聊天样本只有两天，无法可靠判断稳定人格。",
-    "MBTI 只作为观察透镜，不应当作结论。",
-    "对方对具体邀约的响应质量，比当前语气更值得观察。",
+    "只聊了两天，还看不清一个人稳定的人格轮廓。",
+    "MBTI 只是一面镜子，不是结论。",
+    "Ta 之后如何回应具体邀约，比此刻的语气更接近答案。",
   ],
   safetyNotes: [
-    "不要用画像结果替对方做决定，也不要据此制造控制感。",
-    "任何涉及私人信息的材料，都应先征得必要授权并充分脱敏。",
-    "若关系让你持续焦虑、被贬低或失去边界，应优先保护自己。",
+    "别让这份解读替别人做决定，也别把它变成控制或试探。",
+    "把材料放进来前，请替彼此隐去姓名、电话、住址和账号。",
+    "如果这段关系让你长期焦虑、被贬低或失去边界，请先回到自己。",
   ],
 };
 

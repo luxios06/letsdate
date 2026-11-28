@@ -42,10 +42,10 @@ interface AnalyzeWorkspaceProps {
 }
 
 const PROGRESS_STEPS = [
-  "解析消息与会话",
-  "提取并核对事实证据",
-  "分析短回复与依恋线索",
-  "生成人话报告与行动建议",
+  "读懂你们说过的话",
+  "把原话轻轻放回原位",
+  "看见靠近，也看见停顿",
+  "为下一步留一盏灯",
 ];
 
 function ScreenshotButton({
@@ -182,19 +182,19 @@ export function AnalyzeWorkspace({
   return (
     <div className="workspace">
       <div className="workspace__intro">
-        <span className="index-label">01 / 输入材料</span>
-        <h2>把关系里的模糊感，拆成能验证的信号。</h2>
+        <span className="index-label">01 / 让细节有处安放</span>
+        <h2>先把你反复想起的那些片段放在这里。</h2>
         <p>
-          跨平台导入主页、截图和聊天，同时分析你与对方，再把证据转成关系判断和下一步行动。
+          主页、几句对话、一个没读懂的语气，都可以。我们不急着给关系下定义，只把能看见的细节一层层摊开。
         </p>
         <div className="workspace-edge-strip">
-          <span>跨平台材料</span>
-          <span>双人互动</span>
-          <span>安全优先</span>
+          <span>不限定平台</span>
+          <span>两个人一起看</span>
+          <span>边界先于答案</span>
         </div>
         <button type="button" className="subtle-action" onClick={onLoadSample}>
           <RotateCcw size={15} />
-          载入示例
+          看一段示例
         </button>
       </div>
 
@@ -203,7 +203,7 @@ export function AnalyzeWorkspace({
           <div className="source-block__head">
             <div>
               <span className="source-kicker">你</span>
-              <h3>你的表达方式</h3>
+              <h3>关于你</h3>
             </div>
             <ScreenshotButton
               label="导入多张"
@@ -212,14 +212,14 @@ export function AnalyzeWorkspace({
             />
           </div>
           <label className="field-label" htmlFor="self-profile">
-            主页、简介或自我描述
+            你愿意怎样被理解
           </label>
           <textarea
             id="self-profile"
             className="source-textarea source-textarea--compact"
             value={input.selfProfile}
             onChange={(event) => update("selfProfile", event.target.value)}
-            placeholder="例如：慢热但会认真回应，喜欢运动和看展。"
+            placeholder="比如：慢热，但遇到喜欢的话题会认真聊下去。"
           />
           {screenshotJob?.source === "self" && (
             <ScreenshotImportQueue
@@ -233,7 +233,7 @@ export function AnalyzeWorkspace({
           <div className="source-block__head">
             <div>
               <span className="source-kicker">Ta</span>
-              <h3>对方主页</h3>
+              <h3>关于对方</h3>
             </div>
             <ScreenshotButton
               label="导入多张"
@@ -242,14 +242,14 @@ export function AnalyzeWorkspace({
             />
           </div>
           <label className="field-label" htmlFor="other-profile">
-            简介、帖子内容、兴趣标签
+            Ta 愿意让人看到的部分
           </label>
           <textarea
             id="other-profile"
             className="source-textarea source-textarea--compact"
             value={input.otherProfile}
             onChange={(event) => update("otherProfile", event.target.value)}
-            placeholder="粘贴对方愿意公开的文字信息，建议先去除姓名和账号。"
+            placeholder="粘贴公开简介、兴趣或帖子片段。先隐去姓名和账号。"
           />
           {screenshotJob?.source === "other" && (
             <ScreenshotImportQueue
@@ -262,13 +262,13 @@ export function AnalyzeWorkspace({
         <section className="source-block source-block--chat">
           <div className="source-block__head">
             <div>
-              <span className="source-kicker">Dialogue</span>
-              <h3>聊天记录</h3>
+              <span className="source-kicker">Between you</span>
+              <h3>你们说过的话</h3>
             </div>
             <div className="source-block__actions">
               <span className="format-hint">
                 <MessageCircleMore size={14} />
-                我 / 对方逐条标注
+                把“我”和“对方”分开
               </span>
               <ScreenshotButton
                 label="批量识别截图"
@@ -282,7 +282,7 @@ export function AnalyzeWorkspace({
             className="source-textarea source-textarea--chat"
             value={input.chat}
             onChange={(event) => update("chat", event.target.value)}
-            placeholder={`我：最近在听什么歌？\n对方：最近循环一支后摇乐队，你呢？\n\n尽量保留上下文，不要只截取单句。`}
+            placeholder={`我：最近在听什么歌？\n对方：最近循环一支后摇乐队，你呢？\n\n多留一点上下文。语气常常藏在前后几句里。`}
           />
           {screenshotJob?.source === "chat" && (
             <ScreenshotImportQueue
@@ -306,7 +306,7 @@ export function AnalyzeWorkspace({
           <div className="analysis-config__controls">
             <div className="control-group">
               <label className="field-label" htmlFor="relationship-label">
-                关系备注（仅本地）
+                这段关系，你想怎么称呼
               </label>
               <input
                 id="relationship-label"
@@ -316,11 +316,11 @@ export function AnalyzeWorkspace({
                 onChange={(event) =>
                   update("relationshipLabel", event.target.value)
                 }
-                placeholder="例如：阿宁 / 摄影展认识"
+                placeholder="比如：阿宁 / 摄影展认识"
               />
             </div>
             <div className="control-group">
-              <span className="field-label">关系阶段</span>
+              <span className="field-label">你们走到哪一步</span>
               <div className={`custom-select ${stageOpen ? "is-open" : ""}`}>
                 <button
                   type="button"
@@ -351,7 +351,7 @@ export function AnalyzeWorkspace({
             </div>
 
             <div className="control-group control-group--goal">
-              <span className="field-label">这次最想判断</span>
+              <span className="field-label">这次，你最想明白什么</span>
               <div className="choice-row">
                 {GOALS.slice(0, 3).map((goal) => (
                   <button
@@ -384,7 +384,7 @@ export function AnalyzeWorkspace({
                 onChange={(event) => update("consent", event.target.checked)}
               />
               <span>
-                我确认材料已脱敏，并有权用这些内容进行分析。
+                我已隐去不必要的身份信息，也有权认真看看这段关系。
               </span>
             </label>
             {error && <div className="inline-error">{error}</div>}
@@ -397,7 +397,7 @@ export function AnalyzeWorkspace({
               {busy ? (
                 <>
                   <LoaderCircle className="spin" size={18} />
-                  正在分析
+                  正在梳理
                 </>
               ) : importing ? (
                 <>
@@ -406,7 +406,7 @@ export function AnalyzeWorkspace({
                 </>
               ) : (
                 <>
-                  生成关系画像
+                  读懂这段关系
                   <ArrowRight size={18} />
                 </>
               )}
@@ -426,7 +426,7 @@ export function AnalyzeWorkspace({
             </div>
             <div>
               <strong>{progress.label}</strong>
-              <p>先找证据，再形成判断。</p>
+              <p>让细节慢慢归位。</p>
             </div>
             <em>{progress.percent}%</em>
           </div>

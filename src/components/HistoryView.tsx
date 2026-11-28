@@ -58,13 +58,13 @@ export function HistoryView({
     <div className="page-view">
       <div className="page-view__intro">
         <div>
-          <span className="index-label">History</span>
-          <h2>你的关系观察记录</h2>
-          <p>按关系备注自动串联，对比同一段关系在不同时间点的变化。</p>
+          <span className="index-label">Stories</span>
+          <h2>那些被你认真看过的关系</h2>
+          <p>同一段关系，会在不同的日子里显出不同的样子。这里替你把这些变化收好。</p>
         </div>
         <button type="button" className="primary-button" onClick={onNew}>
           <Sparkles size={17} />
-          新建分析
+          写下下一段
         </button>
       </div>
 
@@ -73,10 +73,10 @@ export function HistoryView({
           <div className="empty-state__icon">
             <History size={26} />
           </div>
-          <h3>还没有分析记录</h3>
-          <p>第一次分析完成后，这里会出现可以回看的完整报告。</p>
+          <h3>这里还没有故事</h3>
+          <p>等你第一次认真回看一段对话，它会在这里留下痕迹。</p>
           <button type="button" className="secondary-button" onClick={onNew}>
-            开始第一次分析
+            写下第一段对话
             <ArrowRight size={16} />
           </button>
         </div>
@@ -128,7 +128,7 @@ export function HistoryView({
           ))}
           <button type="button" className="clear-history" onClick={onClear}>
             <Trash2 size={15} />
-            清除全部历史
+            清空所有关系札记
           </button>
         </div>
       )}

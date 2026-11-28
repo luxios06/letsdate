@@ -94,32 +94,32 @@ function App() {
       return;
     }
     if (!input.consent) {
-      setError("请先确认材料已脱敏，并勾选授权说明。");
+      setError("请先替这些材料隐去身份信息，再勾选下方的授权说明。");
       return;
     }
     if (input.chat.trim().length < 12 && input.otherProfile.trim().length < 20) {
-      setError("至少补充一段聊天记录或较完整的对方主页信息。");
+      setError("再多放一点材料吧：一段对话，或一页更完整的公开主页。");
       return;
     }
     setBusy(true);
-    setProgress({ percent: 6, label: "读取材料结构" });
+    setProgress({ percent: 6, label: "让细节有处安放" });
     progressTimer.current = window.setInterval(() => {
       setProgress((current) => {
         if (current.percent >= 88) {
           return {
             ...current,
-            label: "正在整合证据与反证",
+            label: "把不同的解释放在一起看",
           };
         }
         const next = Math.min(88, current.percent + Math.max(1, Math.ceil((90 - current.percent) / 8)));
         const label =
           next < 24
-            ? "提取可验证的表达信号"
+            ? "听见话里的靠近与停顿"
             : next < 48
-              ? "对齐人格与互动维度"
+              ? "把性格与互动慢慢对齐"
               : next < 70
-                ? "寻找反证和替代解释"
-                : "生成关系判断与行动建议";
+                ? "也看看另一种可能"
+                : "为下一步留一盏灯";
         return { percent: next, label };
       });
     }, 280);
@@ -162,7 +162,7 @@ function App() {
   const handleLoadSample = () => {
     setInput(DEMO_SAMPLE);
     setError("");
-    setToast({ kind: "success", message: "示例材料已载入，可以直接生成报告。" });
+    setToast({ kind: "success", message: "一段示例已经放好，随时可以开始。" });
   };
 
   const handleImportScreenshots = async (
@@ -170,7 +170,7 @@ function App() {
     files: File[],
   ) => {
     if (ocrBusy) {
-      setToast({ kind: "error", message: "上一批截图仍在识别中。" });
+      setToast({ kind: "error", message: "上一批图片还在慢慢读，请稍等一下。" });
       return;
     }
     const checked = validateScreenshotFiles(files);
@@ -198,7 +198,7 @@ function App() {
     });
     setToast({
       kind: "success",
-      message: `已加入 ${accepted.length} 张截图，正在按选择顺序识别。`,
+      message: `把 ${accepted.length} 张图片轻轻放好了，正在按顺序读它们。`,
     });
 
     const patchItem = (
@@ -307,12 +307,12 @@ function App() {
     if (successCount > 0) {
       setToast({
         kind: "success",
-        message: `${successCount}/${checked.length} 张识别完成，平均置信度 ${Math.round((confidenceTotal / successCount) * 100)}%${failedCount ? `，${failedCount} 张未完成` : ""}。请检查顺序和说话人。`,
+        message: `${successCount}/${checked.length} 张已经读完，平均把握 ${Math.round((confidenceTotal / successCount) * 100)}%${failedCount ? `，还有 ${failedCount} 张没读出来` : ""}。顺序和说话人，还是想请你再看一眼。`,
       });
     } else {
       setToast({
         kind: "error",
-        message: "这批图片没有识别出可用文字，可以检查图片清晰度后重试。",
+        message: "这批图片里没有读出可用的话。可以换一张清晰些的，或直接粘贴文字。",
       });
     }
   };
@@ -320,7 +320,7 @@ function App() {
   const handleSaveSettings = (nextSettings: ProviderSettings) => {
     saveSettings(nextSettings);
     setSettings(nextSettings);
-    setToast({ kind: "success", message: "模型设置已保存。" });
+    setToast({ kind: "success", message: "设置已经收好。" });
   };
 
   const handleClearData = () => {
@@ -329,7 +329,7 @@ function App() {
     setSettings(loadSettings());
     setInput(EMPTY_INPUT);
     setReport(null);
-    setToast({ kind: "success", message: "本机历史与配置已清除。" });
+    setToast({ kind: "success", message: "本机的故事与设置已轻轻收起。" });
   };
 
   const handleHistorySelect = (record: HistoryRecord) => {
@@ -340,7 +340,7 @@ function App() {
   const handleClearHistory = () => {
     clearHistory();
     setHistory([]);
-    setToast({ kind: "success", message: "历史记录已清除。" });
+    setToast({ kind: "success", message: "这些关系札记已经清空。" });
   };
 
   return (
@@ -372,7 +372,7 @@ function App() {
               <>
                 <Topbar
                   eyebrow={report ? "Report" : "Workspace"}
-                  title={report ? "关系画像报告" : "新建关系分析"}
+                  title={report ? "这段关系的解读" : "写下这段关系"}
                   settings={settings}
                   onSettings={() => setShowSettings(true)}
                 />
@@ -407,7 +407,7 @@ function App() {
               <>
                 <Topbar
                   eyebrow="Archive"
-                  title="历史记录"
+                  title="关系札记"
                   settings={settings}
                   onSettings={() => setShowSettings(true)}
                 />

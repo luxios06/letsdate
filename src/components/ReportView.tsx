@@ -125,7 +125,7 @@ function copyText(value: string) {
 
 function downloadReport(report: AnalysisReport) {
   const lines = [
-    `# letsdate 关系画像`,
+    `# letsdate 关系解读`,
     "",
     `生成时间：${fmtDate(report.createdAt)}`,
     `关系备注：${report.relationshipLabel}`,
@@ -136,14 +136,14 @@ function downloadReport(report: AnalysisReport) {
     `## ${report.overallTitle}`,
     report.overallSummary,
     "",
-    `## 先说人话`,
+    `## 先把话说轻一点`,
     `能确认：${report.humanRead.canConfirm}`,
     `更可能：${report.humanRead.likely}`,
     `另一种解释：${report.humanRead.alternatives}`,
     `接下来观察：${report.humanRead.observeNext}`,
     report.humanRead.supportNote,
     "",
-    "## 情感与亲密信号",
+    "## 情绪与靠近的方式",
     report.emotion.quickRead.headline,
     report.emotion.quickRead.observation,
     `建议：${report.emotion.quickRead.suggestion}`,
@@ -151,7 +151,7 @@ function downloadReport(report: AnalysisReport) {
       (signal) => `- ${signal.label}：${signal.score}，${signal.hits.join("、")}`,
     ),
     "",
-    "## 逐消息情绪与意图",
+    "## 一句话一句话",
     ...report.messageInsights.map(
       (item) =>
         `- ${item.sender === "self" ? "我" : "对方"}：“${item.quote}”\n  情绪：${item.emotion}；意图：${item.intent}；线索：${item.cue}（${item.confidence}置信度）\n  ${item.explanation}`,
@@ -159,7 +159,7 @@ function downloadReport(report: AnalysisReport) {
     "",
     ...(report.knowledge.relatedCases.length > 0
       ? [
-          "## 相似情境参考",
+          "## 别处也发生过的相似片段",
           `案例库共 ${report.knowledge.caseCount} 条匿名派生或虚构案例；以下匹配只用于提示可能的情境模式，不是当前对象的证据。`,
           ...report.knowledge.relatedCases.map(
             (item) =>
@@ -168,39 +168,39 @@ function downloadReport(report: AnalysisReport) {
           "",
         ]
       : []),
-    `## 对方人格透镜`,
+    `## Ta 更像怎样的人`,
     `MBTI 倾向：${report.person.mbti.candidate}（${report.person.mbti.confidence}置信度）`,
     `判断依据：${report.person.mbti.summary}`,
     `替代倾向：${report.person.mbti.alternatives.join("、") || "暂无"}`,
     ...report.person.bigFive.map((trait) => `- ${trait.label}: ${trait.score}/100，${trait.summary}`),
     "",
-    `## 依恋相关互动线索`,
+    `## 亲近与退后的节奏`,
     report.person.attachmentAssessment.summary,
     ...report.person.attachmentAssessment.cues.map(
       (cue) => `- ${cue.label}（${evidenceStatusText[cue.status]}）：${cue.summary}`,
     ),
     "",
-    `## 互动匹配`,
+    `## 你们之间的回声`,
     report.compatibility.summary,
     ...report.compatibility.dimensions.map(
       (dimension) => `- ${dimension.label}: ${dimension.score}/100，${dimension.summary}`,
     ),
     "",
-    `## 下一步`,
+    `## 下一步怎么走`,
     report.action.nextMessage,
     "",
     ...report.action.messageOptions.map((option) => `- ${option.tone}：${option.text}`),
     "",
-    `## 证据`,
+    `## 每一句原话，都有来路`,
     ...report.evidence.map(
       (item) =>
         `- [${item.source}] “${item.quote}”\n  观察：${item.observation}\n  推断：${item.inference}\n  反证：${item.caution}`,
     ),
     "",
-    `## 不确定性`,
+    `## 仍然留白的地方`,
     ...report.uncertainties.map((item) => `- ${item}`),
     "",
-    `## 还需要补充`,
+    `## 想更靠近答案，还缺这些`,
     ...report.contextGaps.map((gap) => `- ${gap.question} ${gap.why}`),
     "",
     `> ${report.safetyNotes.join(" ")}`,
@@ -291,7 +291,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
       <div className="report__toolbar">
         <button type="button" className="back-button" onClick={onBack}>
           <ArrowLeft size={16} />
-          新分析
+          回到书写
         </button>
         <div className="report__meta">
           <span className="report__relationship">{report.relationshipLabel}</span>
@@ -322,7 +322,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
 
       <section className="verdict">
         <div className="verdict__copy">
-          <span className="index-label">02 / 关系判断</span>
+          <span className="index-label">02 / 这段关系此刻的样子</span>
           <div className="verdict__decision">
             <span>{report.decision}</span>
             <em>{confidenceText[report.confidence]}</em>
@@ -339,10 +339,10 @@ export function ReportView({ report, onBack }: ReportViewProps) {
           </div>
           <div className="calibration-note">
             <span>
-              样本 {report.calibration.evidenceMessages} 条 · 可靠性{" "}
+              来自 {report.calibration.evidenceMessages} 条消息 · 可信度{" "}
               {Math.round(report.calibration.reliability * 100)}%
             </span>
-            <span>分数上限 {report.calibration.scoreCap}</span>
+            <span>分数停在 {report.calibration.scoreCap} 以内</span>
             <span>{report.calibration.method}</span>
           </div>
         </div>
@@ -354,7 +354,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
             <small>{report.interest.confidence}置信度</small>
           </div>
           <div>
-            <span>人格判断</span>
+            <span>人格倾向</span>
             <strong>{report.person.mbti.candidate}</strong>
             <small>{report.person.mbti.confidence}置信度</small>
           </div>
@@ -379,7 +379,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
             />
           )}
           <Fingerprint size={16} />
-          画像与匹配
+          两个人的样子
         </button>
         <button
           type="button"
@@ -393,7 +393,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
             />
           )}
           <MessageSquareText size={16} />
-          消息标签
+          一句话一句话
         </button>
         <button
           type="button"
@@ -407,7 +407,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
             />
           )}
           <ScanSearch size={16} />
-          证据链
+          原话与依据
         </button>
         <button
           type="button"
@@ -421,7 +421,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
             />
           )}
           <ArrowRight size={16} />
-          下一步
+          下一步怎么走
         </button>
       </nav>
 
@@ -432,9 +432,9 @@ export function ReportView({ report, onBack }: ReportViewProps) {
               <div>
                 <span className="section-index">M</span>
                 <div>
-                  <h3>逐消息情绪与意图</h3>
+                  <h3>一句话，一层心情</h3>
                   <p>
-                    标签描述这条消息如何表达，不声称知道隐藏动机。
+                    只是听听这句话怎么落在当下，不替任何人猜测藏起来的心事。
                   </p>
                 </div>
               </div>
@@ -511,8 +511,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
               </div>
             )}
             <p className="message-insights-note">
-              默认使用本地规则，不会额外请求模型。切换到 Ollama
-              后，可由本机模型增强标签。
+              没有模型时，本地规则会先读一遍；接入本机模型后，还可以再听深一层。
             </p>
           </section>
         </div>
@@ -525,38 +524,38 @@ export function ReportView({ report, onBack }: ReportViewProps) {
               <div>
                 <span className="section-index">H</span>
                 <div>
-                  <h3>先说人话</h3>
-                  <p>把“能确认的事实”和“仍然不确定的解释”分开。</p>
+                  <h3>先把话说轻一点</h3>
+                  <p>把已经看见的、可能成立的，和暂时还说不准的，轻轻分开。</p>
                 </div>
               </div>
               <span className="confidence-chip">
                 {report.pipeline.exactQuoteVerification
-                  ? "引文已校验"
-                  : "引文待校验"}
+                  ? "原话已核对"
+                  : "原话待核对"}
               </span>
             </div>
             <div className="human-read-grid">
               <div>
-                <span>能确认</span>
+                <span>已经看见</span>
                 <p>{report.humanRead.canConfirm}</p>
               </div>
               <div>
-                <span>更可能</span>
+                <span>更像如此</span>
                 <p>{report.humanRead.likely}</p>
               </div>
               <div>
-                <span>另一种解释</span>
+                <span>另一种可能</span>
                 <p>{report.humanRead.alternatives}</p>
               </div>
               <div>
-                <span>接下来观察</span>
+                <span>接下来看</span>
                 <p>{report.humanRead.observeNext}</p>
               </div>
             </div>
             <div className="emotion-read-panel">
               <div className="emotion-read-panel__main">
                 <div>
-                  <span className="eyebrow">情感与亲密信号</span>
+                  <span className="eyebrow">情绪与靠近的方式</span>
                   <h4>{report.emotion.quickRead.headline}</h4>
                   <p>{report.emotion.quickRead.observation}</p>
                 </div>
@@ -593,11 +592,11 @@ export function ReportView({ report, onBack }: ReportViewProps) {
               </div>
               {report.emotion.quickRead.missingInformation.length > 0 && (
                 <p className="emotion-read-panel__missing">
-                  还需要：{report.emotion.quickRead.missingInformation.join("；")}
+                  如果还想更确定，可以补：{report.emotion.quickRead.missingInformation.join("；")}
                 </p>
               )}
               <small>
-                情感词典来源：cnsenti / DUTIR · 仅描述当前材料中的情绪与互动信号
+                情绪线索来自 cnsenti / DUTIR。它只描述这些文字里的情绪，不替任何人下定义。
               </small>
             </div>
             {report.knowledge.relatedCases.length > 0 && (
@@ -605,10 +604,10 @@ export function ReportView({ report, onBack }: ReportViewProps) {
                 <div className="knowledge-reference__head">
                   <BookOpen size={17} />
                   <div>
-                    <span>相似情境参考</span>
+                    <span>别处也发生过的相似片段</span>
                     <p>
-                      从 {report.knowledge.caseCount} 条匿名派生或虚构案例中检索，
-                      只用于扩展解释，不是关于对方的证据。
+                      从 {report.knowledge.caseCount} 条匿名片段里找到一些回声。
+                      它们只用来多开一扇窗，不是关于对方的证据。
                     </p>
                   </div>
                 </div>
@@ -642,8 +641,8 @@ export function ReportView({ report, onBack }: ReportViewProps) {
               <div>
                 <span className="section-index">A</span>
                 <div>
-                  <h3>对方人格透镜</h3>
-                  <p>给出当前最可能的倾向，同时说明依据和替代方向。</p>
+                  <h3>Ta 更像怎样的人</h3>
+                  <p>把目前的线索放在一起，得到一个方向，也给别的可能留一点位置。</p>
                 </div>
               </div>
               <span className={`confidence-chip confidence-chip--${report.person.mbti.confidence}`}>
@@ -654,7 +653,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
             <div className="personality-grid">
               <div className="mbti-panel">
                 <div className="mbti-panel__title">
-                  <span>当前最像</span>
+                    <span>把这些细节放在一起</span>
                   <strong
                     className={
                       report.person.mbti.candidate === "待观察"
@@ -699,7 +698,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
               <div className="traits-panel">
                 <div className="traits-panel__head">
                   <div>
-                    <span>大五人格倾向</span>
+                    <span>更稳定的性格轮廓</span>
                     <p>{report.person.summary}</p>
                   </div>
                   <UsersRound size={20} />
@@ -714,11 +713,11 @@ export function ReportView({ report, onBack }: ReportViewProps) {
 
             <div className="interaction-grid">
               {[
-                ["互动节奏", report.person.interaction.pace],
-                ["能量来源", report.person.interaction.energy],
-                ["幽默表达", report.person.interaction.humor],
-                ["冲突线索", report.person.interaction.conflict],
-                ["安全模式", report.person.interaction.attachment],
+                ["靠近的节奏", report.person.interaction.pace],
+                ["能量从哪里来", report.person.interaction.energy],
+                ["玩笑落在哪里", report.person.interaction.humor],
+                ["遇到分歧时", report.person.interaction.conflict],
+                ["亲近与退后", report.person.interaction.attachment],
               ].map(([label, value], index) => (
                 <div className="interaction-item" key={label}>
                   <span>{String(index + 1).padStart(2, "0")}</span>
@@ -731,7 +730,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
             <div className="attachment-cue-section">
               <div className="attachment-cue-section__head">
                 <div>
-                  <span>依恋相关互动线索</span>
+                  <span>亲近与退后的节奏</span>
                   <p>{report.person.attachmentAssessment.summary}</p>
                 </div>
                 <ShieldAlert size={19} />
@@ -765,8 +764,8 @@ export function ReportView({ report, onBack }: ReportViewProps) {
                 <div>
                   <span className="section-index">S</span>
                   <div>
-                    <h3>短回复不等于冷淡</h3>
-                    <p>先看个人基线、前后语境和后续是否恢复，而不是只看“嗯”或“哦”。</p>
+                    <h3>一句“嗯”，未必就是退后</h3>
+                    <p>先看 Ta 平时怎么说话，再看前后语境和后来有没有回来，而不是只盯着这两个字。</p>
                   </div>
                 </div>
                 <span className="confidence-chip">
@@ -802,7 +801,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
               <div>
                 <span className="section-index">B</span>
                 <div>
-                  <h3>双方互动匹配</h3>
+                  <h3>你们之间的回声</h3>
                   <p>{report.compatibility.summary}</p>
                 </div>
               </div>
@@ -829,13 +828,13 @@ export function ReportView({ report, onBack }: ReportViewProps) {
               <div className="interest-card">
                 <div className="interest-card__head">
                   <TrendingUp size={18} />
-                  <span>兴趣信号</span>
+                  <span>想靠近的证据</span>
                   <strong>{report.interest.score}</strong>
                 </div>
                 <p>{report.interest.verdict}</p>
                 <div className="interest-columns">
                   <div>
-                    <span>支持信号</span>
+                    <span>让人安心的部分</span>
                     {report.interest.signals.map((signal) => (
                       <p key={signal}>
                         <Check size={13} />
@@ -844,7 +843,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
                     ))}
                   </div>
                   <div>
-                    <span>仍需验证</span>
+                    <span>还想确认的事</span>
                     {report.interest.ambiguities.map((item) => (
                       <p key={item}>
                         <CircleHelp size={13} />
@@ -862,7 +861,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
               <div>
                 <span className="section-index">C</span>
                 <div>
-                  <h3>你在互动里的位置</h3>
+                  <h3>你在这段关系里的位置</h3>
                   <p>{report.self.summary}</p>
                 </div>
               </div>
@@ -870,7 +869,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
             </div>
             <div className="self-grid">
               <div>
-                <span>你的需要</span>
+                <span>你在意什么</span>
                 {report.self.needs.map((item) => (
                   <p key={item}>
                     <HeartHandshake size={14} />
@@ -879,7 +878,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
                 ))}
               </div>
               <div>
-                <span>你的优势</span>
+                <span>你已经在做的</span>
                 {report.self.greenFlags.map((item) => (
                   <p key={item}>
                     <Sparkles size={14} />
@@ -888,7 +887,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
                 ))}
               </div>
               <div>
-                <span>需要留意</span>
+                <span>别忽略的自己</span>
                 {report.self.watchouts.map((item) => (
                   <p key={item}>
                     <AlertTriangle size={14} />
@@ -900,7 +899,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
             <div className="attachment-cue-section">
               <div className="attachment-cue-section__head">
                 <div>
-                  <span>你的依恋相关互动线索</span>
+                  <span>你亲近与退后的方式</span>
                   <p>{report.self.attachmentAssessment.summary}</p>
                 </div>
                 <ShieldAlert size={19} />
@@ -931,8 +930,8 @@ export function ReportView({ report, onBack }: ReportViewProps) {
               <div>
                 <span className="section-index">D</span>
                 <div>
-                  <h3>从原话走到判断</h3>
-                  <p>每一条画像结论，都应该能回到具体材料。</p>
+                  <h3>每一句原话，都有来路</h3>
+                  <p>所有判断都应该能沿着线，慢慢走回它最初出现的地方。</p>
                 </div>
               </div>
               <span className="confidence-chip">{report.evidence.length} 条证据</span>
@@ -961,13 +960,13 @@ export function ReportView({ report, onBack }: ReportViewProps) {
                       </div>
                       <ChevronRight size={18} />
                       <div>
-                        <span>可能意味着</span>
+                        <span>也许意味着</span>
                         <p>{item.inference}</p>
                       </div>
                     </div>
                     <p className="evidence-item__caution">
                       <CircleHelp size={14} />
-                      反证与限制：{item.caution}
+                      也别忘了：{item.caution}
                     </p>
                   </div>
                 </article>
@@ -980,8 +979,8 @@ export function ReportView({ report, onBack }: ReportViewProps) {
               <div>
                 <span className="section-index">E</span>
                 <div>
-                  <h3>还不知道的事</h3>
-                  <p>把不确定性说清楚，比给出一个漂亮但虚假的答案更重要。</p>
+                  <h3>仍然留白的地方</h3>
+                  <p>留白不是失败。它提醒我们，关系还在继续，人也不止一面。</p>
                 </div>
               </div>
               <ShieldAlert size={20} />
@@ -1002,8 +1001,8 @@ export function ReportView({ report, onBack }: ReportViewProps) {
                 <div>
                   <span className="section-index">E2</span>
                   <div>
-                    <h3>还需要你补充什么</h3>
-                    <p>这些信息会直接改变对短回复、依恋线索和兴趣的判断。</p>
+                    <h3>想更靠近答案，还缺这些</h3>
+                    <p>补上它们，很多原本模糊的语气会更容易找到位置。</p>
                   </div>
                 </div>
               </div>
@@ -1026,8 +1025,8 @@ export function ReportView({ report, onBack }: ReportViewProps) {
               <div>
                 <span className="section-index">F</span>
                 <div>
-                  <h3>使用边界</h3>
-                  <p>画像用于理解互动，不用于控制、试探或替别人做决定。</p>
+                  <h3>解读到此为止的边界</h3>
+                  <p>它帮助你更清醒地靠近，而不是替你决定别人是谁。</p>
                 </div>
               </div>
             </div>
@@ -1049,7 +1048,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
             <div className="next-move__intro">
               <span className="section-index">G</span>
               <div>
-                <span className="eyebrow">推荐动作</span>
+                <span className="eyebrow">这一次，可以这样靠近</span>
                 <h3>{report.action.decision}</h3>
                 <p>{report.action.rationale}</p>
               </div>
@@ -1058,7 +1057,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
               <div className="draft-message__head">
                 <div>
                   <MessageCircleMore size={18} />
-                  <span>可以这样发</span>
+                  <span>一句不冒犯的开口</span>
                 </div>
                 <button
                   type="button"
@@ -1090,13 +1089,13 @@ export function ReportView({ report, onBack }: ReportViewProps) {
             <div className="branch-actions">
               <div>
                 <span>
-                  <span className="mini-label mini-label--warm">如果对方积极</span>
+                  <span className="mini-label mini-label--warm">如果 Ta 向你走来</span>
                 </span>
                 <p>{report.action.ifWarm}</p>
               </div>
               <div>
                 <span>
-                  <span className="mini-label mini-label--cold">如果对方转冷</span>
+                  <span className="mini-label mini-label--cold">如果 Ta 暂时退后</span>
                 </span>
                 <p>{report.action.ifCold}</p>
               </div>
@@ -1108,14 +1107,14 @@ export function ReportView({ report, onBack }: ReportViewProps) {
               <div>
                 <span className="section-index">H</span>
                 <div>
-                  <h3>继续观察什么</h3>
-                  <p>不要只解读语气，把注意力放在双向行动和边界上。</p>
+                  <h3>接下来，留意这些细节</h3>
+                  <p>别只听语气。看看 Ta 有没有向你走来，也看看你有没有在这段关系里失去自己。</p>
                 </div>
               </div>
             </div>
             <div className="moves-layout">
               <div className="moves-list">
-                <span>可推进的动作</span>
+                <span>可以试着做的</span>
                 {report.action.conversationMoves.map((item, index) => (
                   <div key={item}>
                     <em>{String(index + 1).padStart(2, "0")}</em>
@@ -1124,7 +1123,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
                 ))}
               </div>
               <div className="stop-list">
-                <span>停止加码的信号</span>
+                <span>该把手收回来的时刻</span>
                 {report.action.stopSigns.map((item) => (
                   <p key={item}>
                     <ShieldAlert size={14} />
@@ -1139,9 +1138,9 @@ export function ReportView({ report, onBack }: ReportViewProps) {
             <div>
               <Fingerprint size={22} />
               <span className="eyebrow">留给你自己的问题</span>
-              <h3>这段互动让你更稳定，还是更常怀疑自己？</h3>
+              <h3>这段关系，让你更像自己，还是更常怀疑自己？</h3>
               <p>
-                关系判断不只看对方是否有趣，也要看你在这段关系里能否保持边界、表达真实需求，并感到被尊重。
+                值得靠近的关系，不只会让你心动，也会让你更能表达需要、守住边界，并安稳地做自己。
               </p>
             </div>
             <button
@@ -1150,7 +1149,7 @@ export function ReportView({ report, onBack }: ReportViewProps) {
               onClick={() => downloadReport(report)}
             >
               <Download size={17} />
-              下载完整报告
+              把这份解读带走
             </button>
           </section>
         </div>
