@@ -180,8 +180,13 @@ export function AnalyzeWorkspace({
         <span className="index-label">01 / 输入材料</span>
         <h2>把关系里的模糊感，拆成能验证的信号。</h2>
         <p>
-          分析主页、双方表达和对话推进。输出是带证据的假设，不是对一个人的定论。
+          跨平台导入主页、截图和聊天，同时分析你与对方，再把证据转成关系判断和下一步行动。
         </p>
+        <div className="workspace-edge-strip">
+          <span>跨平台材料</span>
+          <span>双人互动</span>
+          <span>安全优先</span>
+        </div>
         <button type="button" className="subtle-action" onClick={onLoadSample}>
           <RotateCcw size={15} />
           载入示例
@@ -294,6 +299,21 @@ export function AnalyzeWorkspace({
 
         <section className="analysis-config">
           <div className="analysis-config__controls">
+            <div className="control-group">
+              <label className="field-label" htmlFor="relationship-label">
+                关系备注（仅本地）
+              </label>
+              <input
+                id="relationship-label"
+                className="relationship-label-input"
+                value={input.relationshipLabel}
+                maxLength={40}
+                onChange={(event) =>
+                  update("relationshipLabel", event.target.value)
+                }
+                placeholder="例如：阿宁 / 摄影展认识"
+              />
+            </div>
             <div className="control-group">
               <span className="field-label">关系阶段</span>
               <div className={`custom-select ${stageOpen ? "is-open" : ""}`}>

@@ -90,6 +90,61 @@ export function MethodView() {
         ))}
       </div>
 
+      <section className="competitive-section">
+        <div className="competitive-section__intro">
+          <span className="eyebrow">竞争位置</span>
+          <h3>不是另一个聊天分析器，而是一个关系决策工作台。</h3>
+          <p>
+            Windows 本机微信读取工具擅长拿到完整平台数据；letsdate
+            选择跨平台轻量导入，把重点放在双人互动、关系判断和下一步行动。两者的数据深度不同，但解决的问题也不完全相同。
+          </p>
+        </div>
+        <div className="competitive-grid">
+          <article>
+            <ScanSearch size={18} />
+            <span>跨平台</span>
+            <strong>不依赖某个聊天平台</strong>
+            <p>文字、多图 OCR 和未来本机桥接共用同一套分析协议。</p>
+          </article>
+          <article>
+            <UsersRound size={18} />
+            <span>双人关系</span>
+            <strong>不只分析一个人</strong>
+            <p>同时看双方主动性、回应质量、推进节奏和边界尊重。</p>
+          </article>
+          <article>
+            <Gauge size={18} />
+            <span>决策层</span>
+            <strong>从画像走到是否推进</strong>
+            <p>输出继续、适度、先观察或暂缓，并给出可撤回的消息。</p>
+          </article>
+          <article>
+            <ShieldCheck size={18} />
+            <span>安全优先</span>
+            <strong>控制风险压过浪漫解释</strong>
+            <p>查手机、定位和切断社交会触发暂缓推进，而不是被当成爱。</p>
+          </article>
+          <article>
+            <BrainCircuit size={18} />
+            <span>人格倾向</span>
+            <strong>给出最像的类型，也保留替代方向</strong>
+            <p>低置信度仍然提供可用的沟通假设，不停在“待商榷”。</p>
+          </article>
+          <article>
+            <Fingerprint size={18} />
+            <span>纵向回看</span>
+            <strong>同一关系的多次观察</strong>
+            <p>使用关系备注串联历史，比较互动分和判断是否在变化。</p>
+          </article>
+        </div>
+        <div className="competitive-boundary">
+          <strong>刻意不做</strong>
+          <p>
+            不自动登录或读取第三方数据库，不自动发送消息，不把人格推断当作临床诊断，也不提供操控和跟踪策略。
+          </p>
+        </div>
+      </section>
+
       <section className="method-detail">
         <div className="method-detail__title">
           <BrainCircuit size={20} />

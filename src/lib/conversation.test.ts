@@ -7,6 +7,7 @@ import {
 import type { AnalysisInput } from "../types";
 
 const baseInput: AnalysisInput = {
+  relationshipLabel: "测试关系",
   selfProfile: "",
   otherProfile: "",
   chat: "",

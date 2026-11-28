@@ -49,6 +49,7 @@ export interface ProviderSettings {
 }
 
 export interface AnalysisInput {
+  relationshipLabel: string;
   selfProfile: string;
   otherProfile: string;
   chat: string;
@@ -336,6 +337,7 @@ export interface ScoreCalibration {
 export interface AnalysisReport {
   id: string;
   createdAt: string;
+  relationshipLabel: string;
   provider: ProviderId;
   stage: string;
   decision: Decision;
@@ -368,6 +370,7 @@ export interface AnalysisReport {
 export interface HistoryRecord {
   id: string;
   createdAt: string;
+  relationshipLabel: string;
   title: string;
   decision: Decision;
   score: number;

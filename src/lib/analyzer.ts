@@ -689,12 +689,15 @@ export function buildLocalAnalysis(
 ): AnalysisReport {
   const emotion = emotionOverride ?? analyzeEmotionFallback(input);
   const knowledge = knowledgeOverride ?? emptyKnowledge();
+  const relationshipLabel =
+    input.relationshipLabel.trim().slice(0, 40) || "未命名关系";
   const isDemo = input.chat.trim() === DEMO_SAMPLE.chat.trim() && input.otherProfile.trim() === DEMO_SAMPLE.otherProfile.trim();
   if (isDemo) {
     return {
       ...DEMO_REPORT,
       id: createId(),
       createdAt: new Date().toISOString(),
+      relationshipLabel,
       provider,
       stage: input.relationshipStage,
       emotion,
@@ -813,6 +816,7 @@ export function buildLocalAnalysis(
   return {
     id: createId(),
     createdAt: new Date().toISOString(),
+    relationshipLabel,
     provider,
     stage: input.relationshipStage,
     decision,

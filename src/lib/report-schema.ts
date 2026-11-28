@@ -76,6 +76,7 @@ const personSchema = z.object({
 export const ReportSchema = z.object({
   id: text(120),
   createdAt: text(80),
+  relationshipLabel: text(40),
   provider: z.enum([
     "demo",
     "deepseek",

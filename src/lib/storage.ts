@@ -54,6 +54,10 @@ export function loadHistory(): HistoryRecord[] {
       if (!item || typeof item !== "object") return [];
       const record = item as HistoryRecord;
       if (!record.report || typeof record.report !== "object") return [];
+      const relationshipLabel =
+        record.relationshipLabel ||
+        record.report.relationshipLabel ||
+        "未命名关系";
       const hydrateMbtiSummary = (
         person: HistoryRecord["report"]["person"],
       ) =>
@@ -71,8 +75,10 @@ export function loadHistory(): HistoryRecord[] {
       return [
         {
           ...record,
+          relationshipLabel,
           report: {
             ...record.report,
+            relationshipLabel,
             knowledge: record.report.knowledge ?? emptyKnowledge(),
             person: hydrateMbtiSummary(record.report.person),
             self: hydrateMbtiSummary(record.report.self),
@@ -89,7 +95,8 @@ export function saveReport(report: AnalysisReport): HistoryRecord[] {
   const record: HistoryRecord = {
     id: report.id,
     createdAt: report.createdAt,
-    title: `${report.stage} · ${report.person.mbti.candidate}`,
+    relationshipLabel: report.relationshipLabel,
+    title: `${report.relationshipLabel} · ${report.stage} · ${report.person.mbti.candidate}`,
     decision: report.decision,
     score: report.compatibilityScore,
     report,

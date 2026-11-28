@@ -1,6 +1,7 @@
 import type { AnalysisInput, AnalysisReport, HistoryRecord } from "../types";
 
 export const DEMO_SAMPLE: AnalysisInput = {
+  relationshipLabel: "示例关系",
   selfProfile:
     "产品设计师，平时看展、跑步，也会在家做饭。慢热，但遇到感兴趣的话题会认真聊下去。比较看重稳定回应和彼此空间。",
   otherProfile:
@@ -24,6 +25,7 @@ export const DEMO_SAMPLE: AnalysisInput = {
 export const DEMO_REPORT: AnalysisReport = {
   id: "demo-report",
   createdAt: "2026-11-26T10:30:00.000Z",
+  relationshipLabel: "示例关系",
   provider: "demo",
   stage: "刚匹配，聊了 2 天",
   decision: "适度推进",
@@ -592,7 +594,8 @@ export const SAMPLE_HISTORY: HistoryRecord[] = [
   {
     id: "sample-history",
     createdAt: "2026-11-25T12:20:00.000Z",
-    title: "爬山与摄影展",
+    relationshipLabel: "示例关系",
+    title: "示例关系 · 刚匹配，聊了 2 天 · ENFP",
     decision: "适度推进",
     score: 74,
     report: DEMO_REPORT,

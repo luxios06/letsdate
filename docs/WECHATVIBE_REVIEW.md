@@ -164,3 +164,44 @@ letsdate introduces original TypeScript implementations for:
 - Reply-option generation.
 
 No WechatVibe desktop, WeChat reader, model weights or proprietary user assets were copied into the deployed product.
+
+## Strict comparison: 2026-11-28
+
+### Where WechatVibe is stronger
+
+| Capability | WechatVibe | letsdate |
+| --- | --- | --- |
+| Full-history ingestion | Reads Windows WeChat 4.x shards directly | Screenshots, pasted text and future opt-in native bridge |
+| Message-level analysis | Emotion and intent labels across loaded messages | Conversation-level evidence and selected short-reply evidence |
+| Local inference | Bundled local Laya model option | Deterministic local demo; cloud or Ollama for deeper synthesis |
+| Account isolation | Per-WeChat-account source and analysis storage | Per-browser storage and relationship alias |
+| Desktop workflow | Electron shell, account picker and conversation browser | Cross-platform PWA |
+
+WechatVibe has a real advantage in depth of message acquisition. letsdate should not pretend screenshot OCR matches native database access.
+
+### Where letsdate is stronger
+
+1. **Cross-platform and platform-agnostic**: it is not tied to Windows or one WeChat version.
+2. **Dyadic rather than single-speaker**: it analyzes both people and their interaction, not only one person's messages.
+3. **Relationship decision layer**: personality is connected to reciprocity, interest, compatibility, safety and a concrete next action.
+4. **Safety guardrail**: control and boundary risks force `暂缓推进`, even if the conversation is warm.
+5. **Evidence-linked explanation**: exact quotes, alternatives and retrieved-case context remain separate.
+6. **Portable Agent Skill**: the same protocol works across OpenAI, DeepSeek, Anthropic, Gemini, Ollama and compatible APIs.
+7. **Longitudinal relationship history**: a local relationship alias connects repeated analyses and shows score changes.
+
+### Current shortcomings
+
+- No native full-history import comparable to WechatVibe.
+- No per-message emotion/intent timeline.
+- No local foundation model; deep synthesis still depends on an API or Ollama.
+- No server-backed account isolation, encryption or cross-device sync.
+- Personality scoring remains a communication heuristic, not a validated psychological instrument.
+- The knowledge base has only 95 anonymized or synthetic cases.
+
+### Priority decisions
+
+- Do not copy the Windows WeChat reader into GitHub Pages.
+- Keep multi-image OCR and future loopback bridge as separate acquisition paths.
+- Compete on relationship interpretation and decision quality, not raw message volume.
+- Preserve the safety override and evidence ledger as non-negotiable product advantages.
+- Make longitudinal change and actionable communication visible in the UI, not just in documentation.

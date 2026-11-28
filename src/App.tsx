@@ -36,6 +36,7 @@ import { HistoryView } from "./components/HistoryView";
 import { MethodView } from "./components/MethodView";
 
 const EMPTY_INPUT: AnalysisInput = {
+  relationshipLabel: "",
   selfProfile: "",
   otherProfile: "",
   chat: "",

@@ -5,6 +5,7 @@ import {
 } from "./emotion-analysis";
 
 const input = (chat: string): AnalysisInput => ({
+  relationshipLabel: "测试关系",
   selfProfile: "",
   otherProfile: "",
   chat,

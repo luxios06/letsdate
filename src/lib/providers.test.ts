@@ -57,6 +57,7 @@ describe("two-stage provider pipeline", () => {
 
   it("extracts exact facts before synthesizing the report", async () => {
     const input = {
+      relationshipLabel: "测试关系",
       selfProfile: "我比较慢热，但会认真回应。",
       otherProfile: "喜欢摄影和小范围深聊。",
       chat: "我：周末有空吗？\n对方：周六要拍摄，周日可以。",

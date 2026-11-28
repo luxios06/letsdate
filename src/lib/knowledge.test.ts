@@ -9,6 +9,7 @@ import {
 } from "./knowledge";
 
 const input = (chat: string): AnalysisInput => ({
+  relationshipLabel: "测试关系",
   selfProfile: "",
   otherProfile: "",
   chat,

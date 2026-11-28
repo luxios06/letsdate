@@ -386,6 +386,26 @@ h3 {
   line-height: 1.75;
 }
 
+.workspace-edge-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 13px;
+}
+
+.workspace-edge-strip span {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(40, 94, 84, 0.17);
+  border-radius: 12px;
+  background: rgba(184, 216, 222, 0.18);
+  padding: 0 9px;
+  color: var(--forest);
+  font-size: 8px;
+  font-weight: 650;
+}
+
 .subtle-action {
   margin-top: 16px;
   border: 0;
@@ -474,6 +494,25 @@ h3 {
   font-size: 10px;
   line-height: 1.5;
   font-weight: 650;
+}
+
+.relationship-label-input {
+  width: 100%;
+  margin-top: 7px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 9px 11px;
+  color: var(--ink);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.relationship-label-input:focus {
+  outline: 0;
+  border-color: var(--forest-2);
+  background: #fffdf8;
+  box-shadow: 0 0 0 3px rgba(40, 94, 84, 0.08);
 }
 
 .source-textarea {
@@ -2838,6 +2877,33 @@ h3 {
   line-height: 1.5;
 }
 
+.history-row__copy > .history-row__trend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 7px;
+}
+
+.history-row__trend span {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 2px 6px;
+  color: var(--muted);
+  font-size: 7px;
+}
+
+.history-row__trend span.is-up {
+  border-color: rgba(40, 94, 84, 0.2);
+  background: rgba(184, 216, 222, 0.22);
+  color: var(--forest);
+}
+
+.history-row__trend span.is-down {
+  border-color: rgba(179, 90, 72, 0.2);
+  background: rgba(212, 129, 107, 0.1);
+  color: #964b3d;
+}
+
 .history-row > svg {
   color: var(--muted);
 }
@@ -3028,6 +3094,99 @@ h3 {
 
 .method-card p {
   margin-top: 9px;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.7;
+}
+
+.competitive-section {
+  margin-top: 14px;
+  padding: 26px 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(120deg, rgba(184, 216, 222, 0.18), transparent 48%),
+    var(--paper);
+}
+
+.competitive-section__intro {
+  max-width: 760px;
+}
+
+.competitive-section__intro .eyebrow {
+  color: var(--coral);
+}
+
+.competitive-section__intro h3 {
+  margin-top: 8px;
+  font-family: "Iowan Old Style", "Songti SC", serif;
+  font-size: 29px;
+  line-height: 1.25;
+  font-weight: 580;
+}
+
+.competitive-section__intro p {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.75;
+}
+
+.competitive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 9px;
+  margin-top: 20px;
+}
+
+.competitive-grid article {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgba(255, 253, 248, 0.72);
+  padding: 15px;
+}
+
+.competitive-grid article > svg {
+  color: var(--forest);
+}
+
+.competitive-grid article > span {
+  display: block;
+  margin-top: 13px;
+  color: var(--coral);
+  font-size: 8px;
+  font-weight: 750;
+}
+
+.competitive-grid article > strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--ink);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.competitive-grid article > p {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1.65;
+}
+
+.competitive-boundary {
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+}
+
+.competitive-boundary strong {
+  color: var(--forest);
+  font-size: 9px;
+}
+
+.competitive-boundary p {
+  margin-top: 5px;
   color: var(--muted);
   font-size: 9px;
   line-height: 1.7;
@@ -3738,9 +3897,9 @@ h3 {
     padding-bottom: 12px;
   }
 
-  .report__meta > span:first-child,
   .report__dot,
-  .report__meta > span:nth-child(3) {
+  .report__meta > span:nth-child(3),
+  .report__meta > span:nth-child(5) {
     display: none;
   }
 
@@ -3919,6 +4078,12 @@ h3 {
     align-items: flex-start;
     flex-direction: column;
     gap: 5px;
+  }
+
+  .history-row__copy > .history-row__trend {
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
   }
 
   .history-row__copy p {

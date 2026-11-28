@@ -2,7 +2,7 @@
 
 Saved and deployed: 2026-11-28
 
-Current source version: `0.9.0`
+Current source version: `0.10.0`
 
 ## Completed
 
@@ -15,6 +15,8 @@ Current source version: `0.9.0`
 - Best-fit MBTI tendency is always produced when any behavioral signal exists.
 - MBTI dimensions now use weighted behavioral rules inspired by KnowMe and OpenJung's confidence structure.
 - Personality reports include alternatives, confidence and a practical interaction summary.
+- Relationship aliases connect repeated analyses and show score changes across observations.
+- Method page compares the product's cross-platform, dyadic and safety-first advantages with native WeChat readers.
 - Chat bubble grouping, speaker recovery and timestamp-noise filtering.
 - Local DUTIR emotion analysis and intimacy/boundary signal detection.
 - Short conversations always receive an actionable suggestion and targeted follow-up questions.

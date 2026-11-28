@@ -1,4 +1,4 @@
-const CACHE = "letsdate-v5";
+const CACHE = "letsdate-v6";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./brand-mark.svg"];
 
 self.addEventListener("install", (event) => {

@@ -28,13 +28,34 @@ export function HistoryView({
   onClear,
   onNew,
 }: HistoryViewProps) {
+  const trendById = new Map<
+    string,
+    { delta: number; sequence: number }
+  >();
+  const byRelationship = new Map<string, HistoryRecord[]>();
+  [...history].reverse().forEach((record) => {
+    const key = record.relationshipLabel || "未命名关系";
+    const records = byRelationship.get(key) ?? [];
+    records.push(record);
+    byRelationship.set(key, records);
+  });
+  byRelationship.forEach((records) => {
+    records.forEach((record, index) => {
+      const previous = records[index - 1];
+      trendById.set(record.id, {
+        delta: previous ? record.score - previous.score : 0,
+        sequence: index + 1,
+      });
+    });
+  });
+
   return (
     <div className="page-view">
       <div className="page-view__intro">
         <div>
           <span className="index-label">History</span>
           <h2>你的关系观察记录</h2>
-          <p>历史只保存在当前浏览器，用来比较不同时间点的变化。</p>
+          <p>按关系备注自动串联，对比同一段关系在不同时间点的变化。</p>
         </div>
         <button type="button" className="primary-button" onClick={onNew}>
           <Sparkles size={17} />
@@ -69,15 +90,33 @@ export function HistoryView({
               </span>
               <div className="history-row__copy">
                 <div>
-                  <strong>{record.title}</strong>
+                  <strong>{record.relationshipLabel || "未命名关系"}</strong>
                   <em>{record.decision}</em>
                 </div>
                 <p>
                   <CalendarDays size={14} />
                   {fmtDate(record.createdAt)}
                   <span>·</span>
-                  {record.report.interest.verdict}
+                  {record.report.stage} · {record.report.person.mbti.candidate}
                 </p>
+                <div className="history-row__trend">
+                  <span>
+                    第 {trendById.get(record.id)?.sequence ?? 1} 次观察
+                  </span>
+                  {(trendById.get(record.id)?.sequence ?? 1) > 1 && (
+                    <span
+                      className={
+                        (trendById.get(record.id)?.delta ?? 0) >= 0
+                          ? "is-up"
+                          : "is-down"
+                      }
+                    >
+                      较上次{" "}
+                      {(trendById.get(record.id)?.delta ?? 0) >= 0 ? "+" : ""}
+                      {trendById.get(record.id)?.delta ?? 0} 分
+                    </span>
+                  )}
+                </div>
               </div>
               <ArrowRight size={18} />
             </button>

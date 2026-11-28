@@ -165,6 +165,7 @@ function mergeWithFallback(
     ...candidate,
     id: fallback.id,
     createdAt: new Date().toISOString(),
+    relationshipLabel: fallback.relationshipLabel,
     provider,
     person: {
       ...fallback.person,

@@ -121,6 +121,7 @@ function downloadReport(report: AnalysisReport) {
     `# letsdate 关系画像`,
     "",
     `生成时间：${fmtDate(report.createdAt)}`,
+    `关系备注：${report.relationshipLabel}`,
     `关系阶段：${report.stage}`,
     `结论：${report.decision} / ${report.compatibilityScore}`,
     `分数校准：${report.calibration.evidenceMessages} 条对方消息，可靠性 ${Math.round(report.calibration.reliability * 100)}%，上限 ${report.calibration.scoreCap}`,
@@ -234,6 +235,8 @@ export function ReportView({ report, onBack }: ReportViewProps) {
           新分析
         </button>
         <div className="report__meta">
+          <span className="report__relationship">{report.relationshipLabel}</span>
+          <span className="report__dot" />
           <span>{fmtDate(report.createdAt)}</span>
           <span className="report__dot" />
           <span>{PROVIDER_LABELS[report.provider]}</span>
