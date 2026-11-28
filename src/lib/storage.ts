@@ -80,6 +80,7 @@ export function loadHistory(): HistoryRecord[] {
             ...record.report,
             relationshipLabel,
             knowledge: record.report.knowledge ?? emptyKnowledge(),
+            messageInsights: record.report.messageInsights ?? [],
             person: hydrateMbtiSummary(record.report.person),
             self: hydrateMbtiSummary(record.report.self),
           },

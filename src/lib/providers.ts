@@ -13,6 +13,10 @@ import {
   analyzeEmotion,
 } from "./emotion-analysis";
 import { retrieveKnowledge } from "./knowledge";
+import {
+  buildLocalMessageInsights,
+  mergeMessageInsights,
+} from "./message-insights";
 import { validateReport } from "./report-schema";
 import type { EmotionAnalysis, KnowledgeMatch } from "../types";
 
@@ -38,7 +42,7 @@ export const PROVIDER_LABELS: Record<ProviderSettings["provider"], string> = {
   openai: "OpenAI",
   anthropic: "Anthropic",
   gemini: "Gemini",
-  ollama: "Ollama",
+  ollama: "Ollama 本地模型",
   custom: "OpenAI 兼容接口",
 };
 
@@ -156,6 +160,7 @@ function mergeWithFallback(
   provider: ProviderSettings["provider"],
   emotion: EmotionAnalysis,
   knowledge: KnowledgeMatch,
+  messageInsights?: AnalysisReport["messageInsights"],
 ): AnalysisReport {
   const fallback = buildLocalAnalysis(input, provider, emotion, knowledge);
   if (!raw || typeof raw !== "object") return fallback;
@@ -205,6 +210,7 @@ function mergeWithFallback(
       ...(candidate.action ?? {}),
     },
     knowledge,
+    messageInsights: messageInsights ?? fallback.messageInsights,
     evidence: candidate.evidence?.length ? candidate.evidence : fallback.evidence,
     uncertainties: candidate.uncertainties?.length
       ? candidate.uncertainties
@@ -279,6 +285,8 @@ const EXTRACTION_SYSTEM_PROMPT = `你是 letsdate 的第一阶段事实提取器
 - 短回复必须结合个人基线、前后情绪和后续是否恢复，不得仅凭“嗯/哦”判断冷淡。
 - 计划必须区分 proposed、confirmed、cancelled、ambiguous，并识别否定词。
 - 依恋线索只能来自反复行为、冲突、边界和修复，不能做临床诊断。
+- 为每条消息给出一个主要情绪、一个主要沟通意图和关系线索。标签描述这条消息如何表达，不声称知道隐藏动机。
+- messageInsights 只使用输入中已有的 messageId 和逐字 quote，不得遗漏 quote 或改写。
 
 只返回 JSON：
 {
@@ -305,6 +313,17 @@ const EXTRACTION_SYSTEM_PROMPT = `你是 letsdate 的第一阶段事实提取器
       "classification": "acknowledgment|low_energy|topic_closed|possible_withdrawal|uncertain",
       "afterEffect": "recovered|no_recovery|unknown",
       "observation": "结合上下文后的观察"
+    }
+  ],
+  "messageInsights": [
+    {
+      "messageId": "msg-1",
+      "quote": "原文完整消息",
+      "emotion": "开心|期待|平静|关心|亲昵|低落|焦虑|失望|生气|强硬|困惑",
+      "intent": "分享|了解|邀约|确认计划|改期|拒绝|婉拒|答应|安慰|解释|修复|表达不满|表达边界|寻求确认|控制要求|表达想念|调情|回应|结束话题",
+      "cue": "靠近|稳定|试探|收缩|冲突|修复|边界|风险|中性",
+      "confidence": "低|中|较高",
+      "explanation": "这条消息表达了什么，以及还有什么替代解释"
     }
   ]
 }`;
@@ -335,6 +354,8 @@ function buildFactExtractionPayload(input: AnalysisInput) {
         "只提取事实，不做最终人格或关系判断。",
         "短回复不能单独证明冷淡、回避或焦虑。",
         "没有原文依据的内容不要输出。",
+        "为每条消息输出一个主要情绪、一个主要沟通意图和关系线索。",
+        "messageInsights 的 quote 必须是该消息的逐字原文。",
       ],
     },
     null,
@@ -363,6 +384,15 @@ function validateFactLedger(
   if (!facts.length) {
     throw new Error("模型没有提取出可回查原文的事实，请重试。");
   }
+  const messageById = new Map(
+    conversation.messages.map((message) => [message.id, message] as const),
+  );
+  const messageInsights = parsed.messageInsights
+    .filter((insight) => {
+      const message = messageById.get(insight.messageId);
+      return message && message.text.trim() === insight.quote.trim();
+    })
+    .slice(0, 120);
   return {
     facts,
     planState: {
@@ -377,6 +407,7 @@ function validateFactLedger(
       afterEffect: item.afterEffect,
       observation: item.explanation,
     })),
+    messageInsights,
   };
 }
 
@@ -617,6 +648,19 @@ export async function analyzeWithProvider(
       buildFactExtractionPayload(input),
     );
     const facts = validateFactLedger(extractJson(extractionOutput), input);
+    const parsedConversation = parseConversation(input.chat);
+    const localMessageInsights = buildLocalMessageInsights(
+      parsedConversation.messages,
+    );
+    const messageInsights =
+      facts.messageInsights.length > 0
+        ? mergeMessageInsights(
+            localMessageInsights,
+            facts.messageInsights,
+            settings.provider === "ollama" ? "local-llm" : "provider",
+            parsedConversation.messages,
+          )
+        : localMessageInsights;
     const output = await requestProvider(
       settings,
       systemPrompt,
@@ -628,6 +672,7 @@ export async function analyzeWithProvider(
       settings.provider,
       emotion,
       knowledge,
+      messageInsights,
     );
   } catch (error) {
     throw new Error(friendlyError(error));

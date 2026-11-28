@@ -1,5 +1,10 @@
 import { z } from "zod";
 import type { AnalysisReport } from "../types";
+import {
+  MESSAGE_CUES,
+  MESSAGE_EMOTIONS,
+  MESSAGE_INTENTS,
+} from "./message-insights";
 
 const score = z.number().int().min(0).max(100);
 const confidence = z.enum(["低", "中", "较高"]);
@@ -171,6 +176,22 @@ export const ReportSchema = z.object({
     clusterHints: z.array(text(80)).max(12),
     caseCount: z.number().int().min(0).max(100000),
   }),
+  messageInsights: z
+    .array(
+      z.object({
+        messageId: text(80),
+        quote: text(500),
+        sender: z.enum(["self", "other"]),
+        timestamp: z.string().trim().max(80).nullable(),
+        emotion: z.enum(MESSAGE_EMOTIONS),
+        intent: z.enum(MESSAGE_INTENTS),
+        cue: z.enum(MESSAGE_CUES),
+        confidence,
+        explanation: text(400),
+        source: z.enum(["local-rules", "local-llm", "provider"]),
+      }),
+    )
+    .max(120),
   humanRead: z.object({
     canConfirm: text(500),
     likely: text(500),

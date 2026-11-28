@@ -84,6 +84,32 @@ export const DEMO_REPORT: AnalysisReport = {
     },
     source: "local-fallback",
   },
+  messageInsights: [
+    {
+      messageId: "demo-msg-2",
+      quote: "四姑娘山！上周临时起意去的，凌晨四点爬起来真的差点放弃 😂",
+      sender: "other",
+      timestamp: null,
+      emotion: "开心",
+      intent: "分享",
+      cue: "靠近",
+      confidence: "中",
+      explanation: "主动分享具体经历和情绪细节，是继续展开话题的良好入口。",
+      source: "local-rules",
+    },
+    {
+      messageId: "demo-msg-13",
+      quote: "成交。你周末一般哪天有空？",
+      sender: "other",
+      timestamp: null,
+      emotion: "期待",
+      intent: "确认计划",
+      cue: "稳定",
+      confidence: "中",
+      explanation: "从玩笑式回应推进到具体时间，属于把兴趣落到行动的信号。",
+      source: "local-rules",
+    },
+  ],
   knowledge: {
     relatedCases: [
       {

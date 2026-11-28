@@ -189,6 +189,15 @@ export function SettingsModal({
                 <p>使用内置规则引擎跑通完整报告，不会产生模型请求，也不会消耗 API。</p>
               </div>
             )}
+            {draft.provider === "ollama" && (
+              <div className="demo-note">
+                <ServerCog size={17} />
+                <p>
+                  模型在本机运行，并可增强逐消息情绪与意图标签。先启动 Ollama
+                  并拉取所填模型，无需 API Key。
+                </p>
+              </div>
+            )}
           </section>
 
           <section className="settings-section settings-section--privacy">

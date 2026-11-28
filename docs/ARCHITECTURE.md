@@ -21,6 +21,9 @@ Browser
 │   ├── timestamps and sessions
 │   ├── short-reply baseline and recovery
 │   └── plan state with negation/cancellation
+├── per-message insights
+│   ├── local emotion and intent rules
+│   └── exact-quote Ollama/provider enhancement
 ├── localStorage / sessionStorage
 └── provider adapters
     ├── OpenAI-compatible
@@ -88,6 +91,10 @@ The browser loads PaddleOCR.js lazily. PP-OCRv6 detects text boxes and recognize
 ## Emotion layer
 
 Before model synthesis, letsdate runs a local DUTIR emotion lexicon and relationship-specific signal detector. It produces valence, emotion categories, intimacy/withdrawal/control/repair cues, a short actionable reading and missing-information questions. See `docs/EMOTION.md`.
+
+## Per-message labels
+
+Every message receives one primary emotion, one communication intent and one relationship cue. Local rules provide a no-request fallback. During fact extraction, a model can return `messageInsights`; labels are accepted only when the message ID and exact quote both match. Ollama labels are marked as local-model output. See `docs/LOCAL_MODEL.md`.
 
 ## Knowledge layer
 

@@ -153,6 +153,17 @@ describe("two-stage provider pipeline", () => {
                     evidenceIds: ["fact-1"],
                   },
                   shortReplyFacts: [],
+                  messageInsights: [
+                    {
+                      messageId: "msg-2",
+                      quote: "周六要拍摄，周日可以。",
+                      emotion: "期待",
+                      intent: "确认计划",
+                      cue: "稳定",
+                      confidence: "中",
+                      explanation: "模型给出了具体替代时间。",
+                    },
+                  ],
                 }),
               },
             },
@@ -176,6 +187,8 @@ describe("two-stage provider pipeline", () => {
     expect(report.pipeline.exactQuoteVerification).toBe(true);
     expect(report.evidence.length).toBeGreaterThan(0);
     expect(report.knowledge.relatedCases[0]?.id).toBe("test-plan");
+    expect(report.messageInsights[1]?.source).toBe("provider");
+    expect(report.messageInsights[1]?.intent).toBe("确认计划");
     expect(synthesisPayloads[0]).toContain("retrieved_cases");
     expect(synthesisPayloads[0]).toContain("周末计划协商");
   });

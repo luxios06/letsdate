@@ -172,8 +172,8 @@ No WechatVibe desktop, WeChat reader, model weights or proprietary user assets w
 | Capability | WechatVibe | letsdate |
 | --- | --- | --- |
 | Full-history ingestion | Reads Windows WeChat 4.x shards directly | Screenshots, pasted text and future opt-in native bridge |
-| Message-level analysis | Emotion and intent labels across loaded messages | Conversation-level evidence and selected short-reply evidence |
-| Local inference | Bundled local Laya model option | Deterministic local demo; cloud or Ollama for deeper synthesis |
+| Message-level analysis | Emotion and intent labels across loaded messages | Local per-message emotion, intent and relationship cues; exact-quote model enhancement |
+| Local inference | Bundled local Laya model option | Deterministic local rules plus optional Ollama model |
 | Account isolation | Per-WeChat-account source and analysis storage | Per-browser storage and relationship alias |
 | Desktop workflow | Electron shell, account picker and conversation browser | Cross-platform PWA |
 
@@ -192,8 +192,8 @@ WechatVibe has a real advantage in depth of message acquisition. letsdate should
 ### Current shortcomings
 
 - No native full-history import comparable to WechatVibe.
-- No per-message emotion/intent timeline.
-- No local foundation model; deep synthesis still depends on an API or Ollama.
+- Per-message labels are latest-state labels, not yet a longitudinal emotion/intent timeline.
+- No bundled local foundation model; deep synthesis depends on an API or a separately installed Ollama model.
 - No server-backed account isolation, encryption or cross-device sync.
 - Personality scoring remains a communication heuristic, not a validated psychological instrument.
 - The knowledge base has only 95 anonymized or synthetic cases.

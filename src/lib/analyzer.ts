@@ -15,6 +15,7 @@ import {
 } from "./conversation";
 import { analyzeEmotionFallback } from "./emotion-analysis";
 import { emptyKnowledge } from "./knowledge";
+import { buildLocalMessageInsights } from "./message-insights";
 import type {
   AnalysisInput,
   AnalysisReport,
@@ -691,6 +692,8 @@ export function buildLocalAnalysis(
   const knowledge = knowledgeOverride ?? emptyKnowledge();
   const relationshipLabel =
     input.relationshipLabel.trim().slice(0, 40) || "未命名关系";
+  const parsed = parseConversation(input.chat);
+  const messageInsights = buildLocalMessageInsights(parsed.messages);
   const isDemo = input.chat.trim() === DEMO_SAMPLE.chat.trim() && input.otherProfile.trim() === DEMO_SAMPLE.otherProfile.trim();
   if (isDemo) {
     return {
@@ -702,10 +705,10 @@ export function buildLocalAnalysis(
       stage: input.relationshipStage,
       emotion,
       knowledge: knowledgeOverride ?? DEMO_REPORT.knowledge,
+      messageInsights,
     };
   }
 
-  const parsed = parseConversation(input.chat);
   const text = `${input.selfProfile}\n${input.otherProfile}\n${input.chat}`;
   const questions = countQuestions(input.chat);
   const warm = countWarmSignals(input.chat);
@@ -841,6 +844,7 @@ export function buildLocalAnalysis(
     calibration,
     emotion,
     knowledge,
+    messageInsights,
     humanRead,
     contextGaps,
     shortReplies: parsed.shortReplies,

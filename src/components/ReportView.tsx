@@ -11,6 +11,7 @@ import {
   Fingerprint,
   HeartHandshake,
   MessageCircleMore,
+  MessageSquareText,
   Quote,
   ScanSearch,
   ShieldAlert,
@@ -32,7 +33,7 @@ interface ReportViewProps {
   onBack: () => void;
 }
 
-type ReportTab = "overview" | "evidence" | "action";
+type ReportTab = "overview" | "messages" | "evidence" | "action";
 
 const fmtDate = (value: string) =>
   new Intl.DateTimeFormat("zh-CN", {
@@ -142,6 +143,12 @@ function downloadReport(report: AnalysisReport) {
     `建议：${report.emotion.quickRead.suggestion}`,
     ...report.emotion.intimacySignals.map(
       (signal) => `- ${signal.label}：${signal.score}，${signal.hits.join("、")}`,
+    ),
+    "",
+    "## 逐消息情绪与意图",
+    ...report.messageInsights.map(
+      (item) =>
+        `- ${item.sender === "self" ? "我" : "对方"}：“${item.quote}”\n  情绪：${item.emotion}；意图：${item.intent}；线索：${item.cue}（${item.confidence}置信度）\n  ${item.explanation}`,
     ),
     "",
     ...(report.knowledge.relatedCases.length > 0
@@ -318,6 +325,14 @@ export function ReportView({ report, onBack }: ReportViewProps) {
         </button>
         <button
           type="button"
+          className={tab === "messages" ? "is-active" : ""}
+          onClick={() => setTab("messages")}
+        >
+          <MessageSquareText size={16} />
+          消息标签
+        </button>
+        <button
+          type="button"
           className={tab === "evidence" ? "is-active" : ""}
           onClick={() => setTab("evidence")}
         >
@@ -333,6 +348,64 @@ export function ReportView({ report, onBack }: ReportViewProps) {
           下一步
         </button>
       </nav>
+
+      {tab === "messages" && (
+        <div className="report-section-stack">
+          <section className="report-section message-insights-section">
+            <div className="section-heading">
+              <div>
+                <span className="section-index">M</span>
+                <div>
+                  <h3>逐消息情绪与意图</h3>
+                  <p>
+                    标签描述这条消息如何表达，不声称知道隐藏动机。
+                  </p>
+                </div>
+              </div>
+              <span className="confidence-chip">
+                {report.messageInsights.length} 条标签
+              </span>
+            </div>
+            {report.messageInsights.length > 0 ? (
+              <div className="message-insight-list">
+                {report.messageInsights.map((item) => (
+                  <article
+                    className={`message-insight-item message-insight-item--${item.cue}`}
+                    key={item.messageId}
+                  >
+                    <div className="message-insight-item__meta">
+                      <span>{item.sender === "self" ? "我" : "对方"}</span>
+                      <em>
+                        {item.source === "local-rules"
+                          ? "本地规则"
+                          : item.source === "local-llm"
+                            ? "Ollama 本地模型"
+                            : "模型增强"}
+                      </em>
+                    </div>
+                    <blockquote>“{item.quote}”</blockquote>
+                    <div className="message-insight-item__labels">
+                      <span>{item.emotion}</span>
+                      <span>{item.intent}</span>
+                      <em>{item.cue}</em>
+                    </div>
+                    <p>{item.explanation}</p>
+                    <small>{item.confidence}置信度</small>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state empty-state--compact">
+                <p>这段材料还没有可用的逐消息标签。</p>
+              </div>
+            )}
+            <p className="message-insights-note">
+              默认使用本地规则，不会额外请求模型。切换到 Ollama
+              后，可由本机模型增强标签。
+            </p>
+          </section>
+        </div>
+      )}
 
       {tab === "overview" && (
         <div className="report-section-stack">

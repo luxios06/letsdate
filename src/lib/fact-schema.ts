@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  MESSAGE_CUES,
+  MESSAGE_EMOTIONS,
+  MESSAGE_INTENTS,
+} from "./message-insights";
 
 const text = (max: number) => z.string().trim().min(1).max(max);
 
@@ -22,6 +27,16 @@ export const FactSchema = z.object({
   observation: text(500),
   alternative: text(500),
   confidence: z.enum(["低", "中", "较高"]),
+});
+
+export const ExtractedMessageInsightSchema = z.object({
+  messageId: text(80),
+  quote: text(500),
+  emotion: z.enum(MESSAGE_EMOTIONS),
+  intent: z.enum(MESSAGE_INTENTS),
+  cue: z.enum(MESSAGE_CUES),
+  confidence: z.enum(["低", "中", "较高"]),
+  explanation: text(400),
 });
 
 export const FactLedgerSchema = z.object({
@@ -48,6 +63,7 @@ export const FactLedgerSchema = z.object({
       }),
     )
     .max(12),
+  messageInsights: z.array(ExtractedMessageInsightSchema).max(120).default([]),
 });
 
 export type ExtractedFactLedger = z.infer<typeof FactLedgerSchema>;

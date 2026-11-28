@@ -30,6 +30,52 @@ export type AttachmentCueKind =
   | "avoidant"
   | "mixed"
   | "insufficient";
+export type MessageInsightEmotion =
+  | "开心"
+  | "期待"
+  | "平静"
+  | "关心"
+  | "亲昵"
+  | "低落"
+  | "焦虑"
+  | "失望"
+  | "生气"
+  | "强硬"
+  | "困惑";
+export type MessageInsightIntent =
+  | "分享"
+  | "了解"
+  | "邀约"
+  | "确认计划"
+  | "改期"
+  | "拒绝"
+  | "婉拒"
+  | "答应"
+  | "安慰"
+  | "解释"
+  | "修复"
+  | "表达不满"
+  | "表达边界"
+  | "寻求确认"
+  | "控制要求"
+  | "表达想念"
+  | "调情"
+  | "回应"
+  | "结束话题";
+export type MessageInsightCue =
+  | "靠近"
+  | "稳定"
+  | "试探"
+  | "收缩"
+  | "冲突"
+  | "修复"
+  | "边界"
+  | "风险"
+  | "中性";
+export type MessageInsightSource =
+  | "local-rules"
+  | "local-llm"
+  | "provider";
 
 export type ProviderId =
   | "demo"
@@ -190,6 +236,19 @@ export interface ChatMessage {
   replyToId: string | null;
 }
 
+export interface MessageInsight {
+  messageId: string;
+  quote: string;
+  sender: "self" | "other";
+  timestamp: string | null;
+  emotion: MessageInsightEmotion;
+  intent: MessageInsightIntent;
+  cue: MessageInsightCue;
+  confidence: Confidence;
+  explanation: string;
+  source: MessageInsightSource;
+}
+
 export interface ConversationSession {
   id: string;
   label: string;
@@ -348,6 +407,7 @@ export interface AnalysisReport {
   calibration: ScoreCalibration;
   emotion: EmotionAnalysis;
   knowledge: KnowledgeMatch;
+  messageInsights: MessageInsight[];
   humanRead: HumanRead;
   contextGaps: ContextGap[];
   shortReplies: ShortReplyInsight[];

@@ -27,6 +27,8 @@ When the user imports a screenshot:
 
 Emotion and intimacy signal detection uses a local JSON lexicon. Text is not sent to an emotion-analysis service.
 
+Per-message labels default to local rules in the browser. When the user explicitly selects Ollama, the chat text is sent to the configured loopback address for local-model processing. Cloud providers may receive the same message text during fact extraction.
+
 Retrieved relationship cases are also processed locally. The bundled library contains anonymized aggregate patterns derived from Apache-2.0 CPED data and fully fictional CC0 dating scenarios. It does not contain raw CPED dialogue, private chats, names or account handles.
 
 ## API keys

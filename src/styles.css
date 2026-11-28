@@ -2082,6 +2082,121 @@ h3 {
   line-height: 1.6;
 }
 
+.message-insight-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 19px;
+  max-height: 720px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.message-insight-item {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-left: 3px solid rgba(40, 94, 84, 0.3);
+  border-radius: 6px;
+  background: rgba(255, 253, 248, 0.7);
+  padding: 14px 15px;
+}
+
+.message-insight-item--风险 {
+  border-left-color: #b35a48;
+  background: rgba(212, 129, 107, 0.06);
+}
+
+.message-insight-item--靠近,
+.message-insight-item--修复,
+.message-insight-item--稳定 {
+  border-left-color: var(--forest-2);
+}
+
+.message-insight-item--试探,
+.message-insight-item--收缩,
+.message-insight-item--冲突 {
+  border-left-color: #c28b45;
+}
+
+.message-insight-item__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.message-insight-item__meta span {
+  color: var(--ink);
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.message-insight-item__meta em {
+  color: var(--muted);
+  font-size: 7px;
+  font-style: normal;
+}
+
+.message-insight-item blockquote {
+  margin-top: 9px;
+  color: var(--ink-soft);
+  font-family: "Iowan Old Style", "Songti SC", serif;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.message-insight-item__labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.message-insight-item__labels span,
+.message-insight-item__labels em {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 2px 7px;
+  color: var(--forest);
+  font-size: 7px;
+  font-style: normal;
+}
+
+.message-insight-item__labels span:nth-child(2) {
+  border-color: rgba(212, 129, 107, 0.25);
+  color: #8c493b;
+}
+
+.message-insight-item__labels em {
+  color: var(--muted);
+}
+
+.message-insight-item > p {
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1.65;
+}
+
+.message-insight-item > small {
+  display: block;
+  margin-top: 8px;
+  color: #999e99;
+  font-size: 7px;
+}
+
+.message-insights-note {
+  margin-top: 13px;
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1.6;
+}
+
+.empty-state--compact {
+  min-height: 130px;
+  margin-top: 18px;
+}
+
 .short-reply-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3980,6 +4095,7 @@ h3 {
 
   .human-read-grid,
   .knowledge-reference__grid,
+  .message-insight-list,
   .attachment-cue-grid,
   .short-reply-grid {
     grid-template-columns: 1fr;

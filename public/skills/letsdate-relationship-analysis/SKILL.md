@@ -2,7 +2,7 @@
 name: letsdate-relationship-analysis
 description: Analyze user-provided dating profiles and chat transcripts to produce a calibrated, evidence-linked relationship report with tentative MBTI, Big Five, interaction patterns, compatibility, interest signals, and respectful reply options. Use for dating communication reflection, not mind-reading or psychological diagnosis.
 metadata:
-  version: "1.3.0"
+  version: "1.4.0"
 ---
 
 # letsdate Relationship Analysis
@@ -67,6 +67,8 @@ Use two distinct stages:
 
 1. **Fact extraction.** Parse messages, timestamps, sessions, message kinds, short replies, follow-up outcomes, negations, cancellations and exact quotes. Do not synthesize personality or relationship conclusions yet.
 2. **Synthesis.** Use only the verified fact ledger to form personality, compatibility, attachment-related interaction cues and actions.
+
+The app also produces or enhances one observed emotion label and one communication-intent label per message. These labels describe expression, not hidden motives or clinical state.
 
 If a host runs this as one model call, still preserve the two-stage internal order and do not let an early impression contaminate the evidence ledger.
 
@@ -298,6 +300,20 @@ Use this complete shape:
     },
     "source": "cnsenti-dutir | local-fallback"
   },
+  "messageInsights": [
+    {
+      "messageId": "msg-1",
+      "quote": "原文",
+      "sender": "self | other",
+      "timestamp": "string | null",
+      "emotion": "开心 | 期待 | 平静 | 关心 | 亲昵 | 低落 | 焦虑 | 失望 | 生气 | 强硬 | 困惑",
+      "intent": "分享 | 了解 | 邀约 | 确认计划 | 改期 | 拒绝 | 婉拒 | 答应 | 安慰 | 解释 | 修复 | 表达不满 | 表达边界 | 寻求确认 | 控制要求 | 表达想念 | 调情 | 回应 | 结束话题",
+      "cue": "靠近 | 稳定 | 试探 | 收缩 | 冲突 | 修复 | 边界 | 风险 | 中性",
+      "confidence": "低 | 中 | 较高",
+      "explanation": "这条消息如何表达，以及替代解释",
+      "source": "local-rules | local-llm | provider"
+    }
+  ],
   "humanRead": {
     "canConfirm": "string",
     "likely": "string",
@@ -532,6 +548,7 @@ Before returning JSON, verify:
 - Control or surveillance signals are framed as boundaries and safety risks, never as romantic proof.
 - `contextGaps` lists what information would materially change the judgment.
 - `shortReplies` classifies short messages only after comparing baseline and follow-up outcome.
+- `messageInsights` contains one primary emotion, one communication intent and one relationship cue per message. Model labels must preserve the exact message quote.
 - `pipeline.exactQuoteVerification` is true only after quotes have been checked against the source.
 - MBTI has four dimensions with keys `EI`, `SN`, `TF`, `JP`.
 - Every MBTI dimension and Big Five trait has a valid `status` and `evidenceIds`.
