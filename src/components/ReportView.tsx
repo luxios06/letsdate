@@ -20,6 +20,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import type {
   AnalysisReport,
   Confidence,
@@ -34,6 +35,7 @@ interface ReportViewProps {
 }
 
 type ReportTab = "overview" | "messages" | "evidence" | "action";
+type MessageFilter = "all" | "other" | "risk" | "repair";
 
 const fmtDate = (value: string) =>
   new Intl.DateTimeFormat("zh-CN", {
@@ -99,17 +101,21 @@ function BigFiveRow({ trait }: { trait: TraitScore }) {
 
 function ScoreRing({ score, label }: { score: number; label: string }) {
   return (
-    <div
+    <motion.div
       className="score-ring"
       style={{
         background: `conic-gradient(var(--coral) ${score * 3.6}deg, rgba(23, 63, 57, 0.12) 0deg)`,
       }}
+      initial={{ opacity: 0, scale: 0.88, rotate: -8 }}
+      animate={{ opacity: 1, scale: 1, rotate: 0 }}
+      transition={{ type: "spring", stiffness: 170, damping: 18 }}
+      whileHover={{ scale: 1.025 }}
     >
       <div>
         <strong>{score}</strong>
         <span>{label}</span>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -212,6 +218,8 @@ export function ReportView({ report, onBack }: ReportViewProps) {
   const [tab, setTab] = useState<ReportTab>("overview");
   const [copied, setCopied] = useState(false);
   const [activeMessage, setActiveMessage] = useState(0);
+  const [messageFilter, setMessageFilter] =
+    useState<MessageFilter>("all");
   const topSignals = useMemo(
     () => report.interest.signals.slice(0, 3),
     [report.interest.signals],
@@ -222,10 +230,54 @@ export function ReportView({ report, onBack }: ReportViewProps) {
       tone: "建议",
       text: report.action.nextMessage,
     };
+  const messageFilters = useMemo(
+    () =>
+      [
+        {
+          key: "all" as const,
+          label: "全部",
+          count: report.messageInsights.length,
+        },
+        {
+          key: "other" as const,
+          label: "对方",
+          count: report.messageInsights.filter(
+            (item) => item.sender === "other",
+          ).length,
+        },
+        {
+          key: "risk" as const,
+          label: "风险",
+          count: report.messageInsights.filter((item) => item.cue === "风险")
+            .length,
+        },
+        {
+          key: "repair" as const,
+          label: "修复",
+          count: report.messageInsights.filter((item) => item.cue === "修复")
+            .length,
+        },
+      ] satisfies Array<{
+        key: MessageFilter;
+        label: string;
+        count: number;
+      }>,
+    [report.messageInsights],
+  );
+  const filteredMessageInsights = useMemo(
+    () =>
+      report.messageInsights.filter((item) => {
+        if (messageFilter === "all") return true;
+        if (messageFilter === "other") return item.sender === "other";
+        return item.cue === (messageFilter === "risk" ? "风险" : "修复");
+      }),
+    [messageFilter, report.messageInsights],
+  );
 
   useEffect(() => {
     setActiveMessage(0);
     setCopied(false);
+    setMessageFilter("all");
   }, [report.id]);
 
   const handleCopy = async () => {
@@ -320,6 +372,12 @@ export function ReportView({ report, onBack }: ReportViewProps) {
           className={tab === "overview" ? "is-active" : ""}
           onClick={() => setTab("overview")}
         >
+          {tab === "overview" && (
+            <motion.span
+              className="report-tab-indicator"
+              layoutId="report-tab-indicator"
+            />
+          )}
           <Fingerprint size={16} />
           画像与匹配
         </button>
@@ -328,6 +386,12 @@ export function ReportView({ report, onBack }: ReportViewProps) {
           className={tab === "messages" ? "is-active" : ""}
           onClick={() => setTab("messages")}
         >
+          {tab === "messages" && (
+            <motion.span
+              className="report-tab-indicator"
+              layoutId="report-tab-indicator"
+            />
+          )}
           <MessageSquareText size={16} />
           消息标签
         </button>
@@ -336,6 +400,12 @@ export function ReportView({ report, onBack }: ReportViewProps) {
           className={tab === "evidence" ? "is-active" : ""}
           onClick={() => setTab("evidence")}
         >
+          {tab === "evidence" && (
+            <motion.span
+              className="report-tab-indicator"
+              layoutId="report-tab-indicator"
+            />
+          )}
           <ScanSearch size={16} />
           证据链
         </button>
@@ -344,6 +414,12 @@ export function ReportView({ report, onBack }: ReportViewProps) {
           className={tab === "action" ? "is-active" : ""}
           onClick={() => setTab("action")}
         >
+          {tab === "action" && (
+            <motion.span
+              className="report-tab-indicator"
+              layoutId="report-tab-indicator"
+            />
+          )}
           <ArrowRight size={16} />
           下一步
         </button>
@@ -367,35 +443,68 @@ export function ReportView({ report, onBack }: ReportViewProps) {
               </span>
             </div>
             {report.messageInsights.length > 0 ? (
-              <div className="message-insight-list">
-                {report.messageInsights.map((item) => (
-                  <article
-                    className={`message-insight-item message-insight-item--${item.cue}`}
-                    key={item.messageId}
-                  >
-                    <div className="message-insight-item__meta">
-                      <span>{item.sender === "self" ? "我" : "对方"}</span>
-                      <em>
-                        {item.source === "local-rules"
-                          ? "本地规则"
-                          : item.source === "local-llm"
-                            ? "Ollama 本地模型"
-                            : item.source === "browser-local"
-                              ? "浏览器本地模型"
-                            : "模型增强"}
-                      </em>
-                    </div>
-                    <blockquote>“{item.quote}”</blockquote>
-                    <div className="message-insight-item__labels">
-                      <span>{item.emotion}</span>
-                      <span>{item.intent}</span>
-                      <em>{item.cue}</em>
-                    </div>
-                    <p>{item.explanation}</p>
-                    <small>{item.confidence}置信度</small>
-                  </article>
-                ))}
-              </div>
+              <>
+                <div
+                  className="message-filter-row"
+                  role="group"
+                  aria-label="筛选消息标签"
+                >
+                  {messageFilters.map((filter) => (
+                    <button
+                      key={filter.key}
+                      type="button"
+                      className={
+                        messageFilter === filter.key ? "is-active" : ""
+                      }
+                      onClick={() => setMessageFilter(filter.key)}
+                    >
+                      {filter.label}
+                      <span>{filter.count}</span>
+                    </button>
+                  ))}
+                </div>
+                <motion.div className="message-insight-list" layout>
+                  <AnimatePresence initial={false} mode="popLayout">
+                    {filteredMessageInsights.map((item) => (
+                      <motion.article
+                        layout
+                        initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.97 }}
+                        transition={{ duration: 0.18 }}
+                        className={`message-insight-item message-insight-item--${item.cue}`}
+                        key={item.messageId}
+                      >
+                        <div className="message-insight-item__meta">
+                          <span>{item.sender === "self" ? "我" : "对方"}</span>
+                          <em>
+                            {item.source === "local-rules"
+                              ? "本地规则"
+                              : item.source === "local-llm"
+                                ? "Ollama 本地模型"
+                                : item.source === "browser-local"
+                                  ? "浏览器本地模型"
+                                  : "模型增强"}
+                          </em>
+                        </div>
+                        <blockquote>“{item.quote}”</blockquote>
+                        <div className="message-insight-item__labels">
+                          <span>{item.emotion}</span>
+                          <span>{item.intent}</span>
+                          <em>{item.cue}</em>
+                        </div>
+                        <p>{item.explanation}</p>
+                        <small>{item.confidence}置信度</small>
+                      </motion.article>
+                    ))}
+                  </AnimatePresence>
+                </motion.div>
+                {filteredMessageInsights.length === 0 && (
+                  <div className="empty-state empty-state--compact">
+                    <p>这个筛选下没有消息标签。</p>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="empty-state empty-state--compact">
                 <p>这段材料还没有可用的逐消息标签。</p>

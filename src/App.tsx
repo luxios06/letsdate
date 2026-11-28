@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, CircleAlert, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import type {
   AnalysisInput,
   AnalysisReport,
@@ -358,73 +359,84 @@ function App() {
       />
 
       <main className="main-content">
-        {view === "analyze" && (
-          <>
-            <Topbar
-              eyebrow={report ? "Report" : "Workspace"}
-              title={report ? "关系画像报告" : "新建关系分析"}
-              settings={settings}
-              onSettings={() => setShowSettings(true)}
-            />
-            {report ? (
-              <ReportView
-                report={report}
-                onBack={() => {
-                  setReport(null);
-                  setError("");
-                }}
-              />
-            ) : (
-              <AnalyzeWorkspace
-                input={input}
-                settings={settings}
-                busy={busy}
-                progress={progress}
-                error={error}
-                onChange={setInput}
-                onAnalyze={handleAnalyze}
-                onLoadSample={handleLoadSample}
-                screenshotJob={screenshotJob}
-                onImportScreenshots={handleImportScreenshots}
-                onDismissScreenshotJob={() => setScreenshotJob(null)}
-                onOpenSettings={() => setShowSettings(true)}
-              />
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            className="view-stage"
+            key={report ? "report" : view}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {view === "analyze" && (
+              <>
+                <Topbar
+                  eyebrow={report ? "Report" : "Workspace"}
+                  title={report ? "关系画像报告" : "新建关系分析"}
+                  settings={settings}
+                  onSettings={() => setShowSettings(true)}
+                />
+                {report ? (
+                  <ReportView
+                    report={report}
+                    onBack={() => {
+                      setReport(null);
+                      setError("");
+                    }}
+                  />
+                ) : (
+                  <AnalyzeWorkspace
+                    input={input}
+                    settings={settings}
+                    busy={busy}
+                    progress={progress}
+                    error={error}
+                    onChange={setInput}
+                    onAnalyze={handleAnalyze}
+                    onLoadSample={handleLoadSample}
+                    screenshotJob={screenshotJob}
+                    onImportScreenshots={handleImportScreenshots}
+                    onDismissScreenshotJob={() => setScreenshotJob(null)}
+                    onOpenSettings={() => setShowSettings(true)}
+                  />
+                )}
+              </>
             )}
-          </>
-        )}
 
-        {view === "history" && (
-          <>
-            <Topbar
-              eyebrow="Archive"
-              title="历史记录"
-              settings={settings}
-              onSettings={() => setShowSettings(true)}
-            />
-            <HistoryView
-              history={history}
-              onSelect={handleHistorySelect}
-              onClear={handleClearHistory}
-              onNew={() => {
-                setInput(EMPTY_INPUT);
-                setReport(null);
-                setView("analyze");
-              }}
-            />
-          </>
-        )}
+            {view === "history" && (
+              <>
+                <Topbar
+                  eyebrow="Archive"
+                  title="历史记录"
+                  settings={settings}
+                  onSettings={() => setShowSettings(true)}
+                />
+                <HistoryView
+                  history={history}
+                  onSelect={handleHistorySelect}
+                  onClear={handleClearHistory}
+                  onNew={() => {
+                    setInput(EMPTY_INPUT);
+                    setReport(null);
+                    setView("analyze");
+                  }}
+                />
+              </>
+            )}
 
-        {view === "method" && (
-          <>
-            <Topbar
-              eyebrow="Protocol"
-              title="分析框架"
-              settings={settings}
-              onSettings={() => setShowSettings(true)}
-            />
-            <MethodView />
-          </>
-        )}
+            {view === "method" && (
+              <>
+                <Topbar
+                  eyebrow="Protocol"
+                  title="分析框架"
+                  settings={settings}
+                  onSettings={() => setShowSettings(true)}
+                />
+                <MethodView />
+              </>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       <SettingsModal
@@ -435,15 +447,28 @@ function App() {
         onClearData={handleClearData}
       />
 
-      {toast && (
-        <div className={`toast toast--${toast.kind}`} role="status">
-          {toast.kind === "success" ? <Check size={16} /> : <CircleAlert size={16} />}
-          <span>{toast.message}</span>
-          <button type="button" onClick={() => setToast(null)} title="关闭提示">
-            <X size={14} />
-          </button>
-        </div>
-      )}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            className={`toast toast--${toast.kind}`}
+            role="status"
+            initial={{ opacity: 0, y: 14, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.98 }}
+            transition={{ duration: 0.2 }}
+          >
+            {toast.kind === "success" ? (
+              <Check size={16} />
+            ) : (
+              <CircleAlert size={16} />
+            )}
+            <span>{toast.message}</span>
+            <button type="button" onClick={() => setToast(null)} title="关闭提示">
+              <X size={14} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -104,3 +104,19 @@ The approximately 639MB model file is not bundled in the repository or GitHub Pa
 - Upstream: llama.cpp
 
 Wllama runs the optional GGUF model in a browser worker using WebGPU or WebAssembly.
+
+## Motion
+
+- Package: `motion` 14.14.0
+- Project: https://github.com/motiondivision/motion
+- License: MIT
+
+Used for page transitions, score-ring entry, report tab indicators and message-filter transitions.
+
+## AutoAnimate
+
+- Package: `@formkit/auto-animate` 0.11.0
+- Project: https://github.com/formkit/auto-animate
+- License: MIT
+
+Used for history-row and screenshot-queue layout transitions.

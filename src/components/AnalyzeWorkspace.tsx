@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { useRef, useState } from "react";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 import type {
   AnalyzeProgress,
   AnalysisInput,
@@ -92,6 +93,10 @@ function ScreenshotImportQueue({
   job: ScreenshotImportJob;
   onDismiss: () => void;
 }) {
+  const [queueRef] = useAutoAnimate<HTMLDivElement>({
+    duration: 180,
+    easing: "ease-out",
+  });
   const finished = job.items.filter(
     (item) => item.status === "done" || item.status === "error",
   ).length;
@@ -126,7 +131,7 @@ function ScreenshotImportQueue({
       <div className="screenshot-queue__track">
         <span style={{ width: `${progress}%` }} />
       </div>
-      <div className="screenshot-queue__list">
+      <div className="screenshot-queue__list" ref={queueRef}>
         {job.items.map((item, index) => (
           <div
             className={`screenshot-queue__item is-${item.status}`}

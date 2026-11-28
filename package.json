@@ -1,7 +1,7 @@
 {
   "name": "letsdate",
   "private": true,
-  "version": "0.12.0",
+  "version": "0.13.0",
   "packageManager": "pnpm@11.25.0",
   "type": "module",
   "scripts": {
@@ -14,9 +14,11 @@
     "model:check": "node local-model/check-local.mjs"
   },
   "dependencies": {
+    "@formkit/auto-animate": "0.11.0",
     "@paddleocr/paddleocr-js": "^0.4.2",
     "@wllama/wllama": "4.0.0",
     "lucide-react": "^0.468.0",
+    "motion": "14.14.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tesseract.js": "^6.0.1",

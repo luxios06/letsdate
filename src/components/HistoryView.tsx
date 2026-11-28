@@ -5,6 +5,7 @@ import {
   Sparkles,
   Trash2,
 } from "lucide-react";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 import type { HistoryRecord } from "../types";
 
 interface HistoryViewProps {
@@ -28,6 +29,10 @@ export function HistoryView({
   onClear,
   onNew,
 }: HistoryViewProps) {
+  const [historyListRef] = useAutoAnimate<HTMLDivElement>({
+    duration: 240,
+    easing: "ease-out",
+  });
   const trendById = new Map<
     string,
     { delta: number; sequence: number }
@@ -76,7 +81,7 @@ export function HistoryView({
           </button>
         </div>
       ) : (
-        <div className="history-list">
+        <div className="history-list" ref={historyListRef}>
           {history.map((record) => (
             <button
               type="button"
