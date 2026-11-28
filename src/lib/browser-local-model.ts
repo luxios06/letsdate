@@ -1,4 +1,7 @@
-import type { ChatCompletionResponse, Wllama } from "@wllama/wllama";
+import type {
+  ChatCompletionResponse,
+  Wllama,
+} from "@wllama/wllama";
 import { z } from "zod";
 import type {
   AnalysisInput,
@@ -84,6 +87,35 @@ export function isBrowserLocalModelReady() {
   }
 }
 
+async function resolveModelDownloadUrl() {
+  const response = await fetch(MODEL_URL, {
+    headers: { Range: "bytes=0-0" },
+    cache: "no-store",
+    redirect: "follow",
+  });
+  if (!response.ok) {
+    throw new Error(`ModelScope 下载地址解析失败：HTTP ${response.status}`);
+  }
+  const resolved = response.url;
+  await response.body?.cancel();
+  if (!resolved || resolved === MODEL_URL) {
+    throw new Error("ModelScope 没有返回可用的下载地址。");
+  }
+  return resolved;
+}
+
+async function findCachedModelBlob(wllama: Wllama): Promise<Blob | null> {
+  const files = await wllama.cacheManager.list();
+  const entry = files
+    .filter(
+      (file) =>
+        file.size === MODEL_BYTES &&
+        file.metadata.originalSize === MODEL_BYTES,
+    )
+    .at(-1);
+  return entry ? wllama.cacheManager.open(entry.name) : null;
+}
+
 export async function loadBrowserLocalModel(
   onProgress?: (update: BrowserModelProgress) => void,
 ) {
@@ -97,29 +129,47 @@ export async function loadBrowserLocalModel(
         status: "检查本地模型缓存",
         percent: 2,
       });
-      await wllama.loadModelFromUrl(MODEL_URL, {
-        useCache: true,
+      const loadOptions = {
         n_ctx: 4096,
         n_threads: 1,
         n_batch: 64,
         n_ubatch: 64,
-        cache_type_k: "q8_0",
-        cache_type_v: "q8_0",
-        progressCallback: ({ loaded, total }) => {
-          const target = total > 0 ? total : MODEL_BYTES;
-          const percent = Math.min(
-            68,
-            Math.max(2, Math.round((loaded / target) * 68)),
-          );
-          progressListener?.({
-            status:
-              loaded >= target
-                ? "本地模型下载完成，正在加载"
-                : `正在下载 Qwen3-0.6B ${percent}%`,
-            percent,
-          });
-        },
-      });
+        cache_type_k: "q8_0" as const,
+        cache_type_v: "q8_0" as const,
+      };
+      const cached = await findCachedModelBlob(wllama);
+      if (cached) {
+        onProgress?.({
+          status: "正在加载已缓存的 Qwen3-0.6B",
+          percent: 68,
+        });
+        await wllama.loadModel([cached], loadOptions);
+      } else {
+        const downloadUrl = await resolveModelDownloadUrl();
+        await wllama.cacheManager.download(downloadUrl, {
+          progressCallback: ({ loaded, total }) => {
+            const target = total > 0 ? total : MODEL_BYTES;
+            const percent = Math.min(
+              68,
+              Math.max(2, Math.round((loaded / target) * 68)),
+            );
+            progressListener?.({
+              status:
+                loaded >= target
+                  ? "本地模型下载完成，正在加载"
+                  : `正在下载 Qwen3-0.6B ${percent}%`,
+              percent,
+            });
+          },
+          retries: 5,
+          connections: 4,
+        });
+        const downloaded = await findCachedModelBlob(wllama);
+        if (!downloaded) {
+          throw new Error("模型下载完成，但无法从浏览器缓存中读取。");
+        }
+        await wllama.loadModel([downloaded], loadOptions);
+      }
       localStorage.setItem(MODEL_READY_KEY, "1");
       progressListener?.({
         status: "本地模型已加载",
